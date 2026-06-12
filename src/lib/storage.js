@@ -27,13 +27,19 @@ export async function loginOrCreateParticipant(name, uniqueKey){
 }
 export async function saveForecast(participantId, predictions, confirmed=false){
   if (supabase) {
-    const { error } = await supabase.from('forecasts').upsert({ participant_id: participantId, predictions, confirmed, confirmed_at: confirmed ? new Date().toISOString() : null }, { onConflict:'participant_id' });
+    const { error } = await supabase.from('forecasts').upsert({
+      participant_id: participantId,
+      predictions,
+      confirmed,
+      status: confirmed ? 'confirmed' : 'draft',
+      confirmed_at: confirmed ? new Date().toISOString() : null
+    }, { onConflict:'participant_id' });
     if (error) throw error;
     return true;
   }
   const s = loadLocal();
   const i = s.forecasts.findIndex(f => f.participantId === participantId);
-  const rec = {participantId, predictions, confirmed, confirmedAt: confirmed ? new Date().toISOString():null};
+  const rec = {participantId, predictions, confirmed, status: confirmed ? 'confirmed' : 'draft', confirmedAt: confirmed ? new Date().toISOString():null};
   if (i >= 0) s.forecasts[i] = rec; else s.forecasts.push(rec);
   saveLocal(s); return true;
 }
@@ -41,13 +47,13 @@ export async function getForecast(participantId){
   if (supabase) {
     const { data, error } = await supabase.from('forecasts').select('*').eq('participant_id', participantId).maybeSingle();
     if (error) throw error;
-    return data ? { predictions:data.predictions || {}, confirmed:data.confirmed, confirmedAt:data.confirmed_at } : null;
+    return data ? { predictions:data.predictions || {}, confirmed:data.confirmed, status:data.status || (data.confirmed ? 'confirmed' : 'draft'), confirmedAt:data.confirmed_at } : null;
   }
   return loadLocal().forecasts.find(f => f.participantId === participantId) || null;
 }
 export async function listParticipantsWithForecasts(){
   if (supabase) {
-    const { data, error } = await supabase.from('participants').select('id,name,unique_key,role,created_at,forecasts(predictions,confirmed,confirmed_at)').order('created_at');
+    const { data, error } = await supabase.from('participants').select('id,name,unique_key,role,created_at,forecasts(predictions,confirmed,status,confirmed_at,updated_at)').order('created_at');
     if (error) throw error;
     return data.map(p => ({id:p.id, name:p.name, uniqueKey:p.unique_key, role:p.role, forecast:p.forecasts?.[0]}));
   }

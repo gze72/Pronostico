@@ -29,6 +29,7 @@ create table if not exists public.forecasts (
   participant_id uuid not null unique references public.participants(id) on delete cascade,
   predictions jsonb not null default '{}'::jsonb,
   confirmed boolean not null default false,
+  status text not null default 'draft' check (status in ('draft','confirmed')),
   confirmed_at timestamptz,
   updated_at timestamptz not null default now()
 );

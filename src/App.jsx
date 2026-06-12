@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Trophy, Users, BarChart3, LogOut, ShieldCheck, CheckCircle2, LockKeyhole, Menu, X } from 'lucide-react';
+import { Trophy, Users, BarChart3, LogOut, ShieldCheck, CheckCircle2, LockKeyhole, Menu, X, Save } from 'lucide-react';
 import { GROUPS, TEAMS } from './lib/worldcupData';
 import { allGroupsCompleted, buildRoundOf32, calculateStandings, groupCompleted, winnerLabel } from './lib/scoring';
 import { deleteParticipantAndForecast, getForecast, getMatches, listParticipantsWithForecasts, loginOrCreateParticipant, saveForecast, supabase } from './lib/storage';
@@ -13,8 +13,9 @@ function App(){
   const [view,setView] = useState('pronostico');
   const [sidebar,setSidebar] = useState(false);
   const [toast,setToast] = useState('');
+  const [forecastStatus,setForecastStatus] = useState('empty');
   useEffect(()=>{ getMatches().then(setMatches); },[]);
-  useEffect(()=>{ if(participant) getForecast(participant.id).then(f=>setPredictions(f?.predictions || {})); },[participant]);
+  useEffect(()=>{ if(participant) getForecast(participant.id).then(f=>{ setPredictions(f?.predictions || {}); setForecastStatus(f?.status || (f?.confirmed ? 'confirmed' : 'empty')); }); },[participant]);
   const completedCount = GROUPS.filter(g=>groupCompleted(g.id,matches,predictions)).length;
   const canConfirm = allGroupsCompleted(matches,predictions);
   const setScore = (matchId, field, value) => {
@@ -22,9 +23,14 @@ function App(){
     setPredictions(prev => ({...prev, [matchId]: {...(prev[matchId]||{}), [field]: value}}));
   };
   const persist = async (confirmed=false) => {
-    await saveForecast(participant.id, predictions, confirmed);
-    setToast(confirmed ? 'Pronóstico confirmado y registrado.' : 'Pronóstico guardado como borrador.');
-    setTimeout(()=>setToast(''), 3200);
+    try {
+      await saveForecast(participant.id, predictions, confirmed);
+      setForecastStatus(confirmed ? 'confirmed' : 'draft');
+      setToast(confirmed ? 'Pronóstico confirmado y registrado.' : 'Borrador guardado en Supabase. Puede salir y volver sin perderlo.');
+    } catch (ex) {
+      setToast(ex.message || 'No se pudo guardar el pronóstico.');
+    }
+    setTimeout(()=>setToast(''), 3600);
   };
   if(!participant) return <Login onLogin={setParticipant}/>;
   return <div className="app-shell">
@@ -39,7 +45,7 @@ function App(){
       <div className="user-card"><span>{participant.role === 'admin' ? 'Administrador' : 'Participante'}</span><b>{participant.name}</b><button onClick={()=>setParticipant(null)}><LogOut size={16}/> Salir</button></div>
     </aside>
     <main className="content">
-      <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}</button><div><p>Campeonato Mundial de Fútbol 2026</p><h1>{view==='pronostico'?'Registro de pronóstico':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="progress-pill"><CheckCircle2 size={16}/>{completedCount}/12 grupos</div></header>
+      <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}</button><div><p>Campeonato Mundial de Fútbol 2026</p><h1>{view==='pronostico'?'Registro de pronóstico':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{completedCount}/12 grupos</div></div></header>
       {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm}/>} 
       {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions}/>} 
       {view==='admin' && participant.role === 'admin' && <AdminView matches={matches}/>} 
@@ -99,6 +105,6 @@ function AdminView({matches}){
   }
 
   const detail=selected?.forecast?.predictions || {};
-  return <section className="admin-layout"><div className="panel"><h2><Users/> Participantes registrados</h2><div className="participant-list">{rows.map(r=><button key={r.id} onClick={()=>setSelected(r)} className={selected?.id===r.id?'selected':''}><b>{r.name}</b><span>{r.role} · {r.forecast?.confirmed?'Confirmado':'Sin confirmar'}</span></button>)}</div></div><div className="panel"><h2>Detalle</h2>{!selected ? <p className="muted">Seleccione un participante para consultar sus pronósticos.</p> : <><div className="admin-detail-head"><p><b>{selected.name}</b> · clave: {selected.uniqueKey}</p>{selected.role !== 'admin' && <button className="danger" disabled={busy} onClick={removeSelected}>Eliminar usuario y pronóstico</button>}</div>{message && <p className="admin-message">{message}</p>}<div className="report-groups compact">{GROUPS.map(g=><div className="report-card" key={g.id}><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,detail)}/></div>)}</div></>}</div></section> }
+  return <section className="admin-layout"><div className="panel"><h2><Users/> Participantes registrados</h2><div className="participant-list">{rows.map(r=><button key={r.id} onClick={()=>setSelected(r)} className={selected?.id===r.id?'selected':''}><b>{r.name}</b><span>{r.role} · {r.forecast?.confirmed ? 'Confirmado' : r.forecast?.status === 'draft' ? 'Borrador' : 'Sin pronóstico'}</span></button>)}</div></div><div className="panel"><h2>Detalle</h2>{!selected ? <p className="muted">Seleccione un participante para consultar sus pronósticos.</p> : <><div className="admin-detail-head"><p><b>{selected.name}</b> · clave: {selected.uniqueKey}</p>{selected.role !== 'admin' && <button className="danger" disabled={busy} onClick={removeSelected}>Eliminar usuario y pronóstico</button>}</div>{message && <p className="admin-message">{message}</p>}<div className="report-groups compact">{GROUPS.map(g=><div className="report-card" key={g.id}><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,detail)}/></div>)}</div></>}</div></section> }
 function Watermark(){ return <div className="watermark" aria-hidden="true"><svg viewBox="0 0 280 280"><path d="M112 36h56c-2 46-8 76-28 95-20-19-26-49-28-95Z"/><path d="M83 48c-30 2-46 14-47 34-1 27 25 48 62 55l5-23c-27-4-43-17-42-31 1-8 9-12 25-13l-3-22Zm114 0 3 22c16 1 24 5 25 13 1 14-15 27-42 31l5 23c37-7 63-28 62-55-1-20-17-32-53-34Z"/><path d="M126 129h28v54h-28z"/><path d="M91 205h98v25H91z"/><circle cx="204" cy="198" r="38"/><path d="m184 190 20-14 22 14-8 25h-28z"/></svg></div> }
 export default App;
