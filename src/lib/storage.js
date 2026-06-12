@@ -54,3 +54,29 @@ export async function listParticipantsWithForecasts(){
   const s = loadLocal();
   return s.participants.map(p => ({...p, forecast:s.forecasts.find(f=>f.participantId===p.id)}));
 }
+export async function deleteParticipantAndForecast(participantId){
+  if (!participantId) throw new Error('Seleccione un participante.');
+  if (supabase) {
+    const { data: participant, error: readErr } = await supabase
+      .from('participants')
+      .select('id,role')
+      .eq('id', participantId)
+      .maybeSingle();
+    if (readErr) throw readErr;
+    if (!participant) throw new Error('El participante no existe.');
+    if (participant.role === 'admin') throw new Error('No se permite eliminar usuarios administradores.');
+
+    // forecasts and prediction_confirmations are linked with ON DELETE CASCADE.
+    const { error } = await supabase.from('participants').delete().eq('id', participantId);
+    if (error) throw error;
+    return true;
+  }
+  const s = loadLocal();
+  const participant = s.participants.find(p => p.id === participantId);
+  if (!participant) throw new Error('El participante no existe.');
+  if (participant.role === 'admin') throw new Error('No se permite eliminar usuarios administradores.');
+  s.participants = s.participants.filter(p => p.id !== participantId);
+  s.forecasts = s.forecasts.filter(f => f.participantId !== participantId);
+  saveLocal(s);
+  return true;
+}
