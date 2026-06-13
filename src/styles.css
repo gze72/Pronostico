@@ -752,3 +752,246 @@ input:focus-visible{
   border-color: rgba(180, 43, 43, .45);
   background: #fff4f4;
 }
+
+/* ===== FASE 1 - Score real y puntaje ===== */
+
+.score-mini {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 8px;
+  margin: 8px 0 14px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.score-mini strong {
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+}
+
+.score-mini small {
+  color: rgba(255,255,255,.68);
+  font-size: 12px;
+}
+
+.score-card {
+  grid-template-columns: minmax(130px,1fr) 58px 12px 58px minmax(130px,1fr) minmax(90px,110px) minmax(84px,100px) 62px 62px;
+}
+
+.score-card input:disabled {
+  opacity: .78;
+  cursor: not-allowed;
+  background: #eee8dc;
+}
+
+.lock-note {
+  margin: 8px 0 0;
+  color: var(--gold-dark);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.real-score {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: #f3eee5;
+  border: 1px solid #e4daca;
+}
+
+.real-score small,
+.hit-box small {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 800;
+}
+
+.real-score span {
+  font-weight: 850;
+  color: #181715;
+  white-space: nowrap;
+}
+
+.hit-box {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  align-items: center;
+}
+
+.hit-box b {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.hit-ok {
+  background: #111411;
+  color: #fff;
+}
+
+.hit-bad {
+  background: #fff4f2;
+  color: #7b1f1f;
+  border: 1px solid #e8b2a9;
+}
+
+.pending-hit {
+  background: #f2ede4;
+  color: #8a8377;
+  border: 1px solid #e4daca;
+}
+
+.score-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 18px 0 22px;
+}
+
+.score-summary div {
+  padding: 16px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fff, #fffaf2);
+  border: 1px solid rgba(231,222,208,.94);
+  box-shadow: 0 10px 26px rgba(35,30,21,.04);
+}
+
+.score-summary span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.score-summary strong {
+  font-size: 30px;
+  letter-spacing: -.05em;
+}
+
+.result-admin {
+  margin: 16px 0 22px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255,255,255,.72);
+  overflow: hidden;
+}
+
+.result-admin summary {
+  cursor: pointer;
+  padding: 15px 16px;
+  font-weight: 800;
+  color: var(--gold-dark);
+}
+
+.real-admin-list {
+  display: grid;
+  gap: 8px;
+  padding: 0 14px 14px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.real-admin-row {
+  display: grid;
+  grid-template-columns: 48px minmax(240px,1fr) 58px 10px 58px 92px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.real-admin-row span:first-child {
+  color: var(--gold-dark);
+  font-weight: 850;
+}
+
+.real-admin-row b {
+  font-size: 13px;
+}
+
+.real-admin-row input {
+  width: 58px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  background: #faf8f4;
+  font-weight: 800;
+}
+
+@media(max-width: 1280px) {
+  .score-card {
+    grid-template-columns: 1fr 52px 10px 52px 1fr;
+  }
+
+  .score-card .winner,
+  .score-card .real-score,
+  .score-card .hit-box {
+    grid-column: auto;
+  }
+
+  .score-card .winner {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+
+  .real-score {
+    grid-column: 1 / 3;
+  }
+}
+
+@media(max-width: 760px) {
+  .score-card {
+    grid-template-columns: 1fr 48px 8px 48px 1fr;
+  }
+
+  .real-score,
+  .hit-box {
+    grid-column: span 1;
+  }
+
+  .score-summary {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .real-admin-row {
+    grid-template-columns: 44px 1fr 48px 8px 48px;
+  }
+
+  .real-admin-row button {
+    grid-column: 1 / -1;
+  }
+}
+
+@media(max-width: 520px) {
+  .score-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .score-card .real-score {
+    grid-column: 1 / -1;
+  }
+
+  .score-card .hit-box {
+    grid-column: span 2;
+  }
+}

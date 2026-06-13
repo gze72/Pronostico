@@ -182,3 +182,50 @@ export function winnerLabel(match, prediction) {
   if (r === 'draw') return 'Empate';
   return TEAMS[r === 'home' ? match.home : match.away]?.name || '';
 }
+
+
+export function actualResultOf(result) {
+  if (!result || result.homeGoals === '' || result.awayGoals === '' || result.homeGoals == null || result.awayGoals == null) return null;
+  return resultOf(result.homeGoals, result.awayGoals);
+}
+
+export function evaluatePrediction(matchId, predictions, realScores) {
+  const prediction = predictions?.[matchId];
+  const real = realScores?.[matchId];
+
+  if (!prediction || !real || real.homeGoals == null || real.awayGoals == null) {
+    return { winnerHit: null, scoreHit: null, points: 0 };
+  }
+
+  const predictedResult = resultOf(prediction.homeGoals, prediction.awayGoals);
+  const actualResult = actualResultOf(real);
+
+  if (!predictedResult || !actualResult) {
+    return { winnerHit: null, scoreHit: null, points: 0 };
+  }
+
+  const predictedHome = Number(prediction.homeGoals);
+  const predictedAway = Number(prediction.awayGoals);
+  const actualHome = Number(real.homeGoals);
+  const actualAway = Number(real.awayGoals);
+
+  const winnerHit = predictedResult === actualResult;
+  const scoreHit = predictedHome === actualHome && predictedAway === actualAway;
+
+  return {
+    winnerHit,
+    scoreHit,
+    points: (winnerHit ? 1 : 0) + (scoreHit ? 1 : 0)
+  };
+}
+
+export function calculateParticipantScore(matches, predictions, realScores) {
+  return matches.reduce((acc, match) => {
+    const result = evaluatePrediction(match.id, predictions, realScores);
+    if (result.winnerHit !== null || result.scoreHit !== null) acc.evaluatedMatches += 1;
+    if (result.winnerHit) acc.winnerPoints += 1;
+    if (result.scoreHit) acc.scorePoints += 1;
+    acc.totalPoints += result.points;
+    return acc;
+  }, { winnerPoints: 0, scorePoints: 0, totalPoints: 0, evaluatedMatches: 0 });
+}

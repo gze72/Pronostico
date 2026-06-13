@@ -58,3 +58,22 @@ La llave de dieciseisavos/Round of 32 ahora se genera con 32 clasificados único
 - 1.º y 2.º de cada uno de los 12 grupos.
 - 8 mejores terceros de todos los grupos.
 - Evita repetir países en los cruces proyectados.
+
+
+## Score real y puntos FASE 1
+
+Esta versión agrega:
+
+- Título `Registro de pronóstico (FASE 1)`.
+- Bloqueo de edición cuando el participante confirma su pronóstico.
+- Columna `Score real` para visualizar resultados reales.
+- Validación doble por partido:
+  - 1 punto si acierta el ganador/empate.
+  - 1 punto si acierta el marcador exacto.
+- Puntaje acumulado visible en el menú lateral.
+- Puntaje por participante visible en administración.
+- Tablas Supabase:
+  - `match_results`
+  - `participant_scores`
+
+Nota técnica: la app queda lista para alimentar `match_results` desde una función backend/Edge Function conectada a una fuente oficial. Mientras se configure esa integración, el administrador puede registrar el score real desde el panel de administración.
