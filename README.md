@@ -36,6 +36,11 @@ Esta versión incluye un paquete de Look & Feel premium:
 - Diseño responsive para móvil, tablet y escritorio.
 
 
-### Seguridad visual del login
+## Paquete consolidado Zambranada
 
-Se retiró del formulario público la referencia visible a las credenciales del administrador.
+Esta versión integra simultáneamente:
+
+- Look & Feel premium con marca de agua Zambranada.
+- Login sin mostrar credenciales ni claves de administrador.
+- Persistencia de borradores en Supabase.
+- Eliminación de usuario y pronósticos desde administración.

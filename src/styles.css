@@ -7,11 +7,601 @@
 .status-pill.confirmed{color:#2f6f49;background:#edf8f1;border-color:#9bc7a9}
 .status-pill.empty{color:#6f6a60}
 
-/* Corrección de flujo: evita doble guardado simultáneo */
-.ghost:disabled,
-.primary:disabled {
-  cursor: not-allowed;
-  opacity: 0.68;
-  transform: none !important;
-  box-shadow: none !important;
+/* =========================================================
+   Premium Look & Feel - Zambranada Mundial 2026
+   ========================================================= */
+
+:root{
+  --bg:#f7f3eb;
+  --paper:rgba(255,255,255,.78);
+  --ink:#161615;
+  --muted:#716b61;
+  --line:#e7ded0;
+  --gold:#b8954b;
+  --gold-soft:#ead9b5;
+  --gold-dark:#7d6022;
+  --sage:#5c7566;
+  --deep:#111411;
+  --deep-2:#1d211d;
+  --soft:#eee8dc;
+  --ok:#e4f1e7;
+  --warn:#fff2d9;
+  --danger:#5a1f1f;
+  --glass:rgba(255,255,255,.68);
+  --shadow:0 28px 80px rgba(35,30,21,.12);
+  --shadow-soft:0 16px 45px rgba(35,30,21,.08);
+  --radius-xl:32px;
+  --radius-lg:22px;
+  --radius-md:16px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  background:
+    radial-gradient(circle at 88% 8%, rgba(255,255,255,.98) 0, rgba(255,255,255,.88) 18%, transparent 42%),
+    radial-gradient(circle at 8% 88%, rgba(234,217,181,.38) 0, transparent 36%),
+    linear-gradient(135deg, #f8f5ef 0%, #f3ede3 42%, #ebe1d2 100%);
+  color:var(--ink);
+}
+
+body::selection{
+  background:rgba(184,149,75,.24);
+}
+
+button,
+input{
+  letter-spacing:-.01em;
+}
+
+button{
+  -webkit-tap-highlight-color:transparent;
+}
+
+button:focus-visible,
+input:focus-visible{
+  outline:3px solid rgba(184,149,75,.28);
+  outline-offset:2px;
+}
+
+/* Global layout refinement */
+.app-shell{
+  background:
+    linear-gradient(90deg, rgba(17,20,17,.02), transparent 24%),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,.5), transparent 45%);
+}
+
+.content{
+  padding:34px 36px;
+}
+
+.topbar{
+  margin-bottom:28px;
+}
+
+.topbar p{
+  color:#7e776d;
+  font-weight:500;
+}
+
+.topbar h1{
+  font-weight:760;
+  letter-spacing:-.065em;
+  text-wrap:balance;
+}
+
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* Premium sidebar */
+.sidebar{
+  background:
+    linear-gradient(180deg, rgba(16,18,16,.98), rgba(28,31,27,.95)),
+    radial-gradient(circle at 50% 0%, rgba(184,149,75,.18), transparent 42%);
+  border-right:1px solid rgba(255,255,255,.08);
+  box-shadow:22px 0 70px rgba(19,18,15,.12);
+  overflow:hidden;
+}
+
+.sidebar::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), transparent 24%),
+    radial-gradient(circle at 0% 80%, rgba(184,149,75,.12), transparent 40%);
+  pointer-events:none;
+}
+
+.sidebar::after{
+  content:"Zambranada";
+  position:absolute;
+  left:8px;
+  bottom:34px;
+  transform:rotate(-90deg);
+  transform-origin:left bottom;
+  font-size:72px;
+  font-weight:850;
+  letter-spacing:-.075em;
+  color:rgba(255,255,255,.125);
+  pointer-events:none;
+  line-height:.9;
+}
+
+.brand{
+  position:relative;
+  z-index:1;
+}
+
+.brand b{
+  font-weight:780;
+  letter-spacing:-.025em;
+}
+
+.brand span{
+  color:rgba(255,255,255,.58);
+}
+
+.brand-mark{
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,.24), transparent 35%),
+    linear-gradient(145deg, rgba(184,149,75,.52), rgba(255,255,255,.07));
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 16px 36px rgba(0,0,0,.18);
+}
+
+.sidebar nav{
+  position:relative;
+  z-index:1;
+}
+
+.sidebar nav button,
+.user-card button{
+  border:1px solid transparent;
+  transition:transform .22s ease, background .22s ease, border-color .22s ease, color .22s ease;
+}
+
+.sidebar nav button:hover{
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,255,255,.06);
+}
+
+.sidebar nav button.active{
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.16), rgba(255,255,255,.07));
+  border-color:rgba(255,255,255,.08);
+  color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 14px 30px rgba(0,0,0,.12);
+}
+
+.user-card{
+  position:relative;
+  z-index:1;
+  background:rgba(255,255,255,.075);
+  border-color:rgba(255,255,255,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+/* Premium glass panels */
+.group-rail,
+.panel{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.70));
+  border:1px solid rgba(231,222,208,.84);
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(22px) saturate(130%);
+}
+
+.panel{
+  border-radius:var(--radius-xl);
+}
+
+.group-rail{
+  border-radius:28px;
+}
+
+.panel h2,
+.panel h3{
+  font-weight:780;
+  letter-spacing:-.04em;
+}
+
+.panel-head span{
+  color:var(--gold-dark);
+  letter-spacing:.14em;
+}
+
+.panel-head h2{
+  font-weight:790;
+}
+
+/* More refined group rail */
+.group-rail button{
+  position:relative;
+  overflow:hidden;
+  border:1px solid transparent;
+}
+
+.group-rail button::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, rgba(184,149,75,.12), transparent);
+  opacity:0;
+  transition:opacity .22s ease;
+}
+
+.group-rail button:hover::before,
+.group-rail button.active::before{
+  opacity:1;
+}
+
+.group-rail button.active{
+  border-color:rgba(184,149,75,.18);
+}
+
+.group-rail button.done{
+  background:linear-gradient(90deg, rgba(228,241,231,.95), rgba(255,255,255,.72));
+  border-color:rgba(92,117,102,.20);
+}
+
+/* Buttons */
+.primary{
+  background:
+    linear-gradient(135deg, #111411, #20251f);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 14px 32px rgba(17,20,17,.16);
+  font-weight:720;
+}
+
+.primary:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 22px 46px rgba(17,20,17,.22);
+}
+
+.ghost{
+  background:rgba(255,255,255,.78);
+  border:1px solid rgba(231,222,208,.95);
+  color:#332f27;
+  font-weight:650;
+  box-shadow:0 10px 24px rgba(35,30,21,.04);
+}
+
+.ghost:hover{
+  background:#fffaf1;
+  border-color:#dcc58f;
+  transform:translateY(-1px);
+}
+
+.danger{
+  background:linear-gradient(135deg, #4a1717, #6a2525);
+  font-weight:720;
+  box-shadow:0 12px 28px rgba(90,31,31,.12);
+}
+
+/* Match cards */
+.matches{
+  gap:12px;
+}
+
+.match-card{
+  background:
+    linear-gradient(180deg, #fff, #fffdf9);
+  border:1px solid rgba(231,222,208,.92);
+  border-radius:24px;
+  box-shadow:0 8px 26px rgba(35,30,21,.035);
+}
+
+.match-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 18px 42px rgba(35,30,21,.08);
+  border-color:rgba(184,149,75,.26);
+}
+
+.match-card input{
+  background:linear-gradient(180deg, #fff, #faf7f1);
+  border-color:#e4daca;
+  font-weight:760;
+  color:#151513;
+  transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.match-card input:focus{
+  background:#fff;
+  border-color:#c7a765;
+  box-shadow:0 0 0 4px rgba(184,149,75,.12);
+}
+
+.team b{
+  font-weight:760;
+}
+
+.team span{
+  filter:saturate(.98);
+}
+
+.winner{
+  font-weight:780;
+  color:#536f60;
+}
+
+/* Tables */
+.standings{
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 8px 28px rgba(35,30,21,.035);
+}
+
+.standings th{
+  background:linear-gradient(180deg, #fbf7ef, #f6efe2);
+  color:#7f7567;
+  font-weight:800;
+}
+
+.standings td{
+  background:rgba(255,255,255,.86);
+}
+
+.standings tbody tr:hover td{
+  background:#fffaf1;
+}
+
+/* Pills */
+.progress-pill,
+.status-pill{
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(231,222,208,.88);
+  box-shadow:var(--shadow-soft);
+  font-weight:760;
+}
+
+.status-pill.draft{
+  color:#8a651c;
+  background:linear-gradient(180deg, #fff8e8, #fff2d7);
+  border-color:#e7ca88;
+}
+
+.status-pill.confirmed{
+  color:#2f6f49;
+  background:linear-gradient(180deg, #f1fbf3, #e2f3e7);
+  border-color:#a6cfaf;
+}
+
+/* Report and admin cards */
+.report-card,
+.participant-list button{
+  background:linear-gradient(180deg, #fff, #fffdf8);
+  border-color:rgba(231,222,208,.94);
+  box-shadow:0 10px 28px rgba(35,30,21,.035);
+}
+
+.report-card:hover,
+.participant-list button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 18px 40px rgba(35,30,21,.08);
+  border-color:rgba(184,149,75,.24);
+}
+
+.participant-list button.selected{
+  outline:0;
+  border-color:rgba(184,149,75,.65);
+  box-shadow:0 0 0 3px rgba(184,149,75,.14), 0 18px 40px rgba(35,30,21,.08);
+}
+
+.admin-message{
+  background:linear-gradient(180deg, #fff7e7, #f8ecd4);
+  border-color:#ead7ad;
+}
+
+/* Login premium */
+.login-screen{
+  background:
+    radial-gradient(circle at 78% 28%, rgba(184,149,75,.14), transparent 34%),
+    radial-gradient(circle at 20% 80%, rgba(255,255,255,.7), transparent 35%),
+    linear-gradient(135deg, #f8f5ee, #ece2d2);
+}
+
+.login-card{
+  background:
+    linear-gradient(180deg, rgba(18,20,18,.96), rgba(26,29,25,.94));
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 44px 110px rgba(20,18,14,.28);
+  overflow:hidden;
+}
+
+.login-card::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(184,149,75,.22), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,.08), transparent 30%);
+  pointer-events:none;
+}
+
+.login-card form,
+.login-card .brand{
+  position:relative;
+  z-index:1;
+}
+
+.login-card input{
+  background:rgba(255,255,255,.085);
+  border-color:rgba(255,255,255,.14);
+  transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.login-card input:focus{
+  border-color:rgba(184,149,75,.92);
+  box-shadow:0 0 0 4px rgba(184,149,75,.14);
+  background:rgba(255,255,255,.12);
+}
+
+/* Zambranada watermark */
+.watermark-layer{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.watermark-icon{
+  position:absolute;
+  right:2.2vw;
+  bottom:2vh;
+  width:min(34vw,420px);
+  opacity:.042;
+}
+
+.watermark-icon svg{
+  width:100%;
+  height:auto;
+  fill:#111;
+}
+
+.watermark-word{
+  position:absolute;
+  user-select:none;
+  white-space:nowrap;
+  font-weight:880;
+  letter-spacing:-.085em;
+  line-height:.86;
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.watermark-word-main{
+  right:-1.8rem;
+  top:52%;
+  transform:translateY(-50%) rotate(-90deg);
+  font-size:clamp(76px, 9.5vw, 158px);
+  color:rgba(22,22,21,.065);
+}
+
+.watermark-word-side{
+  left:-1.5rem;
+  bottom:2.5rem;
+  transform:rotate(-90deg);
+  transform-origin:left bottom;
+  font-size:clamp(58px, 7vw, 112px);
+  color:rgba(184,149,75,.145);
+}
+
+.watermark-orb{
+  position:absolute;
+  border-radius:999px;
+  filter:blur(1px);
+}
+
+.watermark-orb-one{
+  width:360px;
+  height:360px;
+  right:-120px;
+  top:18%;
+  background:radial-gradient(circle, rgba(184,149,75,.08), transparent 68%);
+}
+
+.watermark-orb-two{
+  width:460px;
+  height:460px;
+  left:-180px;
+  bottom:-120px;
+  background:radial-gradient(circle, rgba(255,255,255,.68), transparent 64%);
+}
+
+/* Subtle page transitions */
+.panel,
+.group-rail,
+.login-card,
+.match-card,
+.report-card,
+.participant-list button,
+.sidebar nav button{
+  animation:softIn .34s ease both;
+}
+
+@keyframes softIn{
+  from{
+    opacity:.72;
+    transform:translateY(4px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* Mobile refinement */
+@media(max-width:1100px){
+  .content{
+    padding:24px;
+  }
+
+  .watermark-word-main{
+    right:-2.3rem;
+  }
+}
+
+@media(max-width:760px){
+  .content{
+    padding:18px;
+  }
+
+  .topbar{
+    gap:12px;
+  }
+
+  .topbar h1{
+    font-size:34px;
+  }
+
+  .sidebar::after{
+    font-size:50px;
+    left:0;
+    bottom:26px;
+  }
+
+  .watermark-word-main{
+    right:-2rem;
+    font-size:clamp(56px, 12vw, 92px);
+  }
+
+  .watermark-word-side{
+    left:-1.2rem;
+    font-size:clamp(42px, 8vw, 72px);
+  }
+
+  .watermark-icon{
+    width:min(54vw,250px);
+    right:3vw;
+    bottom:3vh;
+  }
+
+  .login-card{
+    border-radius:28px;
+  }
+}
+
+@media(max-width:460px){
+  .topbar h1{
+    font-size:30px;
+  }
+
+  .panel,
+  .group-rail{
+    border-radius:24px;
+  }
+
+  .watermark-word-main{
+    opacity:.8;
+  }
 }
