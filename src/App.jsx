@@ -36,7 +36,7 @@ function App(){
   return <div className="app-shell">
     <Watermark />
     <aside className={`sidebar ${sidebar?'open':''}`}>
-      <div className="brand"><div className="brand-mark"><Trophy size={20}/></div><div><b>Quiniela 2026</b><span>{supabase ? 'Supabase activo' : 'Modo demo local'}</span></div></div>
+      <div className="brand"><div className="brand-mark"><Trophy size={20}/></div><div><b>Zambranada 2026</b><span>{supabase ? 'Supabase activo' : 'Modo demo local'}</span></div></div>
       <nav>
         <button className={view==='pronostico'?'active':''} onClick={()=>{setView('pronostico'); setSidebar(false)}}><Trophy/> Pronóstico</button>
         <button className={view==='reporte'?'active':''} onClick={()=>{setView('reporte'); setSidebar(false)}}><BarChart3/> Reporte</button>
@@ -45,7 +45,7 @@ function App(){
       <div className="user-card"><span>{participant.role === 'admin' ? 'Administrador' : 'Participante'}</span><b>{participant.name}</b><button onClick={()=>setParticipant(null)}><LogOut size={16}/> Salir</button></div>
     </aside>
     <main className="content">
-      <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}</button><div><p>Campeonato Mundial de Fútbol 2026</p><h1>{view==='pronostico'?'Registro de pronóstico':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{completedCount}/12 grupos</div></div></header>
+      <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}</button><div><p>Campeonato Mundial de Fútbol 2026 · Zambranada</p><h1>{view==='pronostico'?'Registro de pronóstico':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{completedCount}/12 grupos</div></div></header>
       {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm}/>} 
       {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions}/>} 
       {view==='admin' && participant.role === 'admin' && <AdminView matches={matches}/>} 
@@ -56,7 +56,7 @@ function App(){
 function Login({onLogin}){
   const [name,setName] = useState(''); const [key,setKey] = useState(''); const [err,setErr] = useState('');
   async function submit(e){ e.preventDefault(); try { setErr(''); const p = await loginOrCreateParticipant(name, key); onLogin(p); } catch(ex){ setErr(ex.message); } }
-  return <div className="login-screen"><Watermark/><section className="login-card"><div className="brand large"><div className="brand-mark"><Trophy size={26}/></div><div><b>Quiniela Mundial 2026</b><span>Pronósticos privados por participante</span></div></div><form onSubmit={submit}><label>Nombre del participante<input value={name} onChange={e=>setName(e.target.value)} placeholder="Ej. Gregory Zambrano"/></label><label>Clave única<input value={key} onChange={e=>setKey(e.target.value)} placeholder="Código personal"/></label>{err && <p className="error">{err}</p>}<button className="primary">Ingresar / Registrar</button><p className="hint"><LockKeyhole size={14}/> Demo administrador: nombre admin, clave ADMIN2026!</p></form></section></div>
+  return <div className="login-screen"><Watermark/><section className="login-card"><div className="brand large"><div className="brand-mark"><Trophy size={26}/></div><div><b>Zambranada Mundial 2026</b><span>Quiniela privada · Mundial 2026</span></div></div><form onSubmit={submit}><label>Nombre del participante<input value={name} onChange={e=>setName(e.target.value)} placeholder="Ej. Gregory Zambrano"/></label><label>Clave única<input value={key} onChange={e=>setKey(e.target.value)} placeholder="Código personal"/></label>{err && <p className="error">{err}</p>}<button className="primary">Ingresar / Registrar</button><p className="hint"><LockKeyhole size={14}/> Demo administrador: nombre admin, clave ADMIN2026!</p></form></section></div>
 }
 function PredictionView({matches,predictions,activeGroup,setActiveGroup,setScore,persist,canConfirm}){
   const groupMatches = matches.filter(m=>m.groupId===activeGroup);
@@ -109,6 +109,9 @@ function AdminView({matches}){
 function Watermark() {
   return (
     <div className="watermark-layer" aria-hidden="true">
+      <div className="watermark-orb watermark-orb-one" />
+      <div className="watermark-orb watermark-orb-two" />
+
       <div className="watermark-word watermark-word-main">Zambranada</div>
       <div className="watermark-word watermark-word-side">Zambranada</div>
 

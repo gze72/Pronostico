@@ -23,4 +23,14 @@ npm run dev
 - Cada grupo cambia visualmente a estado completado cuando todos sus partidos tienen marcador.
 - Reportes: usuario normal ve solo su pronóstico; admin ve todos los participantes y puede consultar el detalle.
 - La llave eliminatoria está parametrizada en `src/lib/worldcupData.js` para ajustar cualquier cambio oficial de FIFA sin rediseñar la app.
-"# Pronostico" 
+
+
+## Actualización visual Zambranada
+
+Esta versión incluye un paquete de Look & Feel premium:
+
+- Marca de agua `Zambranada` integrada al fondo y al menú lateral.
+- Mantiene la copa/balón como elemento visual sutil.
+- Tarjetas, botones, tablas y navegación con estilo glassmorphism minimalista.
+- Login más elegante y transiciones suaves.
+- Diseño responsive para móvil, tablet y escritorio.
