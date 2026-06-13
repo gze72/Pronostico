@@ -1056,3 +1056,143 @@ input:focus-visible{
   font-weight: 850;
   vertical-align: middle;
 }
+
+/* ===== Fix ADMIN Score real + responsive móvil ===== */
+
+.admin-only-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #111411;
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: .08em;
+  font-weight: 850;
+  vertical-align: middle;
+}
+
+.admin-layout {
+  align-items: start;
+}
+
+.admin-layout > .panel {
+  min-width: 0;
+}
+
+.result-admin {
+  width: 100%;
+}
+
+.real-admin-list {
+  width: 100%;
+}
+
+.real-admin-row {
+  min-width: 0;
+}
+
+.real-admin-row b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media(max-width: 1100px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-layout > .panel:first-child {
+    order: 1;
+  }
+
+  .admin-layout > .panel:last-child {
+    order: 2;
+  }
+}
+
+@media(max-width: 760px) {
+  .admin-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .participant-list {
+    max-height: 34vh;
+    overflow: auto;
+    padding-right: 4px;
+  }
+
+  .admin-detail-head {
+    gap: 10px;
+  }
+
+  .admin-detail-head p {
+    word-break: break-word;
+  }
+
+  .result-admin {
+    border-radius: 18px;
+  }
+
+  .result-admin summary {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(12px);
+  }
+
+  .real-admin-list {
+    max-height: 58vh;
+  }
+
+  .real-admin-row {
+    grid-template-columns: 44px 1fr 48px 8px 48px;
+    gap: 8px;
+    align-items: start;
+    padding: 10px;
+  }
+
+  .real-admin-row > span:first-child {
+    grid-row: 1 / span 2;
+  }
+
+  .real-admin-row b {
+    grid-column: 2 / -1;
+    white-space: normal;
+    line-height: 1.35;
+  }
+
+  .real-admin-row input {
+    width: 100%;
+    min-width: 48px;
+  }
+
+  .real-admin-row button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media(max-width: 520px) {
+  .admin-layout .panel {
+    padding: 16px;
+  }
+
+  .participant-list {
+    max-height: 30vh;
+  }
+
+  .real-admin-row {
+    grid-template-columns: 42px 1fr 46px 8px 46px;
+    padding: 10px;
+  }
+
+  .admin-title-row {
+    gap: 10px;
+  }
+}

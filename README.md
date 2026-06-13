@@ -150,3 +150,14 @@ La actualización restringe el registro manual del Score real:
 - El guardado manual se realiza mediante la Edge Function `admin-save-real-score`.
 - `admin-save-real-score` valida que el participante tenga `role = 'admin'` antes de actualizar resultados.
 - Después de guardar un resultado, se ejecuta `recalculate_phase1_scores()` automáticamente.
+
+
+## Corrección guardado Score real ADMIN
+
+Se corrigió el guardado del Score real para que ya no intente escribir directamente en `match_results` desde el cliente. Ahora:
+
+- El frontend llama a la Edge Function `admin-save-real-score`.
+- La función valida que el participante tenga `role = 'admin'`.
+- La función guarda el resultado usando service role.
+- Luego ejecuta `recalculate_phase1_scores()`.
+- En móvil, el panel de administración se reordena verticalmente para mostrar lista, detalle y carga de score real.
