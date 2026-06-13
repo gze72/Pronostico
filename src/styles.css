@@ -6,3 +6,159 @@
 .status-pill.draft{color:#9a6b1d;background:#fff7e6;border-color:#e4c682}
 .status-pill.confirmed{color:#2f6f49;background:#edf8f1;border-color:#9bc7a9}
 .status-pill.empty{color:#6f6a60}
+
+/* ===== Look & Feel - Watermark Zambranada ===== */
+
+body {
+  background:
+    radial-gradient(circle at top right, #fff 0, #f8f5ef 35%, #efe8dc 100%);
+}
+
+.sidebar {
+  background: linear-gradient(180deg, rgba(18, 20, 18, 0.96), rgba(23, 25, 23, 0.92));
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.group-rail,
+.panel {
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(20px) saturate(125%);
+}
+
+.topbar h1 {
+  letter-spacing: -0.05em;
+}
+
+.brand b,
+.topbar h1,
+.panel h2,
+.panel h3 {
+  text-rendering: geometricPrecision;
+}
+
+.watermark-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.watermark-icon {
+  position: absolute;
+  right: 2vw;
+  bottom: 1vh;
+  width: min(34vw, 420px);
+  opacity: 0.045;
+}
+
+.watermark-icon svg {
+  width: 100%;
+  height: auto;
+  fill: #111;
+}
+
+.watermark-word {
+  position: absolute;
+  user-select: none;
+  white-space: nowrap;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+}
+
+.watermark-word-main {
+  right: -1.5rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  font-size: clamp(72px, 9vw, 150px);
+  color: rgba(23, 23, 23, 0.07);
+}
+
+.watermark-word-side {
+  left: -1.5rem;
+  bottom: 2.5rem;
+  transform: rotate(-90deg);
+  transform-origin: left bottom;
+  font-size: clamp(56px, 7vw, 110px);
+  color: rgba(185, 154, 86, 0.14);
+}
+
+.sidebar::after {
+  content: "Zambranada";
+  position: absolute;
+  left: 8px;
+  bottom: 34px;
+  transform: rotate(-90deg);
+  transform-origin: left bottom;
+  font-size: 70px;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  color: rgba(255, 255, 255, 0.13);
+  pointer-events: none;
+}
+
+.sidebar nav button.active {
+  background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.panel,
+.group-rail,
+.login-card {
+  box-shadow: 0 28px 70px rgba(31, 28, 22, 0.10);
+}
+
+.match-card,
+.report-card,
+.participant-list button,
+.standings,
+.ghost,
+.progress-pill,
+.status-pill {
+  transition: all 0.22s ease;
+}
+
+.match-card:hover,
+.report-card:hover,
+.participant-list button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.06);
+}
+
+.ghost:hover {
+  background: #faf7f1;
+  border-color: #d9c8a0;
+}
+
+.progress-pill,
+.status-pill {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(12px);
+}
+
+@media (max-width: 760px) {
+  .watermark-word-main {
+    right: -2rem;
+    font-size: clamp(56px, 12vw, 90px);
+    opacity: 0.9;
+  }
+
+  .watermark-word-side {
+    font-size: clamp(40px, 8vw, 70px);
+    left: -1.2rem;
+  }
+
+  .sidebar::after {
+    font-size: 48px;
+    left: 0;
+    bottom: 26px;
+  }
+
+  .watermark-icon {
+    width: min(52vw, 250px);
+    bottom: 3vh;
+    right: 3vw;
+  }
+}

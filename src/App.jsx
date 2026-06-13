@@ -106,5 +106,23 @@ function AdminView({matches}){
 
   const detail=selected?.forecast?.predictions || {};
   return <section className="admin-layout"><div className="panel"><h2><Users/> Participantes registrados</h2><div className="participant-list">{rows.map(r=><button key={r.id} onClick={()=>setSelected(r)} className={selected?.id===r.id?'selected':''}><b>{r.name}</b><span>{r.role} · {r.forecast?.confirmed ? 'Confirmado' : r.forecast?.status === 'draft' ? 'Borrador' : 'Sin pronóstico'}</span></button>)}</div></div><div className="panel"><h2>Detalle</h2>{!selected ? <p className="muted">Seleccione un participante para consultar sus pronósticos.</p> : <><div className="admin-detail-head"><p><b>{selected.name}</b> · clave: {selected.uniqueKey}</p>{selected.role !== 'admin' && <button className="danger" disabled={busy} onClick={removeSelected}>Eliminar usuario y pronóstico</button>}</div>{message && <p className="admin-message">{message}</p>}<div className="report-groups compact">{GROUPS.map(g=><div className="report-card" key={g.id}><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,detail)}/></div>)}</div></>}</div></section> }
-function Watermark(){ return <div className="watermark" aria-hidden="true"><svg viewBox="0 0 280 280"><path d="M112 36h56c-2 46-8 76-28 95-20-19-26-49-28-95Z"/><path d="M83 48c-30 2-46 14-47 34-1 27 25 48 62 55l5-23c-27-4-43-17-42-31 1-8 9-12 25-13l-3-22Zm114 0 3 22c16 1 24 5 25 13 1 14-15 27-42 31l5 23c37-7 63-28 62-55-1-20-17-32-53-34Z"/><path d="M126 129h28v54h-28z"/><path d="M91 205h98v25H91z"/><circle cx="204" cy="198" r="38"/><path d="m184 190 20-14 22 14-8 25h-28z"/></svg></div> }
+function Watermark() {
+  return (
+    <div className="watermark-layer" aria-hidden="true">
+      <div className="watermark-word watermark-word-main">Zambranada</div>
+      <div className="watermark-word watermark-word-side">Zambranada</div>
+
+      <div className="watermark-icon">
+        <svg viewBox="0 0 280 280">
+          <path d="M112 36h56c-2 46-8 76-28 95-20-19-26-49-28-95Z" />
+          <path d="M83 48c-30 2-46 14-47 34-1 27 25 48 62 55l5-23c-27-4-43-17-42-31 1-8 9-12 25-13l-3-22Zm114 0 3 22c16 1 24 5 25 13 1 14-15 27-42 31l5 23c37-7 63-28 62-55-1-20-17-32-53-34Z" />
+          <path d="M126 129h28v54h-28z" />
+          <path d="M91 205h98v25H91z" />
+          <circle cx="204" cy="198" r="38" />
+          <path d="m184 190 20-14 22 14-8 25h-28z" />
+        </svg>
+      </div>
+    </div>
+  );
+}
 export default App;
