@@ -34,3 +34,8 @@ Esta versión incluye un paquete de Look & Feel premium:
 - Tarjetas, botones, tablas y navegación con estilo glassmorphism minimalista.
 - Login más elegante y transiciones suaves.
 - Diseño responsive para móvil, tablet y escritorio.
+
+
+### Seguridad visual del login
+
+Se retiró del formulario público la referencia visible a las credenciales del administrador.
