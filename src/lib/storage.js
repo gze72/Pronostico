@@ -270,3 +270,20 @@ export async function deleteParticipantAndForecast(participantId){
   saveLocal(s);
   return true;
 }
+
+
+export async function syncResultsAndScores(){
+  if (!supabase) return { ok:false, message:'Modo demo local: sincronización automática no disponible.' };
+
+  const { data, error } = await supabase.functions.invoke('sync-worldcup-results', {
+    body: { trigger: 'app-login' }
+  });
+
+  if (error) {
+    console.warn('No se pudo sincronizar resultados automáticamente:', error.message);
+    return { ok:false, message:error.message };
+  }
+
+  return data;
+}
+

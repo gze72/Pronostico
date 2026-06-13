@@ -995,3 +995,48 @@ input:focus-visible{
     grid-column: span 2;
   }
 }
+
+/* ===== Sincronización automática de resultados ===== */
+
+.sync-pill {
+  max-width: 260px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.78);
+  border: 1px solid rgba(231,222,208,.88);
+  box-shadow: var(--shadow-soft);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.admin-title-row h2 {
+  margin: 0;
+}
+
+@media(max-width:760px) {
+  .sync-pill {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .admin-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-title-row .ghost {
+    width: 100%;
+  }
+}

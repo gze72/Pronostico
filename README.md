@@ -77,3 +77,37 @@ Esta versión agrega:
   - `participant_scores`
 
 Nota técnica: la app queda lista para alimentar `match_results` desde una función backend/Edge Function conectada a una fuente oficial. Mientras se configure esa integración, el administrador puede registrar el score real desde el panel de administración.
+
+
+## Sincronización automática de resultados
+
+La aplicación llama a la Supabase Edge Function `sync-worldcup-results` cada vez que se carga la APP.
+
+Flujo:
+
+1. La APP invoca `sync-worldcup-results`.
+2. La función consulta `RESULTS_PUBLIC_JSON_URL`, si está configurada.
+3. Actualiza `match_results`.
+4. Ejecuta `recalculate_phase1_scores()`.
+5. La APP vuelve a leer `match_results` y muestra `Score real`, check de ganador, check de marcador exacto y puntos.
+
+Formato esperado para `RESULTS_PUBLIC_JSON_URL`:
+
+```json
+[
+  { "match_id": "A1", "home_goals": 2, "away_goals": 0, "status": "finished" },
+  { "match_id": "A2", "home_goals": 2, "away_goals": 1, "status": "finished" }
+]
+```
+
+También acepta:
+
+```json
+{
+  "results": [
+    { "matchId": "A1", "homeGoals": 2, "awayGoals": 0, "status": "finished" }
+  ]
+}
+```
+
+Nota: FIFA no publica un endpoint público estable y documentado para consumo frontend. Por eso la integración se hace por backend/Edge Function, que puede apuntar a una fuente pública, API oficial/licenciada o feed JSON propio.
