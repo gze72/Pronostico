@@ -111,3 +111,42 @@ También acepta:
 ```
 
 Nota: FIFA no publica un endpoint público estable y documentado para consumo frontend. Por eso la integración se hace por backend/Edge Function, que puede apuntar a una fuente pública, API oficial/licenciada o feed JSON propio.
+
+
+## Adaptador WC2026 API
+
+La Edge Function `sync-worldcup-results` soporta dos fuentes:
+
+1. `RESULTS_PUBLIC_JSON_URL`
+2. `WC2026_API_KEY`
+
+Si se configura `WC2026_API_KEY`, la función consulta:
+
+```bash
+https://api.wc2026api.com/matches
+Authorization: Bearer <WC2026_API_KEY>
+```
+
+La función usa `match_number` para mapear el partido externo al identificador interno de la app (`A1`, `A2`, `F1`, etc.). Por ejemplo:
+
+- `match_number: 11` se mapea a `F1`, que en la app corresponde a Países Bajos vs Japón.
+
+Para actualizar el secreto en Supabase:
+
+```bash
+supabase secrets set WC2026_API_KEY=tu_api_key_real --project-ref faxdcmdnnsxsvfisrygx
+```
+
+No colocar la API key en `.env` de Vercel ni en el frontend.
+
+
+## Score real solo administrador
+
+La actualización restringe el registro manual del Score real:
+
+- Los usuarios normales solo pueden consultar `Score real`, checks y puntaje.
+- El panel de carga manual de resultados solo aparece en Administración.
+- La escritura directa a `match_results` desde cliente anónimo queda bloqueada por RLS.
+- El guardado manual se realiza mediante la Edge Function `admin-save-real-score`.
+- `admin-save-real-score` valida que el participante tenga `role = 'admin'` antes de actualizar resultados.
+- Después de guardar un resultado, se ejecuta `recalculate_phase1_scores()` automáticamente.

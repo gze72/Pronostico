@@ -154,27 +154,33 @@ export async function getRealScores(){
   return loadLocal().matchResults || {};
 }
 
-export async function saveRealScore(matchId, homeGoals, awayGoals, status='finished'){
+export async function saveRealScore(adminParticipantId, matchId, homeGoals, awayGoals, status='finished'){
+  if (!adminParticipantId) throw new Error('Solo el administrador puede registrar Score real.');
   if (!matchId) throw new Error('Partido requerido.');
 
-  const parsedHome = homeGoals === '' || homeGoals == null ? null : Number(homeGoals);
-  const parsedAway = awayGoals === '' || awayGoals == null ? null : Number(awayGoals);
-
   if (supabase) {
-    const { error } = await supabase.from('match_results').upsert({
-      match_id: matchId,
-      home_goals: parsedHome,
-      away_goals: parsedAway,
-      status,
-      source: 'manual-admin',
-      updated_at: new Date().toISOString()
-    }, { onConflict:'match_id' });
+    const { data, error } = await supabase.functions.invoke('admin-save-real-score', {
+      body: {
+        adminParticipantId,
+        matchId,
+        homeGoals,
+        awayGoals,
+        status
+      }
+    });
 
     if (error) throw error;
+    if (data?.ok === false) throw new Error(data.error || 'No se pudo guardar el Score real.');
     return true;
   }
 
   const s = loadLocal();
+  const admin = s.participants.find(p => p.id === adminParticipantId);
+  if (!admin || admin.role !== 'admin') throw new Error('Solo el administrador puede registrar Score real.');
+
+  const parsedHome = homeGoals === '' || homeGoals == null ? null : Number(homeGoals);
+  const parsedAway = awayGoals === '' || awayGoals == null ? null : Number(awayGoals);
+
   s.matchResults = s.matchResults || {};
   s.matchResults[matchId] = {
     matchId,

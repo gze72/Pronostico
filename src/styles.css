@@ -1040,3 +1040,19 @@ input:focus-visible{
     width: 100%;
   }
 }
+
+/* ===== Restricción Score real solo ADMIN ===== */
+
+.admin-only-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #111411;
+  color: #fff;
+  font-size: 10px;
+  letter-spacing: .08em;
+  font-weight: 850;
+  vertical-align: middle;
+}
