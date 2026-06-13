@@ -14,6 +14,7 @@ function App(){
   const [sidebar,setSidebar] = useState(false);
   const [toast,setToast] = useState('');
   const [forecastStatus,setForecastStatus] = useState('empty');
+  const [showPrizePopup,setShowPrizePopup] = useState(false);
   useEffect(()=>{ getMatches().then(setMatches); },[]);
   useEffect(()=>{ if(participant) getForecast(participant.id).then(f=>{ setPredictions(f?.predictions || {}); setForecastStatus(f?.status || (f?.confirmed ? 'confirmed' : 'empty')); }); },[participant]);
   const completedCount = GROUPS.filter(g=>groupCompleted(g.id,matches,predictions)).length;
@@ -26,6 +27,7 @@ function App(){
     try {
       await saveForecast(participant.id, predictions, confirmed);
       setForecastStatus(confirmed ? 'confirmed' : 'draft');
+      if (confirmed) setShowPrizePopup(true);
       setToast(confirmed ? 'Pronóstico confirmado y registrado.' : 'Borrador guardado en Supabase. Puede salir y volver sin perderlo.');
     } catch (ex) {
       setToast(ex.message || 'No se pudo guardar el pronóstico.');
@@ -50,9 +52,29 @@ function App(){
       {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions}/>} 
       {view==='admin' && participant.role === 'admin' && <AdminView matches={matches}/>} 
       {toast && <div className="toast">{toast}</div>}
+      {showPrizePopup && <PrizePopup onClose={() => setShowPrizePopup(false)} />}
     </main>
   </div>
 }
+
+function PrizePopup({ onClose }) {
+  return (
+    <div className="prize-overlay" role="dialog" aria-modal="true" aria-labelledby="prize-title">
+      <div className="prize-card">
+        <div className="prize-sparkles">🎉 ⚽ 🏆 😎</div>
+        <h2 id="prize-title">¡Congratulaciones!</h2>
+        <p>
+          Estás participando por los <strong>$30,00</strong> si aciertas el <strong>80%</strong> de los clasificados a la 2da fase.
+        </p>
+        <p className="prize-note">
+          Sorteo entre quienes acierten. Ya saben… 😉😄⚽
+        </p>
+        <button className="primary prize-button" onClick={onClose}>¡Entendido!</button>
+      </div>
+    </div>
+  );
+}
+
 function Login({onLogin}){
   const [name,setName] = useState(''); const [key,setKey] = useState(''); const [err,setErr] = useState('');
   async function submit(e){ e.preventDefault(); try { setErr(''); const p = await loginOrCreateParticipant(name, key); onLogin(p); } catch(ex){ setErr(ex.message); } }

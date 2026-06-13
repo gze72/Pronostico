@@ -605,3 +605,135 @@ input:focus-visible{
     opacity:.8;
   }
 }
+
+/* ===== Popup Premio Zambranada ===== */
+
+.prize-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,.22), transparent 38%),
+    rgba(17, 20, 17, .48);
+  backdrop-filter: blur(10px);
+  animation: prizeFadeIn .22s ease both;
+}
+
+.prize-card {
+  width: min(520px, 100%);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  border-radius: 34px;
+  padding: 34px 30px 30px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(234, 217, 181, .48), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,250,241,.92));
+  border: 1px solid rgba(231, 222, 208, .95);
+  box-shadow:
+    0 38px 110px rgba(17,20,17,.28),
+    inset 0 1px 0 rgba(255,255,255,.8);
+  animation: prizePopIn .32s cubic-bezier(.2,.9,.2,1) both;
+}
+
+.prize-card::before {
+  content: "Zambranada";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  font-size: clamp(58px, 12vw, 120px);
+  font-weight: 880;
+  letter-spacing: -.085em;
+  color: rgba(184,149,75,.075);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.prize-sparkles,
+.prize-card h2,
+.prize-card p,
+.prize-button {
+  position: relative;
+  z-index: 1;
+}
+
+.prize-sparkles {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(231,222,208,.9);
+  box-shadow: 0 14px 34px rgba(35,30,21,.08);
+  font-size: 24px;
+}
+
+.prize-card h2 {
+  margin: 0 0 12px;
+  font-size: clamp(34px, 5vw, 52px);
+  line-height: .95;
+  font-weight: 840;
+  letter-spacing: -.07em;
+  color: var(--ink);
+}
+
+.prize-card p {
+  margin: 0 auto 12px;
+  max-width: 420px;
+  color: #514a40;
+  font-size: 17px;
+  line-height: 1.48;
+}
+
+.prize-card strong {
+  color: #151513;
+  font-weight: 860;
+}
+
+.prize-note {
+  color: var(--gold-dark) !important;
+  font-weight: 760;
+}
+
+.prize-button {
+  margin-top: 8px;
+  min-width: 170px;
+}
+
+@keyframes prizeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes prizePopIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media(max-width: 520px) {
+  .prize-card {
+    padding: 30px 22px 24px;
+    border-radius: 28px;
+  }
+
+  .prize-card p {
+    font-size: 15px;
+  }
+
+  .prize-sparkles {
+    font-size: 22px;
+  }
+}

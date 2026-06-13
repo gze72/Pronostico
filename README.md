@@ -44,3 +44,8 @@ Esta versión integra simultáneamente:
 - Login sin mostrar credenciales ni claves de administrador.
 - Persistencia de borradores en Supabase.
 - Eliminación de usuario y pronósticos desde administración.
+
+
+## Popup de premio
+
+Al confirmar el pronóstico completo, la aplicación muestra un popup informativo indicando que el participante entra al sorteo por $30,00 si acierta el 80% de clasificados a la segunda fase.
