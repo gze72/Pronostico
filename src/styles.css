@@ -737,3 +737,18 @@ input:focus-visible{
     font-size: 22px;
   }
 }
+
+/* ===== Corrección visual llave proyectada ===== */
+
+.qualified-summary {
+  margin: -4px 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.bracket-list div.bracket-warning {
+  border-color: rgba(180, 43, 43, .45);
+  background: #fff4f4;
+}

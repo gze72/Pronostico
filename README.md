@@ -49,3 +49,12 @@ Esta versión integra simultáneamente:
 ## Popup de premio
 
 Al confirmar el pronóstico completo, la aplicación muestra un popup informativo indicando que el participante entra al sorteo por $30,00 si acierta el 80% de clasificados a la segunda fase.
+
+
+## Corrección llave proyectada
+
+La llave de dieciseisavos/Round of 32 ahora se genera con 32 clasificados únicos:
+
+- 1.º y 2.º de cada uno de los 12 grupos.
+- 8 mejores terceros de todos los grupos.
+- Evita repetir países en los cruces proyectados.
