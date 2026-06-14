@@ -171,3 +171,22 @@ La lista de `Participantes registrados` ahora calcula los puntos en tiempo real 
 - Resultados reales cargados en `match_results`.
 
 Esto evita diferencias visuales entre la lista y el detalle cuando `participant_scores` todavía no se ha actualizado o tiene datos persistidos previos.
+
+
+## Puntaje acertado vs puntaje posible
+
+El puntaje ahora se muestra como proporción:
+
+```text
+10 / 14 pts
+```
+
+Donde:
+
+- `10` = puntos acertados por el participante.
+- `14` = puntos posibles según partidos con Score real cargado.
+- Cada partido evaluado vale máximo 2 puntos:
+  - 1 punto por ganador/empate acertado.
+  - 1 punto por marcador exacto.
+
+Ejemplo: si hay 7 partidos jugados/evaluados, el máximo posible es `7 × 2 = 14`.

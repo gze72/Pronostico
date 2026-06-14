@@ -1196,3 +1196,72 @@ input:focus-visible{
     gap: 10px;
   }
 }
+
+/* ===== Puntaje acertado vs puntaje posible ===== */
+
+.score-ratio {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+  color: var(--ink);
+}
+
+.score-ratio strong {
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -.06em;
+  font-weight: 860;
+}
+
+.score-ratio span {
+  color: var(--gold-dark);
+  font-weight: 850;
+  font-size: 20px;
+}
+
+.score-ratio small {
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.score-ratio em {
+  flex-basis: 100%;
+  margin-top: 4px;
+  font-style: normal;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.score-ratio.compact {
+  gap: 3px;
+}
+
+.score-ratio.compact strong {
+  color: #fff;
+  font-size: 22px;
+}
+
+.score-ratio.compact span {
+  color: rgba(255,255,255,.72);
+  font-size: 16px;
+}
+
+.score-ratio.compact small {
+  color: rgba(255,255,255,.68);
+  font-size: 10px;
+}
+
+.score-mini {
+  grid-template-columns: 1fr !important;
+  gap: 4px;
+}
+
+.score-mini > small {
+  color: rgba(255,255,255,.62);
+  font-size: 11px;
+  font-weight: 700;
+}
