@@ -161,3 +161,13 @@ Se corrigió el guardado del Score real para que ya no intente escribir directam
 - La función guarda el resultado usando service role.
 - Luego ejecuta `recalculate_phase1_scores()`.
 - En móvil, el panel de administración se reordena verticalmente para mostrar lista, detalle y carga de score real.
+
+
+## Corrección visual de puntos en Administración
+
+La lista de `Participantes registrados` ahora calcula los puntos en tiempo real usando:
+
+- Pronóstico del participante.
+- Resultados reales cargados en `match_results`.
+
+Esto evita diferencias visuales entre la lista y el detalle cuando `participant_scores` todavía no se ha actualizado o tiene datos persistidos previos.
