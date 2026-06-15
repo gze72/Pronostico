@@ -190,3 +190,27 @@ Donde:
   - 1 punto por marcador exacto.
 
 Ejemplo: si hay 7 partidos jugados/evaluados, el máximo posible es `7 × 2 = 14`.
+
+
+## Paquete consolidado desde versión puntaje 10/14
+
+Este paquete parte de la última versión operativa `actualización puntaje 10/14` e integra, en una sola base, las tres funcionalidades posteriores:
+
+1. Controles administrativos de fase:
+   - Inhabilitar/habilitar registro de nuevos usuarios.
+   - Bloquear todos los pronósticos como `CONFIRMADOS`.
+   - Habilitar nuevamente los pronósticos para edición.
+   - Edge Function `admin-phase-control`.
+   - Tablas `app_settings` y `admin_actions`.
+
+2. Clasificación real por grupo:
+   - Tarjeta `Real · Orden de Clasificación`.
+   - Calculada con `match_results`.
+   - Muestra avance, por ejemplo `2/6 partidos reales`.
+
+3. Close Sidebar:
+   - Botón `Cerrar` dentro del sidebar.
+   - Botón flotante `Menú`.
+   - Comportamiento responsive en web y móvil.
+
+Este paquete corrige el problema de imports duplicados donde `getAppSettings` y `adminPhaseControl` aparecían por error dentro de `lucide-react`.

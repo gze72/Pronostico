@@ -229,3 +229,53 @@ export function calculateParticipantScore(matches, predictions, realScores) {
     return acc;
   }, { winnerPoints: 0, scorePoints: 0, totalPoints: 0, evaluatedMatches: 0 });
 }
+
+
+export function calculateRealStandings(groupId, matches, realScores) {
+  const group = GROUPS.find(g => g.id === groupId);
+  const table = Object.fromEntries(
+    group.teams.map(([code]) => [code, { code, groupId, pj:0, pg:0, pe:0, pp:0, gf:0, gc:0, dg:0, pts:0 }])
+  );
+
+  matches.filter(m => m.groupId === groupId).forEach(m => {
+    const r = realScores?.[m.id];
+    if (!r || r.homeGoals == null || r.awayGoals == null) return;
+
+    const h = Number(r.homeGoals);
+    const a = Number(r.awayGoals);
+    if (Number.isNaN(h) || Number.isNaN(a)) return;
+
+    table[m.home].pj++;
+    table[m.away].pj++;
+    table[m.home].gf += h;
+    table[m.home].gc += a;
+    table[m.away].gf += a;
+    table[m.away].gc += h;
+
+    if (h > a) {
+      table[m.home].pg++;
+      table[m.away].pp++;
+      table[m.home].pts += 3;
+    } else if (h < a) {
+      table[m.away].pg++;
+      table[m.home].pp++;
+      table[m.away].pts += 3;
+    } else {
+      table[m.home].pe++;
+      table[m.away].pe++;
+      table[m.home].pts++;
+      table[m.away].pts++;
+    }
+  });
+
+  Object.values(table).forEach(t => { t.dg = t.gf - t.gc; });
+
+  return Object.values(table).sort(
+    (x,y) =>
+      y.pts - x.pts ||
+      y.dg - x.dg ||
+      y.gf - x.gf ||
+      TEAMS[x.code].name.localeCompare(TEAMS[y.code].name)
+  );
+}
+

@@ -55,6 +55,9 @@ export async function loginOrCreateParticipant(name, uniqueKey){
 
     if (error) throw error;
     if (existing) return { id: existing.id, name: existing.name, uniqueKey: existing.unique_key, role: existing.role };
+    const settings = await getAppSettings();
+    const isAdminKey = uniqueKey === 'ADMIN2026!';
+    if (!settings.registrationEnabled && !isAdminKey) throw new Error('El registro de nuevos participantes se encuentra cerrado por el administrador.');
 
     const { data, error: insErr } = await supabase
       .from('participants')
@@ -245,6 +248,92 @@ export async function listParticipantsWithForecasts(){
     score:s.participantScores?.[p.id] || { totalPoints:0, winnerPoints:0, scorePoints:0, evaluatedMatches:0 }
   }));
 }
+
+
+export async function getAppSettings(){
+  const defaults = {
+    registrationEnabled: true,
+    phase1PredictionsLocked: false
+  };
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('key,value');
+
+    if (error) {
+      console.warn('No se pudieron leer app_settings:', error.message);
+      return defaults;
+    }
+
+    const map = Object.fromEntries((data || []).map(row => [row.key, row.value]));
+    return {
+      registrationEnabled: map.registration_enabled ?? true,
+      phase1PredictionsLocked: map.phase1_predictions_locked ?? false
+    };
+  }
+
+  const s = loadLocal();
+  s.settings = s.settings || defaults;
+  saveLocal(s);
+  return s.settings;
+}
+
+export async function adminPhaseControl(adminParticipantId, action, value){
+  if (!adminParticipantId) throw new Error('Administrador requerido.');
+
+  if (supabase) {
+    const { data, error } = await supabase.functions.invoke('admin-phase-control', {
+      body: { adminParticipantId, action, value }
+    });
+
+    if (error) throw error;
+    if (data?.ok === false) throw new Error(data.error || 'No se pudo ejecutar la acción administrativa.');
+    return data;
+  }
+
+  const s = loadLocal();
+  const admin = s.participants.find(p => p.id === adminParticipantId);
+  if (!admin || admin.role !== 'admin') throw new Error('Solo el rol administrador puede ejecutar esta acción.');
+
+  s.settings = s.settings || {
+    registrationEnabled: true,
+    phase1PredictionsLocked: false
+  };
+
+  if (action === 'set_registration_enabled') {
+    s.settings.registrationEnabled = Boolean(value);
+    saveLocal(s);
+    return { ok:true, message: Boolean(value) ? 'Registro de nuevos usuarios habilitado' : 'Registro de nuevos usuarios inhabilitado' };
+  }
+
+  if (action === 'lock_all_predictions') {
+    s.settings.phase1PredictionsLocked = true;
+    s.forecasts = s.forecasts.map(f => ({
+      ...f,
+      confirmed:true,
+      status:'confirmed',
+      confirmedAt:f.confirmedAt || new Date().toISOString()
+    }));
+    saveLocal(s);
+    return { ok:true, message:'Todos los pronósticos fueron bloqueados como CONFIRMADOS' };
+  }
+
+  if (action === 'unlock_all_predictions') {
+    s.settings.phase1PredictionsLocked = false;
+    s.forecasts = s.forecasts.map(f => ({
+      ...f,
+      confirmed:false,
+      status:'draft',
+      confirmedAt:null
+    }));
+    saveLocal(s);
+    return { ok:true, message:'Todos los usuarios fueron habilitados para pronosticar nuevamente' };
+  }
+
+  throw new Error('Acción administrativa no reconocida.');
+}
+
 
 export async function deleteParticipantAndForecast(participantId){
   if (!participantId) throw new Error('Seleccione un participante.');

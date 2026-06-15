@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Trophy, Users, BarChart3, LogOut, ShieldCheck, CheckCircle2, LockKeyhole, Menu, X, Save } from 'lucide-react';
+import { Trophy, Users, BarChart3, LogOut, ShieldCheck, CheckCircle2, LockKeyhole, Menu, X, Save, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { GROUPS, TEAMS } from './lib/worldcupData';
-import { allGroupsCompleted, buildQualified, buildRoundOf32, calculateParticipantScore, calculateStandings, evaluatePrediction, groupCompleted, winnerLabel } from './lib/scoring';
-import { deleteParticipantAndForecast, getForecast, getMatches, getRealScores, listParticipantsWithForecasts, loginOrCreateParticipant, saveForecast, saveParticipantScore, saveRealScore, syncResultsAndScores, supabase } from './lib/storage';
+import { allGroupsCompleted, buildQualified, buildRoundOf32, calculateParticipantScore, calculateRealStandings, calculateStandings, evaluatePrediction, groupCompleted, winnerLabel } from './lib/scoring';
+import { adminPhaseControl, deleteParticipantAndForecast, getAppSettings, getForecast, getMatches, getRealScores, listParticipantsWithForecasts, loginOrCreateParticipant, saveForecast, saveParticipantScore, saveRealScore, supabase, syncResultsAndScores } from './lib/storage';
 import './styles.css';
 
 function App(){
@@ -12,15 +12,18 @@ function App(){
   const [predictions,setPredictions] = useState({});
   const [activeGroup,setActiveGroup] = useState('A');
   const [view,setView] = useState('pronostico');
+  const [sidebarOpen,setSidebarOpen] = useState(true);
   const [sidebar,setSidebar] = useState(false);
   const [toast,setToast] = useState('');
   const [forecastStatus,setForecastStatus] = useState('empty');
   const [showPrizePopup,setShowPrizePopup] = useState(false);
+  const [appSettings,setAppSettings] = useState({ registrationEnabled:true, phase1PredictionsLocked:false });
   const [syncStatus,setSyncStatus] = useState('Sincronizando resultados...');
   useEffect(()=>{ 
     async function boot(){
       const loadedMatches = await getMatches();
       setMatches(loadedMatches);
+      setAppSettings(await getAppSettings());
       try {
         const sync = await syncResultsAndScores();
         setSyncStatus(sync?.ok ? 'Resultados sincronizados' : (sync?.message || 'Resultados recalculados con datos existentes'));
@@ -37,12 +40,13 @@ function App(){
   const completedCount = GROUPS.filter(g=>groupCompleted(g.id,matches,predictions)).length;
   const canConfirm = allGroupsCompleted(matches,predictions);
   const setScore = (matchId, field, value) => {
-    if (forecastStatus === 'confirmed') return;
+    if (forecastStatus === 'confirmed' || appSettings.phase1PredictionsLocked) return;
     if (value !== '' && (Number(value) < 0 || Number(value) > 30)) return;
     setPredictions(prev => ({...prev, [matchId]: {...(prev[matchId]||{}), [field]: value}}));
   };
   const persist = async (confirmed=false) => {
     try {
+      if (appSettings.phase1PredictionsLocked) throw new Error('La FASE 1 está bloqueada por el administrador.');
       await saveForecast(participant.id, predictions, confirmed);
       setForecastStatus(confirmed ? 'confirmed' : 'draft');
       if (confirmed) setShowPrizePopup(true);
@@ -66,9 +70,9 @@ function App(){
     </aside>
     <main className="content">
       <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}</button><div><p>Campeonato Mundial de Fútbol 2026 · Zambranada</p><h1>{view==='pronostico'?'Registro de pronóstico (FASE 1)':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className="sync-pill">{syncStatus}</div><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{completedCount}/12 grupos</div></div></header>
-      {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} realScores={realScores} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm} forecastStatus={forecastStatus}/>} 
+      {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} realScores={realScores} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm} forecastStatus={forecastStatus} appSettings={appSettings}/>} 
       {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores}/>} 
-      {view==='admin' && participant.role === 'admin' && <AdminView matches={matches} realScores={realScores} setRealScores={setRealScores} participant={participant}/>} 
+      {view==='admin' && participant.role === 'admin' && <AdminView matches={matches} realScores={realScores} setRealScores={setRealScores} participant={participant} appSettings={appSettings} setAppSettings={setAppSettings}/>} 
       {toast && <div className="toast">{toast}</div>}
       {showPrizePopup && <PrizePopup onClose={() => setShowPrizePopup(false)} />}
     </main>
@@ -98,14 +102,14 @@ function Login({onLogin}){
   async function submit(e){ e.preventDefault(); try { setErr(''); const p = await loginOrCreateParticipant(name, key); onLogin(p); } catch(ex){ setErr(ex.message); } }
   return <div className="login-screen"><Watermark/><section className="login-card"><div className="brand large"><div className="brand-mark"><Trophy size={26}/></div><div><b>Zambranada Mundial 2026</b><span>Quiniela privada · Mundial 2026</span></div></div><form onSubmit={submit}><label>Nombre del participante<input value={name} onChange={e=>setName(e.target.value)} placeholder="Ej. Gregory Zambrano"/></label><label>Clave única<input value={key} onChange={e=>setKey(e.target.value)} placeholder="Código personal"/></label>{err && <p className="error">{err}</p>}<button className="primary">Ingresar / Registrar</button><p className="hint"><LockKeyhole size={14}/> Acceso privado por participante mediante clave única.</p></form></section></div>
 }
-function PredictionView({matches,predictions,realScores,activeGroup,setActiveGroup,setScore,persist,canConfirm,forecastStatus}){
+function PredictionView({matches,predictions,realScores,activeGroup,setActiveGroup,setScore,persist,canConfirm,forecastStatus,appSettings}){
   const groupMatches = matches.filter(m=>m.groupId===activeGroup);
   const standings = calculateStandings(activeGroup,matches,predictions);
   const r32 = canConfirm ? buildRoundOf32(matches,predictions) : [];
   const qualified = canConfirm ? buildQualified(matches,predictions) : null;
-  const locked = forecastStatus === 'confirmed';
+  const locked = forecastStatus === 'confirmed' || appSettings.phase1PredictionsLocked;
 
-  return <div className="prediction-grid"><section className="group-rail">{GROUPS.map(g=>{const done=groupCompleted(g.id,matches,predictions);return <button key={g.id} className={`${activeGroup===g.id?'active':''} ${done?'done':''}`} onClick={()=>setActiveGroup(g.id)}><span>Grupo {g.id}</span>{done && <CheckCircle2/>}</button>})}</section><section className="panel"><div className="panel-head"><div><span>Fase de grupos</span><h2>Grupo {activeGroup}</h2>{locked && <p className="lock-note">Pronóstico confirmado. La FASE 1 quedó bloqueada para edición.</p>}</div><button className="ghost" disabled={locked} onClick={()=>persist(false)}>{locked ? 'Borrador bloqueado' : 'Guardar borrador'}</button></div><div className="matches">{groupMatches.map(m=>{const ev=evaluatePrediction(m.id,predictions,realScores); return <article className="match-card score-card" key={m.id}><Team code={m.home}/><input type="number" min="0" max="30" disabled={locked} value={predictions[m.id]?.homeGoals ?? ''} onChange={e=>setScore(m.id,'homeGoals',e.target.value)} /><span className="colon">:</span><input type="number" min="0" max="30" disabled={locked} value={predictions[m.id]?.awayGoals ?? ''} onChange={e=>setScore(m.id,'awayGoals',e.target.value)} /><Team code={m.away}/><b className="winner">{winnerLabel(m,predictions[m.id])}</b><div className="real-score"><small>Score real</small><span>{formatRealScore(realScores[m.id])}</span></div><div className="hit-box"><small>Ganador</small><b className={ev.winnerHit === null ? 'pending-hit' : ev.winnerHit ? 'hit-ok' : 'hit-bad'}>{hitIcon(ev.winnerHit)}</b></div><div className="hit-box"><small>Score</small><b className={ev.scoreHit === null ? 'pending-hit' : ev.scoreHit ? 'hit-ok' : 'hit-bad'}>{hitIcon(ev.scoreHit)}</b></div></article>})}</div><Standings standings={standings}/><div className="confirm-row"><button className="primary" disabled={!canConfirm || locked} onClick={()=>persist(true)}>{locked ? 'Pronóstico confirmado' : 'Confirmar Pronóstico'}</button>{!canConfirm && <span>Complete los 12 grupos para habilitar la confirmación.</span>}{locked && <span>No se permiten cambios después de confirmar FASE 1.</span>}</div></section><section className="panel slim"><h3>Llave proyectada</h3>{!canConfirm ? <p className="muted">La llave se mostrará al completar toda la fase de grupos.</p> : <><p className="qualified-summary">32 clasificados únicos: 1.º y 2.º de cada grupo + 8 mejores terceros.</p><div className="bracket-list">{r32.map(m=><div key={m.id} className={m.duplicateWarning ? 'bracket-warning' : ''}><small>{m.id}</small><span>{label(m.a)} vs {label(m.b)}</span></div>)}</div>{qualified?.hasDuplicateQualified && <p className="error">Advertencia: se detectaron clasificados duplicados.</p>}</>}</section></div>
+  return <div className="prediction-grid"><section className="group-rail">{GROUPS.map(g=>{const done=groupCompleted(g.id,matches,predictions);return <button key={g.id} className={`${activeGroup===g.id?'active':''} ${done?'done':''}`} onClick={()=>setActiveGroup(g.id)}><span>Grupo {g.id}</span>{done && <CheckCircle2/>}</button>})}</section><section className="panel"><div className="panel-head"><div><span>Fase de grupos</span><h2>Grupo {activeGroup}</h2>{locked && <p className="lock-note">{appSettings.phase1PredictionsLocked ? 'FASE 1 bloqueada por el administrador.' : 'Pronóstico confirmado. La FASE 1 quedó bloqueada para edición.'}</p>}</div><button className="ghost" disabled={locked} onClick={()=>persist(false)}>{locked ? 'Borrador bloqueado' : 'Guardar borrador'}</button></div><div className="matches">{groupMatches.map(m=>{const ev=evaluatePrediction(m.id,predictions,realScores); return <article className="match-card score-card" key={m.id}><Team code={m.home}/><input type="number" min="0" max="30" disabled={locked} value={predictions[m.id]?.homeGoals ?? ''} onChange={e=>setScore(m.id,'homeGoals',e.target.value)} /><span className="colon">:</span><input type="number" min="0" max="30" disabled={locked} value={predictions[m.id]?.awayGoals ?? ''} onChange={e=>setScore(m.id,'awayGoals',e.target.value)} /><Team code={m.away}/><b className="winner">{winnerLabel(m,predictions[m.id])}</b><div className="real-score"><small>Score real</small><span>{formatRealScore(realScores[m.id])}</span></div><div className="hit-box"><small>Ganador</small><b className={ev.winnerHit === null ? 'pending-hit' : ev.winnerHit ? 'hit-ok' : 'hit-bad'}>{hitIcon(ev.winnerHit)}</b></div><div className="hit-box"><small>Score</small><b className={ev.scoreHit === null ? 'pending-hit' : ev.scoreHit ? 'hit-ok' : 'hit-bad'}>{hitIcon(ev.scoreHit)}</b></div></article>})}</div><RealClassification groupId={activeGroup} matches={matches} realScores={realScores}/><Standings standings={standings}/><div className="confirm-row"><button className="primary" disabled={!canConfirm || locked} onClick={()=>persist(true)}>{locked ? 'Pronóstico confirmado' : 'Confirmar Pronóstico'}</button>{!canConfirm && <span>Complete los 12 grupos para habilitar la confirmación.</span>}{locked && <span>No se permiten cambios después de confirmar FASE 1.</span>}</div></section><section className="panel slim"><h3>Llave proyectada</h3>{!canConfirm ? <p className="muted">La llave se mostrará al completar toda la fase de grupos.</p> : <><p className="qualified-summary">32 clasificados únicos: 1.º y 2.º de cada grupo + 8 mejores terceros.</p><div className="bracket-list">{r32.map(m=><div key={m.id} className={m.duplicateWarning ? 'bracket-warning' : ''}><small>{m.id}</small><span>{label(m.a)} vs {label(m.b)}</span></div>)}</div>{qualified?.hasDuplicateQualified && <p className="error">Advertencia: se detectaron clasificados duplicados.</p>}</>}</section></div>
 }
 
 function formatRealScore(real){
@@ -152,6 +156,34 @@ function ScoreRatio({ score, compact=false }) {
   );
 }
 
+
+function RealClassification({ groupId, matches, realScores }) {
+  const standings = calculateRealStandings(groupId, matches, realScores);
+  const evaluated = matches
+    .filter(m => m.groupId === groupId)
+    .filter(m => realScores?.[m.id]?.homeGoals != null && realScores?.[m.id]?.awayGoals != null)
+    .length;
+
+  return (
+    <aside className="real-classification">
+      <div className="real-classification-head">
+        <strong>Real</strong>
+        <span>Orden de Clasificación</span>
+        <small>{evaluated}/6 partidos reales</small>
+      </div>
+      <ol>
+        {standings.map((team, index) => (
+          <li key={team.code} className={index < 2 ? 'qualified-real' : ''}>
+            <b>{index + 1}ro</b>
+            <span>{TEAMS[team.code].name}</span>
+            <em>{team.pts} pts</em>
+          </li>
+        ))}
+      </ol>
+    </aside>
+  );
+}
+
 function Team({code}){ const t=TEAMS[code]; return <div className="team"><span>{t?.flag}</span><b>{t?.name}</b></div> }
 function label(code){ return TEAMS[code] ? `${TEAMS[code].flag} ${TEAMS[code].name}` : code; }
 function Standings({standings}){ return <table className="standings"><thead><tr><th>Pos</th><th>Equipo</th><th>Pts</th><th>DG</th><th>GF</th></tr></thead><tbody>{standings.map((s,i)=><tr key={s.code}><td>{i+1}</td><td>{label(s.code)}</td><td>{s.pts}</td><td>{s.dg}</td><td>{s.gf}</td></tr>)}</tbody></table> }
@@ -159,7 +191,7 @@ function ReportView({participant,matches,predictions,realScores}){
   const score = calculateParticipantScore(matches,predictions,realScores);
   return <section className="panel report"><h2>Consulta de pronóstico</h2><p className="muted">{participant.role==='admin'?'Use Administración para revisar todos los participantes.':'Vista privada de su pronóstico registrado o guardado.'}</p><div className="score-summary"><div><span>Puntos FASE 1</span><ScoreRatio score={score}/></div><div><span>Ganador</span><strong>{score.winnerPoints}</strong></div><div><span>Score exacto</span><strong>{score.scorePoints}</strong></div><div><span>Partidos evaluados</span><strong>{score.evaluatedMatches}</strong></div></div><div className="report-groups">{GROUPS.map(g=><div key={g.id} className="report-card"><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,predictions)}/></div>)}</div></section>
 }
-function AdminView({matches,realScores,setRealScores,participant}){
+function AdminView({matches,realScores,setRealScores,participant,appSettings,setAppSettings}){
   const [rows,setRows]=useState([]);
   const [selected,setSelected]=useState(null);
   const [busy,setBusy]=useState(false);
@@ -189,6 +221,31 @@ function AdminView({matches,realScores,setRealScores,participant}){
   }
 
   useEffect(()=>{ refresh(); },[]);
+
+  async function runPhaseAction(action, value){
+    const labels = {
+      set_registration_enabled: value ? 'habilitar el registro de nuevos usuarios' : 'inhabilitar el registro de nuevos usuarios',
+      lock_all_predictions: 'bloquear todos los pronósticos como CONFIRMADOS',
+      unlock_all_predictions: 'habilitar a todos los usuarios para pronosticar nuevamente'
+    };
+
+    const ok = window.confirm(`¿Confirmar acción administrativa: ${labels[action] || action}?`);
+    if (!ok) return;
+
+    try {
+      setBusy(true);
+      setMessage('');
+      const result = await adminPhaseControl(participant.id, action, value);
+      setAppSettings(await getAppSettings());
+      await refresh();
+      setMessage(result?.message || 'Acción administrativa ejecutada.');
+    } catch (ex) {
+      setMessage(ex.message || 'No se pudo ejecutar la acción administrativa.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
 
   async function removeSelected(){
     if (!selected) return;
@@ -232,7 +289,7 @@ function AdminView({matches,realScores,setRealScores,participant}){
   const detail=selected?.forecast?.predictions || {};
   const selectedScore = selected ? calculateParticipantScore(matches,detail,realScores) : null;
 
-  return <section className="admin-layout"><div className="panel"><h2><Users/> Participantes registrados</h2><div className="participant-list">{rows.map(r=>{const rowScore=calculateParticipantScore(matches,r.forecast?.predictions || {},realScores); return <button key={r.id} onClick={()=>setSelected(r)} className={selected?.id===r.id?'selected':''}><b>{r.name}</b><span>{r.role} · {r.forecast?.confirmed ? 'Confirmado' : r.forecast?.status === 'draft' ? 'Borrador' : 'Sin pronóstico'} · {scoreRatioLabel(rowScore)}</span></button>})}</div></div><div className="panel"><div className="admin-title-row"><h2>Detalle</h2><button className="ghost" disabled={busy} onClick={syncNow}>Recalcular puntajes</button></div>{!selected ? <p className="muted">Seleccione un participante para consultar sus pronósticos.</p> : <><div className="admin-detail-head"><div><p><b>{selected.name}</b> · clave: {selected.uniqueKey}</p>{selectedScore && <p className="muted">Puntos FASE 1: <b>{scoreRatioLabel(selectedScore)}</b> · Ganador: {selectedScore.winnerPoints} · Score: {selectedScore.scorePoints}</p>}</div>{selected.role !== 'admin' && <button className="danger" disabled={busy} onClick={removeSelected}>Eliminar usuario y pronóstico</button>}</div>{message && <p className="admin-message">{message}</p>}<details className="result-admin"><summary>Actualizar Score real FASE 1 <span className="admin-only-badge">Solo ADMIN</span></summary><div className="real-admin-list">{matches.map(m=>{const current=realScores[m.id] || {}; const draft=scoreDraft[m.id] || {}; return <div className="real-admin-row" key={m.id}><span>{m.matchNo}</span><b>{label(m.home)} vs {label(m.away)}</b><input type="number" min="0" max="99" value={draft.homeGoals ?? current.homeGoals ?? ''} onChange={e=>setScoreDraft(prev=>({...prev,[m.id]:{...(prev[m.id]||{}),homeGoals:e.target.value}}))}/><span>:</span><input type="number" min="0" max="99" value={draft.awayGoals ?? current.awayGoals ?? ''} onChange={e=>setScoreDraft(prev=>({...prev,[m.id]:{...(prev[m.id]||{}),awayGoals:e.target.value}}))}/><button className="ghost" onClick={()=>persistRealScore(m.id)}>Guardar</button></div>})}</div></details><div className="report-groups compact">{GROUPS.map(g=><div className="report-card" key={g.id}><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,detail)}/></div>)}</div></>}</div></section>
+  return <section className="admin-layout"><div className="panel admin-controls"><h2><ShieldCheck/> Controles de fase</h2><div className="control-grid"><div><b>Registro de nuevos usuarios</b><span>{appSettings.registrationEnabled ? 'Abierto' : 'Cerrado'}</span></div><button className="ghost" disabled={busy} onClick={()=>runPhaseAction('set_registration_enabled', !appSettings.registrationEnabled)}>{appSettings.registrationEnabled ? 'Inhabilitar registros' : 'Habilitar registros'}</button><div><b>Pronósticos FASE 1</b><span>{appSettings.phase1PredictionsLocked ? 'Bloqueados/confirmados' : 'Habilitados para edición'}</span></div><button className={appSettings.phase1PredictionsLocked ? 'ghost' : 'danger'} disabled={busy} onClick={()=>runPhaseAction(appSettings.phase1PredictionsLocked ? 'unlock_all_predictions' : 'lock_all_predictions')}>{appSettings.phase1PredictionsLocked ? 'Habilitar pronósticos' : 'Bloquear todos'}</button></div><p className="muted">Estas acciones afectan a todos los participantes. El bloqueo masivo coloca los pronósticos existentes en estado CONFIRMADO.</p></div><div className="panel"><h2><Users/> Participantes registrados</h2><div className="participant-list">{rows.map(r=>{const rowScore=calculateParticipantScore(matches,r.forecast?.predictions || {},realScores); return <button key={r.id} onClick={()=>setSelected(r)} className={selected?.id===r.id?'selected':''}><b>{r.name}</b><span>{r.role} · {r.forecast?.confirmed ? 'Confirmado' : r.forecast?.status === 'draft' ? 'Borrador' : 'Sin pronóstico'} · {scoreRatioLabel(rowScore)}</span></button>})}</div></div><div className="panel"><div className="admin-title-row"><h2>Detalle</h2><button className="ghost" disabled={busy} onClick={syncNow}>Recalcular puntajes</button></div>{!selected ? <p className="muted">Seleccione un participante para consultar sus pronósticos.</p> : <><div className="admin-detail-head"><div><p><b>{selected.name}</b> · clave: {selected.uniqueKey}</p>{selectedScore && <p className="muted">Puntos FASE 1: <b>{scoreRatioLabel(selectedScore)}</b> · Ganador: {selectedScore.winnerPoints} · Score: {selectedScore.scorePoints}</p>}</div>{selected.role !== 'admin' && <button className="danger" disabled={busy} onClick={removeSelected}>Eliminar usuario y pronóstico</button>}</div>{message && <p className="admin-message">{message}</p>}<details className="result-admin"><summary>Actualizar Score real FASE 1 <span className="admin-only-badge">Solo ADMIN</span></summary><div className="real-admin-list">{matches.map(m=>{const current=realScores[m.id] || {}; const draft=scoreDraft[m.id] || {}; return <div className="real-admin-row" key={m.id}><span>{m.matchNo}</span><b>{label(m.home)} vs {label(m.away)}</b><input type="number" min="0" max="99" value={draft.homeGoals ?? current.homeGoals ?? ''} onChange={e=>setScoreDraft(prev=>({...prev,[m.id]:{...(prev[m.id]||{}),homeGoals:e.target.value}}))}/><span>:</span><input type="number" min="0" max="99" value={draft.awayGoals ?? current.awayGoals ?? ''} onChange={e=>setScoreDraft(prev=>({...prev,[m.id]:{...(prev[m.id]||{}),awayGoals:e.target.value}}))}/><button className="ghost" onClick={()=>persistRealScore(m.id)}>Guardar</button></div>})}</div></details><div className="report-groups compact">{GROUPS.map(g=><div className="report-card" key={g.id}><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,detail)}/></div>)}</div></>}</div></section>
 }
 function Watermark() {
   return (
