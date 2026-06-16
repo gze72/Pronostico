@@ -262,3 +262,24 @@ Se ajustó el ranking para compartir por WhatsApp u otras apps:
 - Cada participante muestra `puntos + porcentaje`, por ejemplo `26 pts · 81%`.
 - El menú lateral muestra el porcentaje de aciertos junto al puntaje del usuario.
 - La lista de administración muestra también puntos y porcentaje.
+
+
+## Reporte compartido profesional
+
+Se rediseñó el ranking compartido para WhatsApp y otras apps:
+
+- Encabezado sobrio y jerarquizado.
+- Resumen del estado actual:
+  - Partidos evaluados.
+  - Puntaje máximo.
+  - Participantes.
+  - Confirmados.
+  - Líder actual.
+- Ranking compacto por participante:
+  - Posición.
+  - Nombre.
+  - Puntos.
+  - Porcentaje de efectividad.
+  - Estado mediante símbolo.
+- Vista previa antes de compartir.
+- Botón para copiar texto y botón para compartir usando el menú nativo del celular.
