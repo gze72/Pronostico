@@ -1774,3 +1774,34 @@ input:focus-visible{
     display: none !important;
   }
 }
+
+/* ===== Compartir ranking administrador ===== */
+
+.admin-share-actions {
+  display: grid;
+  margin: 10px 0 14px;
+}
+
+.share-ranking-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 16px;
+}
+
+@media(max-width: 760px) {
+  .admin-share-actions {
+    position: sticky;
+    top: 68px;
+    z-index: 5;
+    padding: 8px 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
+    backdrop-filter: blur(12px);
+  }
+
+  .share-ranking-btn {
+    width: 100%;
+  }
+}

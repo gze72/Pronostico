@@ -238,3 +238,16 @@ Se corrigió la visualización del menú en celular:
 - Al tocar el botón, se abre el sidebar.
 - Al tocar fuera del sidebar o seleccionar una opción, se cierra.
 - En escritorio el sidebar permanece visible.
+
+
+## Compartir ranking desde administración
+
+Se agregó la función `Compartir ranking` en el módulo Administrador.
+
+Características:
+
+- Genera un texto con los participantes ordenados por mayor puntaje.
+- Muestra formato `puntos obtenidos / puntos posibles`, por ejemplo `11 / 22 pts`.
+- Incluye fecha y hora de actualización.
+- En celular usa `navigator.share`, abriendo el menú nativo para compartir por WhatsApp, Telegram, correo u otras apps.
+- En web, si no está disponible el menú nativo de compartir, copia el ranking al portapapeles.
