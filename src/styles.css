@@ -1560,3 +1560,100 @@ input:focus-visible{
     padding-left: 88px;
   }
 }
+
+/* ===== Fix tablas admin + orden participantes ===== */
+
+.participant-sort {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 14px;
+}
+
+.participant-sort label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.participant-sort select {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 15px;
+  border: 1px solid rgba(231,222,208,.95);
+  background: rgba(255,255,255,.88);
+  color: var(--ink);
+  font-weight: 740;
+  box-shadow: 0 10px 24px rgba(35,30,21,.04);
+}
+
+.admin-standings-grid {
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  align-items: start;
+}
+
+.admin-standings-grid .report-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.admin-standings-grid .standings {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 16px;
+}
+
+.admin-standings-grid .standings table {
+  min-width: 420px;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.admin-standings-grid .standings th,
+.admin-standings-grid .standings td {
+  padding: 8px 8px;
+  font-size: 11px;
+  white-space: normal;
+  vertical-align: middle;
+}
+
+.admin-standings-grid .standings th:nth-child(1),
+.admin-standings-grid .standings td:nth-child(1) {
+  width: 42px;
+}
+
+.admin-standings-grid .standings th:nth-child(2),
+.admin-standings-grid .standings td:nth-child(2) {
+  width: 145px;
+}
+
+.admin-standings-grid .standings th:nth-child(3),
+.admin-standings-grid .standings td:nth-child(3),
+.admin-standings-grid .standings th:nth-child(4),
+.admin-standings-grid .standings td:nth-child(4),
+.admin-standings-grid .standings th:nth-child(5),
+.admin-standings-grid .standings td:nth-child(5) {
+  width: 54px;
+  text-align: center;
+}
+
+.admin-standings-grid .standings td:nth-child(2) span,
+.admin-standings-grid .standings td:nth-child(2) b {
+  white-space: normal;
+  word-break: normal;
+}
+
+@media(max-width: 760px) {
+  .admin-standings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-standings-grid .standings table {
+    min-width: 390px;
+  }
+
+  .participant-sort {
+    margin-bottom: 12px;
+  }
+}

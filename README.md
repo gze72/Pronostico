@@ -214,3 +214,16 @@ Este paquete parte de la última versión operativa `actualización puntaje 10/1
    - Comportamiento responsive en web y móvil.
 
 Este paquete corrige el problema de imports duplicados donde `getAppSettings` y `adminPhaseControl` aparecían por error dentro de `lucide-react`.
+
+
+## Corrección tablas admin y orden participantes
+
+Se corrigió el módulo Administrador:
+
+- Las tablas de detalle por grupo ahora permiten ver correctamente columnas como `DG` y `GF`.
+- Se evita el corte visual de columnas en tarjetas pequeñas.
+- Se agregó orden para `Participantes registrados`:
+  - Puntos: mayor a menor.
+  - Puntos: menor a mayor.
+  - Nombre: A-Z.
+  - Nombre: Z-A.
