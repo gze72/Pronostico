@@ -1,24 +1,54 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-type PublicMatchResult = {
-  match_id?: string;
-  matchId?: string;
-  home_goals?: number;
-  homeGoals?: number;
-  away_goals?: number;
-  awayGoals?: number;
-  status?: string;
-  source_url?: string;
-  sourceUrl?: string;
-  external_match_key?: string;
-  externalMatchKey?: string;
-};
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const FIFA_CALENDAR_URL =
+  Deno.env.get("FIFA_CALENDAR_URL") ||
+  "https://api.fifa.com/api/v3/calendar/matches?language=es&count=500&idSeason=285023";
+
+const GROUP_LETTER_MAP: Record<string, string> = {
+  "Grupo A": "A",
+  "Grupo B": "B",
+  "Grupo C": "C",
+  "Grupo D": "D",
+  "Grupo E": "E",
+  "Grupo F": "F",
+  "Grupo G": "G",
+  "Grupo H": "H",
+  "Grupo I": "I",
+  "Grupo J": "J",
+  "Grupo K": "K",
+  "Grupo L": "L"
+};
+
+type FifaMatch = {
+  IdMatch: string;
+  MatchNumber?: number;
+  Date?: string;
+  LocalDate?: string;
+  GroupName?: Array<{ Locale: string; Description: string }>;
+  Home?: {
+    Score?: number;
+    Abbreviation?: string;
+    ShortClubName?: string;
+    TeamName?: Array<{ Locale: string; Description: string }>;
+  };
+  Away?: {
+    Score?: number;
+    Abbreviation?: string;
+    ShortClubName?: string;
+    TeamName?: Array<{ Locale: string; Description: string }>;
+  };
+  HomeTeamScore?: number;
+  AwayTeamScore?: number;
+  MatchStatus?: number;
+  ResultType?: number;
+  MatchTime?: string;
 };
 
 function json(body: unknown, status = 200) {
@@ -28,114 +58,214 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function normalizeStatus(status?: string) {
-  const clean = String(status || "").toLowerCase();
-  if (["finished", "final", "ft", "completed", "fulltime"].includes(clean)) return "finished";
-  if (["live", "in_progress", "playing"].includes(clean)) return "live";
-  if (["postponed"].includes(clean)) return "postponed";
-  if (["cancelled", "canceled"].includes(clean)) return "cancelled";
-  return "scheduled";
+function textOf(list?: Array<{ Locale: string; Description: string }>) {
+  return list?.[0]?.Description || "";
 }
 
-async function fetchPublicResults(): Promise<PublicMatchResult[]> {
-  const endpoint = Deno.env.get("RESULTS_PUBLIC_JSON_URL");
+function groupLetter(match: FifaMatch) {
+  const groupName = textOf(match.GroupName);
+  return GROUP_LETTER_MAP[groupName] || null;
+}
 
-  if (!endpoint) return [];
+function teamName(team?: FifaMatch["Home"]) {
+  return textOf(team?.TeamName) || team?.ShortClubName || team?.Abbreviation || "";
+}
 
-  const res = await fetch(endpoint, {
-    headers: {
-      "Accept": "application/json",
-      "User-Agent": "Zambranada-WorldCup-Results-Sync/1.0",
-    },
-  });
+function scoreHome(match: FifaMatch) {
+  return match.HomeTeamScore ?? match.Home?.Score;
+}
 
-  if (!res.ok) {
-    throw new Error(`Fuente pública respondió HTTP ${res.status}`);
+function scoreAway(match: FifaMatch) {
+  return match.AwayTeamScore ?? match.Away?.Score;
+}
+
+function isCompleted(match: FifaMatch) {
+  const h = scoreHome(match);
+  const a = scoreAway(match);
+
+  if (h == null || a == null) return false;
+
+  // En el JSON FIFA validado, ResultType = 1 representa resultado publicable.
+  if (match.ResultType === 1) return true;
+
+  // Respaldo por tiempo de partido.
+  const minutes = Number(String(match.MatchTime || "").replace(/[^0-9]/g, ""));
+  return minutes >= 90;
+}
+
+function kickoffTime(match: FifaMatch) {
+  return new Date(match.Date || match.LocalDate || "2100-01-01T00:00:00Z").getTime();
+}
+
+function buildGroupSlotMap(fifaMatches: FifaMatch[]) {
+  const byGroup = new Map<string, FifaMatch[]>();
+
+  for (const match of fifaMatches) {
+    const g = groupLetter(match);
+    if (!g) continue;
+    if (!byGroup.has(g)) byGroup.set(g, []);
+    byGroup.get(g)!.push(match);
   }
 
+  const map = new Map<string, string>();
+
+  for (const [g, matches] of byGroup.entries()) {
+    matches.sort((a, b) => {
+      const byNumber = Number(a.MatchNumber || 0) - Number(b.MatchNumber || 0);
+      if (byNumber !== 0) return byNumber;
+      return kickoffTime(a) - kickoffTime(b);
+    });
+
+    matches.forEach((match, index) => {
+      map.set(String(match.IdMatch), `${g}${index + 1}`);
+    });
+  }
+
+  return map;
+}
+
+async function assertAdmin(supabase: any, adminParticipantId: string | null) {
+  if (!adminParticipantId) throw new Error("Administrador requerido");
+
+  const { data, error } = await supabase
+    .from("participants")
+    .select("id,role")
+    .eq("id", adminParticipantId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (!data || data.role !== "admin") {
+    throw new Error("Solo el rol administrador puede sincronizar resultados oficiales.");
+  }
+}
+
+async function fetchFifaMatches() {
+  const res = await fetch(FIFA_CALENDAR_URL, {
+    headers: {
+      "Accept": "application/json",
+      "User-Agent": "Zambranada-Mundial-2026/1.0"
+    }
+  });
+
+  if (!res.ok) throw new Error(`FIFA HTTP ${res.status}`);
+
   const payload = await res.json();
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.results)) return payload.results;
-  if (Array.isArray(payload?.matches)) return payload.matches;
-  return [];
+  return Array.isArray(payload?.Results) ? payload.Results as FifaMatch[] : [];
 }
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  if (req.method !== "POST") return json({ ok: false, error: "Method not allowed" }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  let runId: string | null = null;
-
-  const { data: run } = await supabase
-    .from("result_sync_runs")
-    .insert({
-      source: Deno.env.get("RESULTS_PUBLIC_JSON_URL") || "not-configured",
-      status: "started",
-      message: "Sincronización iniciada"
-    })
-    .select("id")
-    .single();
-
-  runId = run?.id || null;
-
   try {
-    const publicResults = await fetchPublicResults();
-    let updated = 0;
+    const body = await req.json().catch(() => ({}));
+    const adminParticipantId = body?.adminParticipantId || null;
+    const debug = Boolean(body?.debug);
 
-    for (const item of publicResults) {
-      const matchId = item.match_id || item.matchId;
-      if (!matchId) continue;
+    await assertAdmin(supabase, adminParticipantId);
 
-      const homeGoals = item.home_goals ?? item.homeGoals;
-      const awayGoals = item.away_goals ?? item.awayGoals;
+    const fifaMatches = await fetchFifaMatches();
+    const slotMap = buildGroupSlotMap(fifaMatches);
+    const completed = fifaMatches.filter(isCompleted);
 
-      if (homeGoals == null || awayGoals == null) continue;
+    const updated: any[] = [];
+    const skipped: any[] = [];
+
+    for (const match of completed) {
+      const matchId = slotMap.get(String(match.IdMatch));
+      const h = scoreHome(match);
+      const a = scoreAway(match);
+
+      if (!matchId || h == null || a == null) {
+        skipped.push({
+          fifaId: match.IdMatch,
+          matchNumber: match.MatchNumber,
+          reason: "No se pudo mapear a slot interno",
+          group: groupLetter(match),
+          home: teamName(match.Home),
+          away: teamName(match.Away)
+        });
+        continue;
+      }
+
+      const payload = {
+        match_id: matchId,
+        home_goals: Number(h),
+        away_goals: Number(a),
+        status: "finished",
+        source: "fifa",
+        source_url: FIFA_CALENDAR_URL,
+        external_match_key: String(match.IdMatch),
+        fetched_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
       const { error } = await supabase
         .from("match_results")
-        .upsert({
+        .upsert(payload, { onConflict: "match_id" });
+
+      if (error) {
+        skipped.push({
           match_id: matchId,
-          home_goals: Number(homeGoals),
-          away_goals: Number(awayGoals),
-          status: normalizeStatus(item.status || "finished"),
-          source: "public-auto-sync",
-          source_url: item.source_url || item.sourceUrl || Deno.env.get("RESULTS_PUBLIC_JSON_URL") || null,
-          external_match_key: item.external_match_key || item.externalMatchKey || null,
-          fetched_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "match_id" });
+          fifaId: match.IdMatch,
+          reason: error.message
+        });
+        continue;
+      }
 
-      if (error) throw error;
-      updated += 1;
+      updated.push({
+        match_id: matchId,
+        fifa_id: match.IdMatch,
+        match_number: match.MatchNumber,
+        group: groupLetter(match),
+        home: teamName(match.Home),
+        away: teamName(match.Away),
+        score: `${h}-${a}`
+      });
     }
 
-    const { error: rpcError } = await supabase.rpc("recalculate_phase1_scores");
-    if (rpcError) throw rpcError;
+    let recalculated = false;
+    let recalculateError = null;
 
-    const message = publicResults.length
-      ? `Sincronización completada. Resultados procesados: ${updated}.`
-      : "Sin fuente pública configurada o sin resultados nuevos. Puntajes recalculados con datos existentes.";
-
-    if (runId) {
-      await supabase
-        .from("result_sync_runs")
-        .update({ status: publicResults.length ? "success" : "partial", matches_updated: updated, message })
-        .eq("id", runId);
+    try {
+      const { error } = await supabase.rpc("recalculate_phase1_scores");
+      if (error) {
+        recalculateError = error.message;
+      } else {
+        recalculated = true;
+      }
+    } catch (err) {
+      recalculateError = err instanceof Error ? err.message : String(err);
     }
 
-    return json({ ok: true, matches_updated: updated, message });
+    return json({
+      ok: true,
+      source: "fifa",
+      endpoint: FIFA_CALENDAR_URL,
+      fifaMatches: fifaMatches.length,
+      completedMatches: completed.length,
+      updated: updated.length,
+      skipped: skipped.length,
+      recalculated,
+      recalculateError,
+      message: updated.length
+        ? `Resultados oficiales sincronizados desde FIFA: ${updated.length}.`
+        : "No se encontraron nuevos resultados oficiales para actualizar.",
+      ...(debug ? { updatedRows: updated, skippedRows: skipped.slice(0, 50) } : {})
+    });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (runId) {
-      await supabase
-        .from("result_sync_runs")
-        .update({ status: "failed", message })
-        .eq("id", runId);
-    }
-    return json({ ok: false, error: message }, 500);
+    console.error("sync-worldcup-results error", err);
+
+    return json({
+      ok: false,
+      source: "fifa",
+      error: err instanceof Error ? err.message : String(err),
+      message: "No se pudo sincronizar resultados desde FIFA. Puede registrar el Score real manualmente."
+    }, 500);
   }
 });

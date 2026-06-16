@@ -391,3 +391,40 @@ Esto evita el error:
 ```text
 [PARSE_ERROR] Unterminated string
 ```
+
+
+## Sincronización oficial FIFA
+
+Se agregó integración oficial con el endpoint público FIFA:
+
+```text
+https://api.fifa.com/api/v3/calendar/matches?language=es&count=500&idSeason=285023
+```
+
+La Edge Function `sync-worldcup-results`:
+
+- Consulta FIFA.
+- Lee `Results`.
+- Identifica partidos concluidos por score/result type.
+- Mapea:
+  - `MatchNumber`
+  - `GroupName`
+  - `Home.Abbreviation`
+  - `Away.Abbreviation`
+  - `HomeTeamScore`
+  - `AwayTeamScore`
+- Actualiza `match_results`.
+- Recalcula puntajes usando `recalculate_phase1_scores`.
+
+Body recomendado de prueba:
+
+```json
+{
+  "adminParticipantId": "ID_DEL_ADMIN",
+  "debug": true
+}
+```
+
+Variable opcional:
+
+- `FIFA_CALENDAR_URL`: permite cambiar el endpoint FIFA sin modificar código.
