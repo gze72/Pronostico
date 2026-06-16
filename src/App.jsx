@@ -12,8 +12,7 @@ function App(){
   const [predictions,setPredictions] = useState({});
   const [activeGroup,setActiveGroup] = useState('A');
   const [view,setView] = useState('pronostico');
-  const [sidebarOpen,setSidebarOpen] = useState(true);
-  const [sidebar,setSidebar] = useState(false);
+  const [sidebar,setSidebar] = useState(() => window.innerWidth >= 900);
   const [toast,setToast] = useState('');
   const [forecastStatus,setForecastStatus] = useState('empty');
   const [showPrizePopup,setShowPrizePopup] = useState(false);
@@ -35,6 +34,14 @@ function App(){
     boot();
   },[]);
   useEffect(()=>{ if(participant) getForecast(participant.id).then(f=>{ setPredictions(f?.predictions || {}); setForecastStatus(f?.status || (f?.confirmed ? 'confirmed' : 'empty')); }); },[participant]);
+  useEffect(()=>{
+    function handleResponsiveSidebar(){
+      setSidebar(window.innerWidth >= 900);
+    }
+    window.addEventListener('resize', handleResponsiveSidebar);
+    return () => window.removeEventListener('resize', handleResponsiveSidebar);
+  },[]);
+
   const currentScore = calculateParticipantScore(matches,predictions,realScores);
   useEffect(()=>{ if(participant && matches.length) saveParticipantScore(participant.id,currentScore).catch(()=>{}); },[participant, matches, predictions, realScores]);
   const completedCount = GROUPS.filter(g=>groupCompleted(g.id,matches,predictions)).length;
@@ -59,7 +66,7 @@ function App(){
   if(!participant) return <Login onLogin={setParticipant}/>;
   return <div className="app-shell">
     <Watermark />
-    <aside className={`sidebar ${sidebar?'open':''}`}>
+    <aside className={`sidebar ${sidebar?'open':''}`}><button className="sidebar-close" onClick={()=>setSidebar(false)} aria-label="Cerrar menú"><X size={18}/><span>Cerrar</span></button>
       <div className="brand"><div className="brand-mark"><Trophy size={20}/></div><div><b>Zambranada 2026</b><span>{supabase ? 'Supabase activo' : 'Modo demo local'}</span></div></div>
       <nav>
         <button className={view==='pronostico'?'active':''} onClick={()=>{setView('pronostico'); setSidebar(false)}}><Trophy/> Pronóstico</button>
@@ -68,8 +75,9 @@ function App(){
       </nav>
       <div className="user-card"><span>{participant.role === 'admin' ? 'Administrador' : 'Participante'}</span><b>{participant.name}</b><div className="score-mini"><ScoreRatio score={currentScore} compact/><small>FASE 1</small></div><button onClick={()=>setParticipant(null)}><LogOut size={16}/> Salir</button></div>
     </aside>
+    {sidebar && <button className="sidebar-overlay" aria-label="Cerrar menú" onClick={()=>setSidebar(false)} />}
     <main className="content">
-      <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}</button><div><p>Campeonato Mundial de Fútbol 2026 · Zambranada</p><h1>{view==='pronostico'?'Registro de pronóstico (FASE 1)':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className="sync-pill">{syncStatus}</div><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{completedCount}/12 grupos</div></div></header>
+      <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}<span>{sidebar ? "Cerrar" : "Menú"}</span></button><div><p>Campeonato Mundial de Fútbol 2026 · Zambranada</p><h1>{view==='pronostico'?'Registro de pronóstico (FASE 1)':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className="sync-pill">{syncStatus}</div><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{completedCount}/12 grupos</div></div></header>
       {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} realScores={realScores} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm} forecastStatus={forecastStatus} appSettings={appSettings}/>} 
       {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores}/>} 
       {view==='admin' && participant.role === 'admin' && <AdminView matches={matches} realScores={realScores} setRealScores={setRealScores} participant={participant} appSettings={appSettings} setAppSettings={setAppSettings}/>} 

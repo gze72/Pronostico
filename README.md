@@ -227,3 +227,14 @@ Se corrigió el módulo Administrador:
   - Puntos: menor a mayor.
   - Nombre: A-Z.
   - Nombre: Z-A.
+
+
+## Fix menú móvil visible
+
+Se corrigió la visualización del menú en celular:
+
+- En móvil inicia cerrado.
+- El botón flotante de menú queda visible arriba a la izquierda.
+- Al tocar el botón, se abre el sidebar.
+- Al tocar fuera del sidebar o seleccionar una opción, se cierra.
+- En escritorio el sidebar permanece visible.
