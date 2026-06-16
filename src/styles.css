@@ -1805,3 +1805,31 @@ input:focus-visible{
     width: 100%;
   }
 }
+
+/* ===== Mejor presentación ranking compartido y porcentaje ===== */
+
+.score-mini {
+  align-items: start;
+}
+
+.score-mini > small {
+  display: block;
+  margin-top: 2px;
+  color: rgba(255,255,255,.72) !important;
+  font-size: 11px;
+  letter-spacing: .01em;
+}
+
+.participant-list button span {
+  line-height: 1.35;
+}
+
+.share-ranking-btn {
+  background:
+    linear-gradient(135deg, #151915, #263026);
+  box-shadow: 0 18px 38px rgba(17,20,17,.16);
+}
+
+.share-ranking-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}

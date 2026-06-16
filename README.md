@@ -251,3 +251,14 @@ Características:
 - Incluye fecha y hora de actualización.
 - En celular usa `navigator.share`, abriendo el menú nativo para compartir por WhatsApp, Telegram, correo u otras apps.
 - En web, si no está disponible el menú nativo de compartir, copia el ranking al portapapeles.
+
+
+## Mejora presentación ranking compartido
+
+Se ajustó el ranking para compartir por WhatsApp u otras apps:
+
+- El encabezado mantiene el puntaje máximo al momento.
+- En cada participante ya no se repite `/32 pts`.
+- Cada participante muestra `puntos + porcentaje`, por ejemplo `26 pts · 81%`.
+- El menú lateral muestra el porcentaje de aciertos junto al puntaje del usuario.
+- La lista de administración muestra también puntos y porcentaje.
