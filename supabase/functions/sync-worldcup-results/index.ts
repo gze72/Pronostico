@@ -344,6 +344,32 @@ function toDebugMatch(match: FifaMatch) {
   };
 }
 
+
+function hasFinalStoredScore(row: any) {
+  return row && row.home_goals != null && row.away_goals != null;
+}
+
+function isManualAdminScore(row: any) {
+  const source = String(row?.source || "").toLowerCase();
+  return source.includes("manual") || source.includes("admin");
+}
+
+async function loadExistingResults(supabase: any) {
+  const { data, error } = await supabase
+    .from("match_results")
+    .select("match_id,home_goals,away_goals,status,source,updated_at,external_match_key");
+
+  if (error) throw error;
+
+  const map = new Map<string, any>();
+  for (const row of data || []) {
+    map.set(String(row.match_id), row);
+  }
+
+  return map;
+}
+
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ ok: false, error: "Method not allowed" }, 405);
@@ -368,6 +394,9 @@ Deno.serve(async (req: Request) => {
     const updated: any[] = [];
     const live: any[] = [];
     const skipped: any[] = [];
+    const protectedRows: any[] = [];
+
+    const existingResults = await loadExistingResults(supabase);
 
     for (const match of finalMatches) {
       const key = matchKey(match);
@@ -379,6 +408,27 @@ Deno.serve(async (req: Request) => {
         skipped.push({
           ...toDebugMatch(match),
           reason: "Sin mapeo seguro por grupo/local/visitante. No se actualiza."
+        });
+        continue;
+      }
+
+      const existing = existingResults.get(String(internalMatchId));
+
+      // Regla principal:
+      // El webservice NO debe sobrescribir resultados ya cargados.
+      // Si el ADMIN registró/actualizó un marcador, se respeta como fuente de verdad.
+      // También protegemos cualquier marcador no vacío para evitar cambios automáticos no deseados.
+      if (hasFinalStoredScore(existing)) {
+        protectedRows.push({
+          match_id: internalMatchId,
+          ...toDebugMatch(match),
+          existing_home_goals: existing.home_goals,
+          existing_away_goals: existing.away_goals,
+          existing_source: existing.source,
+          admin_priority: isManualAdminScore(existing),
+          reason: isManualAdminScore(existing)
+            ? "Protegido: resultado registrado por administrador. No se sobrescribe."
+            : "Protegido: resultado ya existente. El servicio automático solo actualiza marcadores vacíos."
         });
         continue;
       }
@@ -431,19 +481,24 @@ Deno.serve(async (req: Request) => {
       // Por defecto NO guardamos live para evitar alterar puntajes con marcador parcial.
       // Si en el futuro quieres visualizarlo desde BD, invoca con saveLive:true.
       if (saveLive && internalMatchId && h != null && a != null) {
-        await supabase
-          .from("match_results")
-          .upsert({
-            match_id: internalMatchId,
-            home_goals: Number(h),
-            away_goals: Number(a),
-            status: "live",
-            source: "fifa-live",
-            source_url: FIFA_CALENDAR_URL,
-            external_match_key: String(match.IdMatch),
-            fetched_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }, { onConflict: "match_id" });
+        const existing = existingResults.get(String(internalMatchId));
+
+        // Nunca guardar live encima de marcador existente/final/manual.
+        if (!hasFinalStoredScore(existing)) {
+          await supabase
+            .from("match_results")
+            .upsert({
+              match_id: internalMatchId,
+              home_goals: Number(h),
+              away_goals: Number(a),
+              status: "live",
+              source: "fifa-live",
+              source_url: FIFA_CALENDAR_URL,
+              external_match_key: String(match.IdMatch),
+              fetched_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, { onConflict: "match_id" });
+        }
       }
     }
 
@@ -475,17 +530,21 @@ Deno.serve(async (req: Request) => {
       finalMatches: finalMatches.length,
       liveMatches: live.length,
       updated: updated.length,
+      protected: protectedRows.length,
       skipped: skipped.length,
       recalculated,
       recalculateError,
       message: updated.length
-        ? `Resultados finales sincronizados desde FIFA: ${updated.length}.${liveMessage}`
-        : `No se encontraron nuevos resultados finales para actualizar.${liveMessage}`,
+        ? `Resultados finales sincronizados desde FIFA: ${updated.length}. Resultados protegidos por carga previa/ADMIN: ${protectedRows.length}.${liveMessage}`
+        : `No se encontraron nuevos resultados finales vacíos para actualizar. Resultados protegidos por carga previa/ADMIN: ${protectedRows.length}.${liveMessage}`,
       liveNotice: live.length
         ? "Existen partidos en curso. Los marcadores parciales no se usan para puntajes hasta que FIFA publique el resultado final."
         : null,
       liveMatchesInfo: live,
-      ...(debug ? { updatedRows: updated, skippedRows: skipped.slice(0, 80), liveRows: live } : {})
+      protectedNotice: protectedRows.length
+        ? "Existen marcadores ya cargados. Se respetan y no se sobrescriben automáticamente."
+        : null,
+      ...(debug ? { updatedRows: updated, protectedRows: protectedRows.slice(0, 100), skippedRows: skipped.slice(0, 80), liveRows: live } : {})
     });
   } catch (err) {
     console.error("sync-worldcup-results error", err);
