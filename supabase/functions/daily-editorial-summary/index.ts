@@ -151,17 +151,18 @@ function buildBulletsFromNews(articles: any[], matchSummaries: string[]) {
 }
 
 function fallbackBullets(matchSummaries: string[]) {
-  if (!matchSummaries.length) return [
-    "No hay resultados reales cargados para la jornada seleccionada.",
-    "El ranking se actualizó con los marcadores disponibles en la base de datos.",
-    "Cuando el administrador registre nuevos Score real, el reporte reflejará la jornada actualizada."
-  ];
-  const drawCount = matchSummaries.filter(x => x.includes("igualaron")).length;
+  const evaluatedText = matchSummaries.length
+    ? `Resultados reales evaluados al momento: ${matchSummaries.length} partido${matchSummaries.length === 1 ? "" : "s"}.`
+    : "Aún no hay resultados reales cargados para la jornada seleccionada.";
+
   return [
-    drawCount >= 2 ? "Jornada marcada por empates y grupos muy abiertos." : "Jornada con movimientos importantes en la tabla de posiciones.",
-    ...matchSummaries.slice(0, 4)
-  ].slice(0, 5);
+    "No se encontraron noticias deportivas externas disponibles para complementar esta jornada.",
+    evaluatedText,
+    "El ranking se genera con los marcadores reales cargados por administración.",
+    "El resumen editorial se actualizará automáticamente cuando la fuente externa entregue información disponible."
+  ];
 }
+
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
