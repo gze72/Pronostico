@@ -298,3 +298,52 @@ Se ajustó el reporte compartido:
   - Bélgica rescatando empate ante Egipto con impacto de Lukaku.
   - Arabia Saudita sosteniendo el empate ante Uruguay.
   - Irán y Nueva Zelanda cerrando con 2-2.
+
+
+## Resumen editorial en línea
+
+El botón `Compartir ranking` ahora actualiza el resumen editorial cada vez que se presiona.
+
+Flujo:
+
+1. El administrador presiona `Compartir ranking`.
+2. La APP invoca la Edge Function `daily-editorial-summary`.
+3. La función consulta, según configuración:
+   - `EDITORIAL_NEWS_ENDPOINT`, si existe.
+   - `NEWSAPI_KEY`, si existe.
+   - resultados cargados en `match_results`, como respaldo.
+4. La respuesta se incorpora al encabezado del ranking.
+5. El administrador revisa la vista previa y comparte.
+
+Variables opcionales en Supabase Edge Function Secrets:
+
+- `NEWSAPI_KEY`: API key de NewsAPI.org.
+- `EDITORIAL_NEWS_ENDPOINT`: endpoint propio que devuelva `{ "bullets": ["...", "..."] }` o `{ "summary_text": "..." }`.
+
+Si no configuras una fuente externa, el resumen se genera con los resultados reales cargados en `match_results`, pero no incluirá comentarios de medios deportivos externos.
+
+## Mejora multibúsqueda NewsAPI
+
+La Edge Function `daily-editorial-summary` ahora busca noticias en varios niveles:
+
+1. Consulta específica por partidos/equipos de la jornada.
+2. `FIFA World Cup 2026` con fecha.
+3. `Copa Mundial 2026` con fecha.
+4. `FIFA World Cup 2026` general.
+5. `Copa Mundial 2026` general.
+6. `Mundial 2026` general.
+
+El body de prueba acepta:
+
+```json
+{
+  "date": "2026-06-15",
+  "debug": true,
+  "daysBack": 7,
+  "query": "FIFA World Cup 2026"
+}
+```
+
+- `daysBack`: amplía el rango de búsqueda hacia atrás.
+- `query`: permite probar una búsqueda personalizada.
+- `debug`: devuelve diagnóstico de intentos, idioma, status HTTP y artículos encontrados.
