@@ -171,7 +171,7 @@ function ScoreRatio({ score, compact=false }) {
       <span>/</span>
       <strong>{possible}</strong>
       <small>pts</small>
-      {!compact && <em>{pct}% de efectividad</em>}
+      {!compact && <em>{pct}% de</em>}
     </div>
   );
 }
@@ -210,6 +210,19 @@ function Standings({standings}){ return <table className="standings"><thead><tr>
 function ReportView({participant,matches,predictions,realScores}){
   const score = calculateParticipantScore(matches,predictions,realScores);
   return <section className="panel report"><h2>Consulta de pronóstico</h2><p className="muted">{participant.role==='admin'?'Use Administración para revisar todos los participantes.':'Vista privada de su pronóstico registrado o guardado.'}</p><div className="score-summary"><div><span>Puntos FASE 1</span><ScoreRatio score={score}/></div><div><span>Ganador</span><strong>{score.winnerPoints}</strong></div><div><span>Score exacto</span><strong>{score.scorePoints}</strong></div><div><span>Partidos evaluados</span><strong>{score.evaluatedMatches}</strong></div></div><div className="report-groups">{GROUPS.map(g=><div key={g.id} className="report-card"><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,predictions)}/></div>)}</div></section>
+}
+
+function buildDailyEditorialSummary() {
+  // Resumen editorial de jornada para el 15/jun/2026.
+  // El texto está diseñado para WhatsApp: breve, limpio y sin saturar el ranking.
+  return [
+    'Claves de la jornada:',
+    '• Jornada marcada por empates y grupos muy abiertos.',
+    '• España no pudo romper el bloque de Cabo Verde.',
+    '• Bélgica rescató el 1-1 ante Egipto con impacto de Lukaku desde el banco.',
+    '• Arabia Saudita sostuvo a Uruguay y dejó el Grupo H sin favoritos claros.',
+    '• Irán y Nueva Zelanda cerraron el día con un 2-2 que mantiene vivo el Grupo G.'
+  ];
 }
 
 function buildRankingShareText(rows, matches, realScores) {
@@ -264,7 +277,7 @@ function buildRankingShareText(rows, matches, realScores) {
     const pct = `${scorePercent(r.score)}%`;
     const pts = `${r.score.totalPoints} pts`;
     const status = statusIcon(r);
-    return `${icon} ${r.name}\n   ${pts} · ${pct} efectividad ${status}`;
+    return `${icon} ${r.name}\n   ${pts} · ${pct} ${status}`;
   });
 
   return [
@@ -275,6 +288,8 @@ function buildRankingShareText(rows, matches, realScores) {
     `Partidos evaluados: ${evaluatedMatches}`,
     `Puntaje máximo: ${possible} pts`,
     `Participantes: ${ranked.length} · Confirmados: ${confirmedCount}`,
+    thin,
+    ...buildDailyEditorialSummary(),
     thin,
     `Líder actual: ${leader?.name || 'Pendiente'}`,
     `Marca líder: ${topScore} pts · ${topPercent}%`,

@@ -283,3 +283,18 @@ Se rediseñó el ranking compartido para WhatsApp y otras apps:
   - Estado mediante símbolo.
 - Vista previa antes de compartir.
 - Botón para copiar texto y botón para compartir usando el menú nativo del celular.
+
+
+## Ajuste reporte sin ruido visual
+
+Se ajustó el reporte compartido:
+
+- Se elimina la palabra `efectividad` del detalle de cada participante.
+- Cada participante se muestra como `26 pts · 81% ●`.
+- Se agrega un resumen editorial de la jornada en el encabezado.
+- Para la jornada del 15/jun/2026 se incluyen las claves:
+  - Empates en Grupos G y H.
+  - España frenada por Cabo Verde.
+  - Bélgica rescatando empate ante Egipto con impacto de Lukaku.
+  - Arabia Saudita sosteniendo el empate ante Uruguay.
+  - Irán y Nueva Zelanda cerrando con 2-2.

@@ -1962,3 +1962,13 @@ input:focus-visible{
     padding: 14px 18px 18px;
   }
 }
+
+/* ===== Ajuste reporte sin ruido visual ===== */
+
+.share-preview-card pre {
+  line-height: 1.52;
+}
+
+.share-preview-head h3 {
+  letter-spacing: -.06em;
+}
