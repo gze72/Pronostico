@@ -347,3 +347,47 @@ El body de prueba acepta:
 - `daysBack`: amplía el rango de búsqueda hacia atrás.
 - `query`: permite probar una búsqueda personalizada.
 - `debug`: devuelve diagnóstico de intentos, idioma, status HTTP y artículos encontrados.
+
+
+## Editorial genérico cuando no hay noticias externas
+
+Se eliminó el fallback editorial específico o “quemado”.
+
+Cuando NewsAPI o el endpoint externo no devuelvan noticias, el reporte compartido mostrará un comentario genérico:
+
+- No se encontraron noticias deportivas externas disponibles.
+- El ranking se genera con los marcadores reales cargados por administración.
+- El resumen se actualizará automáticamente cuando la fuente externa entregue información.
+
+Esto evita confundir al lector con comentarios que parezcan noticias reales cuando la fuente externa no entregó contenido.
+
+
+## Fix llamada editorial desde la APP
+
+Se corrigió el botón `Compartir ranking` para que:
+
+- No use texto editorial quemado en el frontend.
+- Llame a `daily-editorial-summary` cada vez que se presiona.
+- Envíe búsqueda ampliada:
+  - `daysBack: 30`
+  - `query: FIFA World Cup 2026 OR Copa Mundial 2026 OR Mundial 2026`
+- Use noticias externas si la Edge Function devuelve `source = newsapi...`.
+- Use comentario genérico si no hay noticias externas disponibles.
+
+
+## Fix parse error storage editorial
+
+Se corrigió un error de sintaxis en `src/lib/storage.js` causado por strings multilínea con comillas simples.
+
+La función `getDailyEditorialSummary` ahora usa template string para el resumen genérico:
+
+```js
+const genericSummary = `Claves de la jornada:
+• ...`;
+```
+
+Esto evita el error:
+
+```text
+[PARSE_ERROR] Unterminated string
+```

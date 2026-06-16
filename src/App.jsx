@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Trophy, Users, BarChart3, LogOut, ShieldCheck, CheckCircle2, LockKeyhole, Menu, X, Save, PanelLeftClose, PanelLeftOpen, Share2 } from 'lucide-react';
 import { GROUPS, TEAMS } from './lib/worldcupData';
 import { allGroupsCompleted, buildQualified, buildRoundOf32, calculateParticipantScore, calculateRealStandings, calculateStandings, evaluatePrediction, groupCompleted, winnerLabel } from './lib/scoring';
-import { adminPhaseControl, deleteParticipantAndForecast, getAppSettings, getForecast, getMatches, getRealScores, listParticipantsWithForecasts, loginOrCreateParticipant, saveForecast, saveParticipantScore, saveRealScore, supabase, syncResultsAndScores } from './lib/storage';
+import { adminPhaseControl, deleteParticipantAndForecast, getAppSettings, getForecast, getMatches, getRealScores, listParticipantsWithForecasts, loginOrCreateParticipant, saveForecast, saveParticipantScore, saveRealScore, supabase, syncResultsAndScores, getDailyEditorialSummary } from './lib/storage';
 import './styles.css';
 
 function App(){
@@ -212,20 +212,7 @@ function ReportView({participant,matches,predictions,realScores}){
   return <section className="panel report"><h2>Consulta de pronóstico</h2><p className="muted">{participant.role==='admin'?'Use Administración para revisar todos los participantes.':'Vista privada de su pronóstico registrado o guardado.'}</p><div className="score-summary"><div><span>Puntos FASE 1</span><ScoreRatio score={score}/></div><div><span>Ganador</span><strong>{score.winnerPoints}</strong></div><div><span>Score exacto</span><strong>{score.scorePoints}</strong></div><div><span>Partidos evaluados</span><strong>{score.evaluatedMatches}</strong></div></div><div className="report-groups">{GROUPS.map(g=><div key={g.id} className="report-card"><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,predictions)}/></div>)}</div></section>
 }
 
-function buildDailyEditorialSummary() {
-  // Resumen editorial de jornada para el 15/jun/2026.
-  // El texto está diseñado para WhatsApp: breve, limpio y sin saturar el ranking.
-  return [
-    'Claves de la jornada:',
-    '• Jornada marcada por empates y grupos muy abiertos.',
-    '• España no pudo romper el bloque de Cabo Verde.',
-    '• Bélgica rescató el 1-1 ante Egipto con impacto de Lukaku desde el banco.',
-    '• Arabia Saudita sostuvo a Uruguay y dejó el Grupo H sin favoritos claros.',
-    '• Irán y Nueva Zelanda cerraron el día con un 2-2 que mantiene vivo el Grupo G.'
-  ];
-}
-
-function buildRankingShareText(rows, matches, realScores) {
+function buildRankingShareText(rows, matches, realScores, editorialSummaryText='') {
   const ranked = [...rows]
     .map(r => ({
       ...r,
@@ -289,7 +276,7 @@ function buildRankingShareText(rows, matches, realScores) {
     `Puntaje máximo: ${possible} pts`,
     `Participantes: ${ranked.length} · Confirmados: ${confirmedCount}`,
     thin,
-    ...buildDailyEditorialSummary(),
+    ...(editorialSummaryText ? editorialSummaryText.split('\n') : ['Claves de la jornada:', '• Resumen editorial pendiente de actualización.']),
     thin,
     `Líder actual: ${leader?.name || 'Pendiente'}`,
     `Marca líder: ${topScore} pts · ${topPercent}%`,
@@ -364,9 +351,40 @@ function AdminView({matches,realScores,setRealScores,participant,appSettings,set
 
   
   async function shareRanking(){
-    const text = buildRankingShareText(rows, matches, realScores);
-    setShareText(text);
-    setShowSharePreview(true);
+    try {
+      setMessage('Actualizando resumen editorial de la jornada...');
+
+      const targetDate = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Guayaquil',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(new Date());
+
+      const editorial = await getDailyEditorialSummary(targetDate, {
+        debug: false,
+        daysBack: 30,
+        query: 'FIFA World Cup 2026 OR Copa Mundial 2026 OR Mundial 2026'
+      });
+
+      const editorialText = editorial?.summaryText || 'Claves de la jornada:\n• No se encontraron noticias deportivas externas disponibles para complementar esta jornada.\n• El ranking se genera con los marcadores reales cargados por administración.';
+      const text = buildRankingShareText(rows, matches, realScores, editorialText);
+
+      setShareText(text);
+      setShowSharePreview(true);
+
+      if (editorial?.source?.startsWith('newsapi')) {
+        setMessage('Resumen editorial actualizado con noticias externas.');
+      } else {
+        setMessage('Ranking generado con resumen editorial genérico o resultados disponibles.');
+      }
+    } catch (ex) {
+      const fallback = 'Claves de la jornada:\n• No se encontraron noticias deportivas externas disponibles para complementar esta jornada.\n• El ranking se genera con los marcadores reales cargados por administración.';
+      const text = buildRankingShareText(rows, matches, realScores, fallback);
+      setShareText(text);
+      setShowSharePreview(true);
+      setMessage('No se pudo actualizar el resumen editorial en línea.');
+    }
   }
 
   async function confirmShareRanking(){

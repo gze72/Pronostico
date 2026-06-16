@@ -250,6 +250,42 @@ export async function listParticipantsWithForecasts(){
 }
 
 
+
+export async function getDailyEditorialSummary(date, options = {}){
+  const genericSummary = `Claves de la jornada:
+• No se encontraron noticias deportivas externas disponibles para complementar esta jornada.
+• El ranking se genera con los marcadores reales cargados por administración.`;
+
+  if (!supabase) {
+    return {
+      ok: false,
+      source: 'local-fallback',
+      summaryText: genericSummary
+    };
+  }
+
+  const body = {
+    date,
+    debug: Boolean(options.debug),
+    daysBack: options.daysBack ?? 30,
+    query: options.query || 'FIFA World Cup 2026 OR Copa Mundial 2026 OR Mundial 2026'
+  };
+
+  const { data, error } = await supabase.functions.invoke('daily-editorial-summary', { body });
+
+  if (error) {
+    console.warn('No se pudo obtener resumen editorial:', error.message);
+    return {
+      ok: false,
+      source: 'function-error',
+      summaryText: genericSummary
+    };
+  }
+
+  return data;
+}
+
+
 export async function getAppSettings(){
   const defaults = {
     registrationEnabled: true,
