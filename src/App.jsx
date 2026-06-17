@@ -73,7 +73,7 @@ function App(){
     setTimeout(()=>setToast(''), 3600);
   };
   if(!participant) return <Login onLogin={setParticipant}/>;
-  return <div className="app-shell">
+  return <div className={`app-shell ${sidebar ? 'sidebar-open' : 'sidebar-closed'}`}>
     <Watermark />
     <aside className={`sidebar ${sidebar?'open':''}`}><button className="sidebar-close" onClick={()=>setSidebar(false)} aria-label="Cerrar menú"><X size={18}/><span>Cerrar</span></button>
       <div className="brand"><div className="brand-mark"><Trophy size={20}/></div><div><b>Zambranada 2026</b><span>{supabase ? 'Supabase activo' : 'Modo demo local'}</span></div></div>
@@ -260,9 +260,40 @@ function PremiumRankingReport({rows}){
 }
 
 function ReportView({participant,matches,predictions,realScores,rankingRows=[]}){
+  const [reportTab,setReportTab] = useState('ranking');
   const score = calculateParticipantScore(matches,predictions,realScores);
   const rankedRows = buildPremiumRankingRows(rankingRows,matches,realScores);
-  return <div className="report-stack"><PremiumRankingReport rows={rankedRows}/><section className="panel report private-report"><h2>{participant.role==='admin'?'Consulta de pronóstico':'Mi pronóstico'}</h2><p className="muted">{participant.role==='admin'?'Use Administración para revisar todos los participantes.':'Vista privada de su pronóstico registrado o guardado.'}</p><div className="score-summary"><div><span>Puntos FASE 1</span><ScoreRatio score={score}/></div><div><span>Ganador</span><strong>{score.winnerPoints}</strong></div><div><span>Score exacto</span><strong>{score.scorePoints}</strong></div><div><span>Partidos evaluados</span><strong>{score.evaluatedMatches}</strong></div></div><div className="report-groups">{GROUPS.map(g=><div key={g.id} className="report-card"><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,predictions)}/></div>)}</div></section></div>
+  const predictionTitle = participant.role==='admin' ? 'Consulta de pronóstico' : 'Mi pronóstico';
+  const predictionText = participant.role==='admin'
+    ? 'Use Administración para revisar todos los participantes.'
+    : 'Vista privada de su pronóstico registrado o guardado.';
+
+  return <div className="report-stack report-tabs-layout">
+    <section className="report-tabs-shell" aria-label="Opciones de reporte">
+      <button type="button" className={reportTab==='ranking'?'active':''} onClick={()=>setReportTab('ranking')}>
+        <Trophy size={16}/>
+        <span>Ranking de participantes</span>
+      </button>
+      <button type="button" className={reportTab==='pronosticos'?'active':''} onClick={()=>setReportTab('pronosticos')}>
+        <BarChart3 size={16}/>
+        <span>{predictionTitle}</span>
+      </button>
+    </section>
+
+    {reportTab==='ranking' && <PremiumRankingReport rows={rankedRows}/>}
+
+    {reportTab==='pronosticos' && <section className="panel report private-report report-tab-panel">
+      <h2>{predictionTitle}</h2>
+      <p className="muted">{predictionText}</p>
+      <div className="score-summary">
+        <div><span>Puntos FASE 1</span><ScoreRatio score={score}/></div>
+        <div><span>Ganador</span><strong>{score.winnerPoints}</strong></div>
+        <div><span>Score exacto</span><strong>{score.scorePoints}</strong></div>
+        <div><span>Partidos evaluados</span><strong>{score.evaluatedMatches}</strong></div>
+      </div>
+      <div className="report-groups">{GROUPS.map(g=><div key={g.id} className="report-card"><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,predictions)}/></div>)}</div>
+    </section>}
+  </div>
 }
 
 function buildRankingShareText(rows, matches, realScores, editorialSummaryText='') {

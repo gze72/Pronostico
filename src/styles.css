@@ -2135,3 +2135,116 @@ input:focus-visible{
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ==========================================================
+   Reportes en pestañas + menú móvil seguro
+   ========================================================== */
+
+.report-tabs-layout {
+  gap: 18px;
+}
+
+.report-tabs-shell {
+  width: 100%;
+  display: inline-flex;
+  gap: 8px;
+  padding: 7px;
+  border: 1px solid rgba(198,162,93,.22);
+  border-radius: 999px;
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 14px 38px rgba(73,55,26,.08);
+  backdrop-filter: blur(14px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.report-tabs-shell::-webkit-scrollbar {
+  display: none;
+}
+
+.report-tabs-shell button {
+  flex: 1 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: transparent;
+  color: #6f675d;
+  font-weight: 850;
+  white-space: nowrap;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.report-tabs-shell button:hover {
+  color: var(--ink);
+  background: rgba(255,255,255,.74);
+}
+
+.report-tabs-shell button.active {
+  color: #161513;
+  background: linear-gradient(180deg,#fff8e9,#f3dfb2);
+  border: 1px solid rgba(198,162,93,.26);
+  box-shadow: 0 10px 24px rgba(198,162,93,.14);
+}
+
+.report-tab-panel {
+  margin-top: 0 !important;
+}
+
+/* El overlay ya no debe capturar toques dentro del menú móvil.
+   El usuario cierra con el botón Cerrar o seleccionando una opción del menú. */
+@media(max-width: 900px) {
+  .sidebar-overlay {
+    display: none !important;
+    pointer-events: none !important;
+  }
+
+  .sidebar.open {
+    z-index: 50 !important;
+    pointer-events: auto !important;
+  }
+
+  .sidebar.open .sidebar-close {
+    display: inline-flex !important;
+  }
+
+  .report-tabs-shell {
+    position: sticky;
+    top: 72px;
+    z-index: 8;
+    border-radius: 20px;
+    padding: 6px;
+    margin-bottom: 2px;
+  }
+
+  .report-tabs-shell button {
+    flex: 1 0 78%;
+    justify-content: flex-start;
+    min-height: 46px;
+    padding: 10px 14px;
+    font-size: .88rem;
+  }
+
+  .report-groups {
+    grid-template-columns: 1fr !important;
+  }
+
+  .private-report .score-summary,
+  .score-summary {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media(max-width: 520px) {
+  .report-tabs-shell {
+    gap: 6px;
+  }
+
+  .report-tabs-shell button {
+    flex-basis: 86%;
+  }
+}

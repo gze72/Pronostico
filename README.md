@@ -592,3 +592,26 @@ src/styles.css
 README.md
 docs/ranking-premium-mockup.png
 ```
+
+
+## Reportes en pestañas y menú móvil seguro
+
+Se ajustó el módulo `Reporte` para separar sus dos funcionalidades principales:
+
+- `Ranking de participantes`.
+- `Consulta de pronóstico` / `Mi pronóstico`.
+
+También se corrigió el comportamiento móvil del menú:
+
+- Tocar/arrastrar dentro del menú ya no dispara el cierre accidental.
+- El menú se cierra únicamente con el botón `Cerrar` o al seleccionar una opción de navegación.
+- En móvil las pestañas se presentan como control horizontal tipo segmented tabs, siguiendo patrones actuales de apps/PWA.
+
+Archivos modificados:
+
+```text
+src/App.jsx
+src/styles.css
+README.md
+docs/ranking-premium-mockup.png
+```
