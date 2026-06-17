@@ -571,3 +571,25 @@ src/styles.css
 README.md
 docs/ranking-premium-mockup.png
 ```
+
+
+## Fix móvil ranking premium
+
+Se agregó un ajuste responsive para que el ranking premium funcione correctamente en celular/PWA.
+
+Corrige:
+
+- Sidebar móvil como drawer lateral.
+- Visualización del bloque `Ranking actual` dentro del menú móvil.
+- Visualización del ranking completo dentro del módulo `Reporte`.
+- Adaptación de métricas y tabla premium a pantallas pequeñas.
+- Botón de menú/cierre visible sobre el contenido móvil.
+
+Archivos modificados:
+
+```text
+src/App.jsx
+src/styles.css
+README.md
+docs/ranking-premium-mockup.png
+```
