@@ -6,28 +6,6 @@ import { adminPhaseControl, deleteParticipantAndForecast, getAppSettings, getFor
 import './styles.css';
 
 function App(){
-  // mobile-ranking-fix-body-sync
-  useEffect(() => {
-    const syncBody = () => {
-      const drawer =
-        document.querySelector('.sidebar.open, .sidebar.is-open, .sidebar.sidebar-open, .app-sidebar.open, .layout-sidebar.open') ||
-        document.querySelector('[data-sidebar-open="true"]');
-
-      if (drawer) document.body.classList.add('sidebar-open');
-      else document.body.classList.remove('sidebar-open');
-    };
-
-    syncBody();
-    const obs = new MutationObserver(syncBody);
-    obs.observe(document.body, { attributes: true, childList: true, subtree: true, attributeFilter: ['class', 'data-sidebar-open', 'aria-expanded'] });
-
-    return () => {
-      obs.disconnect();
-      document.body.classList.remove('sidebar-open');
-    };
-  }, []);
-
-
   const [participant,setParticipant] = useState(null);
   const [matches,setMatches] = useState([]);
   const [realScores,setRealScores] = useState({});

@@ -573,19 +573,18 @@ docs/ranking-premium-mockup.png
 ```
 
 
-## Fix móvil ranking premium
+## Fix restauración APP móvil segura
 
-Se agregó un ajuste responsive para que el ranking premium funcione correctamente en celular/PWA.
+Este paquete corrige el bloqueo del navegador introducido por el fix móvil anterior.
 
-Corrige:
+Cambios:
 
-- Sidebar móvil como drawer lateral.
-- Visualización del bloque `Ranking actual` dentro del menú móvil.
-- Visualización del ranking completo dentro del módulo `Reporte`.
-- Adaptación de métricas y tabla premium a pantallas pequeñas.
-- Botón de menú/cierre visible sobre el contenido móvil.
+- Se restaura `src/App.jsx` desde la versión ranking premium que funcionaba en web.
+- Se elimina cualquier lógica JS invasiva asociada a apertura/cierre de menú móvil.
+- Se conserva el diseño premium del ranking.
+- Se agregan únicamente ajustes CSS seguros para que el ranking se adapte mejor a móvil.
 
-Archivos modificados:
+Archivos a reemplazar:
 
 ```text
 src/App.jsx
