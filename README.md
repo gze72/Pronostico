@@ -393,30 +393,33 @@ Esto evita el error:
 ```
 
 
-## Sincronización oficial FIFA
+## Sync FIFA seguro por grupo/equipos
 
-Se agregó integración oficial con el endpoint público FIFA:
+Se corrigió `sync-worldcup-results` para evitar actualizaciones incorrectas.
 
-```text
-https://api.fifa.com/api/v3/calendar/matches?language=es&count=500&idSeason=285023
+Reglas nuevas:
+
+- Ya no se actualiza por orden del partido dentro del grupo.
+- Solo se actualiza por coincidencia exacta:
+  `Grupo + Equipo local + Equipo visitante`.
+- Si no existe mapeo seguro, el partido se omite.
+- Los partidos en curso se informan como `live`, pero no alteran puntajes.
+- Los puntajes solo se recalculan con partidos finales.
+
+Ejemplo de respuesta para partido en curso:
+
+```json
+{
+  "liveNotice": "Existen partidos en curso. Los marcadores parciales no se usan para puntajes hasta que FIFA publique el resultado final.",
+  "liveMatchesInfo": [
+    {
+      "message": "Partido en curso: Brasil 1-1 Marruecos. Marcador parcial, puede cambiar."
+    }
+  ]
+}
 ```
 
-La Edge Function `sync-worldcup-results`:
-
-- Consulta FIFA.
-- Lee `Results`.
-- Identifica partidos concluidos por score/result type.
-- Mapea:
-  - `MatchNumber`
-  - `GroupName`
-  - `Home.Abbreviation`
-  - `Away.Abbreviation`
-  - `HomeTeamScore`
-  - `AwayTeamScore`
-- Actualiza `match_results`.
-- Recalcula puntajes usando `recalculate_phase1_scores`.
-
-Body recomendado de prueba:
+Body de prueba recomendado:
 
 ```json
 {
@@ -425,6 +428,146 @@ Body recomendado de prueba:
 }
 ```
 
-Variable opcional:
+Para guardar marcadores en vivo en `match_results` como `status = live`, usar:
 
-- `FIFA_CALENDAR_URL`: permite cambiar el endpoint FIFA sin modificar código.
+```json
+{
+  "adminParticipantId": "ID_DEL_ADMIN",
+  "debug": true,
+  "saveLive": true
+}
+```
+
+Por defecto `saveLive` es `false` para no alterar puntajes.
+
+
+## Prioridad ADMIN sobre FIFA
+
+Se agregó una regla de protección para `sync-worldcup-results`:
+
+- Si `match_results` ya tiene `home_goals` y `away_goals`, el servicio automático NO lo sobrescribe.
+- Si el resultado fue cargado por ADMIN o fuente manual, se respeta como fuente prioritaria.
+- FIFA solo actualiza partidos cuyo marcador esté vacío o no exista.
+- Los partidos en curso tampoco sobrescriben marcadores existentes.
+
+Esto evita que una sincronización automática modifique resultados ya validados por administración.
+
+Respuesta esperada:
+
+```json
+{
+  "updated": 2,
+  "protected": 15,
+  "protectedNotice": "Existen marcadores ya cargados. Se respetan y no se sobrescriben automáticamente."
+}
+```
+
+
+## Fix no-2xx sync FIFA
+
+Se corrigió `sync-worldcup-results` para evitar que el panel muestre:
+
+```text
+Edge Function returned a non-2xx status code
+```
+
+Cambios:
+
+- Si el frontend no envía `adminParticipantId`, la función ya no devuelve HTTP 500.
+- Si ocurre un error controlado, devuelve HTTP 200 con `ok:false` y `handled:true`.
+- Si se envía `adminParticipantId`, se sigue validando que sea rol `admin`.
+- Se mantiene la protección: FIFA no sobrescribe resultados ya cargados o manuales del ADMIN.
+
+Body válido con admin:
+
+```json
+{
+  "adminParticipantId": "ID_DEL_ADMIN",
+  "debug": true
+}
+```
+
+Body compatible si el frontend no envía admin:
+
+```json
+{
+  "debug": true
+}
+```
+
+
+## Limpiar scores automáticos de partidos futuros
+
+Se corrigió `sync-worldcup-results` para evitar que aparezcan scores en partidos que aún no se juegan o no han finalizado.
+
+Reglas:
+
+- Resultado manual/ADMIN: se protege y no se modifica.
+- Resultado automático FIFA anterior: puede corregirse si FIFA ya publicó resultado final.
+- Resultado automático en partido futuro/no finalizado: se limpia y queda `home_goals = null`, `away_goals = null`.
+- Partido en curso: se informa como marcador parcial, pero no altera puntajes.
+- Puntajes se recalculan cuando se actualizan/corrigen/limpian resultados automáticos.
+
+Respuesta esperada:
+
+```json
+{
+  "clearedFutureAuto": 1,
+  "futureNotice": "Se eliminaron marcadores automáticos de partidos futuros o no finalizados."
+}
+```
+
+
+## Fix códigos internos FIFA 3 letras
+
+Se corrigió `sync-worldcup-results` porque la APP usa códigos FIFA de 3 letras en `worldcupData.js`.
+
+Ejemplos:
+
+```text
+TUR, USA, PAR, AUS
+```
+
+Antes se estaba convirtiendo a códigos de 2 letras y eso provocaba cruces incorrectos en partidos como:
+
+```text
+D5 Turquía vs Estados Unidos
+D6 Paraguay vs Australia
+```
+
+Reglas nuevas:
+
+- El mapeo seguro usa códigos internos de 3 letras.
+- `D|TUR|USA => D5`
+- `D|PAR|AUS => D6`
+- Se limpian automáticamente los scores FIFA erróneos previos de D5/D6 si no fueron manual/admin.
+- Los resultados ADMIN/manual siguen protegidos.
+
+Body recomendado:
+
+```json
+{
+  "adminParticipantId": "ID_DEL_ADMIN",
+  "debug": true
+}
+```
+
+
+## Mejora visual ranking premium
+
+Se agregó un diseño profesional/minimalista para el ranking:
+
+- Tarjeta compacta `Ranking actual` en el menú lateral.
+- Top 5 con puntos y porcentaje.
+- Acentos discretos para podio.
+- Botón `Ver ranking completo`.
+- Vista completa en `Reporte` con métricas superiores y tabla premium.
+
+Archivos modificados:
+
+```text
+src/App.jsx
+src/styles.css
+README.md
+docs/ranking-premium-mockup.png
+```
