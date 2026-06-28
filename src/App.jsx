@@ -383,7 +383,7 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
         <span className="phase32-eyebrow">Segunda fase · 16 enfrentamientos directos</span>
         <h2>Pronóstico 16°</h2>
         <p className="phase32-deadline">Tiene hasta las <b>16:00 de hoy 28/jun/2026</b> para pronosticar. Después de esa hora se bloqueará automáticamente; solo ADMIN podrá habilitar nuevamente.</p>
-        <p className="phase32-rules">Puntaje: 1 punto por ganador, 1 punto por resultado exacto y 1 punto bonus si el partido llega a penales y acierta el ganador por penales. Esta fase ya no usa grupos: son 16 cruces directos.</p>
+        <p className="phase32-rules">Puntaje: 1 punto por acertar el ganador en tiempo regular. Si el partido termina empatado y se define por penales, el empate pronosticado cuenta como acierto base de 1 punto; además, recibe 1 punto bonus si también acierta el ganador por penales. El resultado exacto suma 1 punto adicional.</p><div className="phase32-rules-note"><b>Regla de penales:</b> si pronostica empate y el partido realmente llega a penales, obtiene 1 punto por acertar el empate. Si además acierta el ganador de la tanda, suma 1 punto bonus.</div><p className="phase32-hidden-copy"></p>
       </div>
       <div className={`phase32-lock-card ${locked?'locked':'open'}`}>
         <b>{locked ? 'Bloqueado' : 'Abierto'}</b>

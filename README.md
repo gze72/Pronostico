@@ -810,3 +810,27 @@ src/styles.css
 src/lib/storage.js
 README.md
 ```
+
+
+## Regla de puntaje con penales FASE 2
+
+Se actualizó la lógica de `evaluatePhase32Prediction`.
+
+Regla vigente:
+
+```text
+Partido definido en tiempo regular:
+- 1 punto por acertar ganador.
+- 1 punto por acertar resultado exacto.
+
+Partido empatado y definido por penales:
+- 1 punto si el usuario pronosticó empate.
+- 1 punto por resultado exacto si acertó el marcador empatado.
+- 1 punto bonus si además acertó el ganador por penales.
+```
+
+También se actualizó el texto explicativo en la cabecera de Pronóstico 16° y se eliminó el comentario:
+
+```text
+Esta fase ya no usa grupos: son 16 cruces directos.
+```

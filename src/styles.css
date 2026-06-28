@@ -2479,3 +2479,25 @@ nav button:disabled {
     padding: 3px 7px;
   }
 }
+
+
+
+/* Regla de puntaje FASE 2 / penales */
+.phase32-rules-note {
+  margin-top: 10px;
+  padding: 11px 13px;
+  border: 1px solid rgba(185, 154, 86, .28);
+  border-radius: 14px;
+  background: rgba(255, 248, 231, .82);
+  color: #5d4b2f;
+  font-size: .92rem;
+  line-height: 1.45;
+}
+
+.phase32-rules-note b {
+  color: #8c6724;
+}
+
+.phase32-hidden-copy {
+  display: none;
+}

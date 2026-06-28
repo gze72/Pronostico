@@ -330,25 +330,44 @@ export function phase32WentPenalties(record) {
 }
 
 export function evaluatePhase32Prediction(match, predictions, realResults) {
-  const prediction = predictions?.[match.id];
-  const real = realResults?.[match.id];
+  const pred = predictions?.[match.id] || {};
+  const real = realResults?.[match.id] || {};
 
-  if (!prediction || !real || real.homeGoals == null || real.awayGoals == null) {
+  const predHasScore = pred.homeGoals !== '' && pred.awayGoals !== '' && pred.homeGoals != null && pred.awayGoals != null;
+  const realHasScore = real.homeGoals !== '' && real.awayGoals !== '' && real.homeGoals != null && real.awayGoals != null;
+
+  if (!predHasScore || !realHasScore) {
     return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0 };
   }
 
-  const predictedWinner = phase32WinnerFromScore(match, prediction);
+  const predHome = Number(pred.homeGoals);
+  const predAway = Number(pred.awayGoals);
+  const realHome = Number(real.homeGoals);
+  const realAway = Number(real.awayGoals);
+
+  const predTie = predHome === predAway;
+  const realTie = realHome === realAway;
+  const realWentPenalties = Boolean(real.wentPenalties) || realTie;
+
+  const predWinner = phase32WinnerFromScore(match, pred);
   const realWinner = phase32WinnerFromScore(match, real);
-  const predictedWentPenalties = phase32WentPenalties(prediction);
-  const realWentPenalties = Boolean(real.wentPenalties || phase32WentPenalties(real));
 
-  if (!predictedWinner || !realWinner) {
-    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0 };
-  }
+  /*
+    Regla FASE 2:
+    - Si el partido real se define en tiempo regular, el punto de ganador se otorga por acertar al ganador.
+    - Si el partido real termina empatado y se define por penales, el acierto base equivale a haber pronosticado empate.
+      En ese caso, el usuario recibe 1 punto por acertar que el partido llegó igualado.
+    - El bonus de penales es independiente: se otorga solo si el usuario pronosticó empate y acertó el ganador de penales.
+  */
+  const winnerHit = realWentPenalties
+    ? predTie
+    : (predWinner && realWinner ? predWinner === realWinner : false);
 
-  const scoreHit = Number(prediction.homeGoals) === Number(real.homeGoals) && Number(prediction.awayGoals) === Number(real.awayGoals);
-  const winnerHit = predictedWinner === realWinner;
-  const penaltyHit = realWentPenalties ? (predictedWentPenalties && prediction.penaltyWinner === real.penaltyWinner) : null;
+  const scoreHit = predHome === realHome && predAway === realAway;
+
+  const penaltyHit = realWentPenalties
+    ? Boolean(predTie && pred.penaltyWinner && real.penaltyWinner && pred.penaltyWinner === real.penaltyWinner)
+    : null;
 
   return {
     winnerHit,
