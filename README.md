@@ -892,3 +892,33 @@ La lógica de cálculo no cambia respecto a la versión anterior:
 - ganador directo vale 2 puntos;
 - resultado exacto vale 1 punto;
 - empate/penales suma 1 punto por empate y 1 punto por ganador en penales.
+
+
+## Bloqueo diario FASE 2 14:30 Ecuador
+
+Se actualizó el bloqueo de Pronóstico 16°:
+
+```text
+- Bloqueo diario a las 14:30 hora Ecuador.
+- Se bloquean los partidos que se juegan ese día.
+- Si un partido inicia antes de las 14:30, se bloquea antes del inicio.
+- Los partidos de días posteriores siguen disponibles.
+- Si el usuario confirma Pronóstico 16°, se bloquea todo el pronóstico del usuario.
+- El ADMIN puede habilitar nuevamente usando el control de Pronóstico 16°.
+```
+
+La regla por partido usa:
+
+```text
+deadline = menor valor entre:
+1. fecha del partido a las 14:30 Ecuador
+2. hora de inicio del partido
+```
+
+Archivos modificados:
+
+```text
+src/App.jsx
+src/styles.css
+README.md
+```
