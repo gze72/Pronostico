@@ -740,3 +740,26 @@ active_report_phase = phase32
 phase1_backup_status = closed_preserved_for_general_total
 phase32_ranking_enabled = true
 ```
+
+
+## Fix login ranking FASE 2
+
+Se corrigió un error de ejecución que impedía ingresar a la APP después del login.
+
+Causa corregida:
+
+```text
+ReferenceError: statusInfo is not defined
+```
+
+Corrección aplicada:
+
+```text
+statusInfo: premiumStatus({ forecast: r.phase32Forecast })
+```
+
+También se ajustó la tarjeta lateral para mostrar correctamente el máximo de puntos FASE 2:
+
+```text
+16 enfrentamientos x 3 pts = 48 pts
+```

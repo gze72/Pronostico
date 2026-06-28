@@ -105,7 +105,7 @@ function App(){
         {participant.role === 'admin' && <button className={view==='admin'?'active':''} onClick={()=>{setView('admin'); setSidebar(false)}}><ShieldCheck/> Administración</button>}
       </nav>
       <PremiumSidebarRanking rows={sidebarRankingRows} onOpenReport={()=>{setView('reporte'); setSidebar(false)}}/>
-      <div className="user-card"><span>{participant.role === 'admin' ? 'Administrador' : 'Participante'}</span><b>{participant.name}</b><div className="score-mini"><ScoreRatio score={phase32Score} compact/><small>FASE 2 · {scorePercentPhase(phase32Score)}% aciertos</small></div><button onClick={()=>setParticipant(null)}><LogOut size={16}/> Salir</button></div>
+      <div className="user-card"><span>{participant.role === 'admin' ? 'Administrador' : 'Participante'}</span><b>{participant.name}</b><div className="score-mini"><div className="score-ratio compact" title={`${phase32Score.totalPoints || 0} puntos FASE 2`}><strong>{phase32Score.totalPoints || 0}</strong><span>/</span><strong>{maxPossiblePhase32Points(phase32Score)}</strong><small>pts</small></div><small>FASE 2 · {scorePercentPhase(phase32Score)}% aciertos</small></div><button onClick={()=>setParticipant(null)}><LogOut size={16}/> Salir</button></div>
     </aside>
     {sidebar && <button className="sidebar-overlay" aria-label="Cerrar menú" onClick={()=>setSidebar(false)} />}
     <main className="content">
@@ -285,7 +285,7 @@ function buildPremiumPhase32RankingRows(rows,phase32Matches,phase32RealScores){
     const score=calculatePhase32Score(phase32Matches,r.phase32Forecast?.predictions || {},phase32RealScores);
     const possible=(score.evaluatedMatches || 0)*3;
     const percent=possible>0?Math.round((score.totalPoints/possible)*100):0;
-    return {...r,score,possible,percent,forecast:r.phase32Forecast,statusInfo:statusInfo(r.phase32Forecast)};
+    return {...r,score,possible,percent,forecast:r.phase32Forecast,statusInfo:premiumStatus({ forecast: r.phase32Forecast })};
   }).sort((a,b)=> b.score.totalPoints-a.score.totalPoints || b.score.winnerPoints-a.score.winnerPoints || b.score.scorePoints-a.score.scorePoints || b.score.penaltyPoints-a.score.penaltyPoints || a.name.localeCompare(b.name));
 }
 
