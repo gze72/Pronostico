@@ -923,3 +923,19 @@ Efecto:
 - Administración usa los puntajes recalculados por participante.
 
 No requiere ejecutar SQL nuevamente si `phase32_match_penalties` ya existe.
+
+
+## Corrección Reporte usa ranking penalizado
+
+Se corrigió una inconsistencia visual:
+
+```text
+Antes:
+- Menú lateral usaba phase32RankingRows con penalizaciones.
+- Reporte principal recalculaba phase32Rows sin pasar phase32Penalties.
+
+Ahora:
+- Reporte recibe phase32RankingRows desde App.
+- Reporte muestra la misma fuente que el ranking lateral.
+- Si un participante tiene penalizaciones, se muestra el conteo en el detalle.
+```

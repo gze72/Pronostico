@@ -115,7 +115,7 @@ function App(){
       <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}<span>{sidebar ? "Cerrar" : "Menú"}</span></button><div><p>Campeonato Mundial de Fútbol 2026 · Zambranada</p><h1>{view==='pronostico16'?'Pronóstico 16°':view==='pronostico'?'Registro de pronóstico (FASE 1)':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className="sync-pill">{syncStatus}</div><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{view==='pronostico16' ? `${phase32Matches.length}/16 enfrentamientos` : `${completedCount}/12 grupos`}</div></div></header>
       {view==='pronostico16' && <Phase32PredictionView participant={participant} matches={phase32Matches} predictions={phase32Predictions} setPredictions={setPhase32Predictions} realScores={phase32RealScores} setRealScores={setPhase32RealScores} score={phase32Score} status={phase32Status} appSettings={appSettings} persist={persistPhase32} penalties={currentPhase32Penalties}/>}
       {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} realScores={realScores} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm} forecastStatus={forecastStatus} appSettings={appSettings}/>} 
-      {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores} rankingRows={rankingRows} phase32Matches={phase32Matches} phase32RealScores={phase32RealScores}/>} 
+      {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores} rankingRows={rankingRows} phase32Matches={phase32Matches} phase32RealScores={phase32RealScores} phase32RankingRows={phase32RankingRows}/>} 
       {view==='admin' && participant.role === 'admin' && <AdminView matches={matches} realScores={realScores} setRealScores={setRealScores} participant={participant} appSettings={appSettings} setAppSettings={setAppSettings} phase32Matches={phase32Matches} phase32RealScores={phase32RealScores} setPhase32RealScores={setPhase32RealScores}/>} 
       {toast && <div className="toast">{toast}</div>}
       {showPrizePopup && <PrizePopup onClose={() => setShowPrizePopup(false)} />}
@@ -288,7 +288,7 @@ function buildPremiumPhase32RankingRows(rows,phase32Matches,phase32RealScores,ph
     const score=calculatePhase32Score(phase32Matches,r.phase32Forecast?.predictions || {},phase32RealScores,phase32Penalties[r.id] || {});
     const possible=(score.evaluatedMatches || 0)*3;
     const percent=possible>0?Math.round((score.totalPoints/possible)*100):0;
-    return {...r,score,possible,percent,forecast:r.phase32Forecast,statusInfo:premiumStatus({ forecast: r.phase32Forecast })};
+    const penalizedMatches = Object.keys(phase32Penalties[r.id] || {}).length; return {...r,score,possible,percent,penalizedMatches,forecast:r.phase32Forecast,statusInfo:premiumStatus({ forecast: r.phase32Forecast })};
   }).sort((a,b)=> b.score.totalPoints-a.score.totalPoints || b.score.winnerPoints-a.score.winnerPoints || b.score.scorePoints-a.score.scorePoints || b.score.penaltyPoints-a.score.penaltyPoints || a.name.localeCompare(b.name));
 }
 
@@ -442,11 +442,11 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
   </section>
 }
 
-function ReportView({participant,matches,predictions,realScores,rankingRows=[],phase32Matches=[],phase32RealScores={}}){
+function ReportView({participant,matches,predictions,realScores,rankingRows=[],phase32Matches=[],phase32RealScores={},phase32RankingRows=[]}){
   const [reportTab,setReportTab] = useState('ranking16');
   const score = calculateParticipantScore(matches,predictions,realScores);
   const rankedRows = buildPremiumRankingRows(rankingRows,matches,realScores);
-  const phase32Rows = buildPremiumPhase32RankingRows(rankingRows,phase32Matches,phase32RealScores);
+  const phase32Rows = phase32RankingRows.length ? phase32RankingRows : buildPremiumPhase32RankingRows(rankingRows,phase32Matches,phase32RealScores);
   const predictionTitle = participant.role==='admin' ? 'Consulta de pronóstico' : 'Mi pronóstico';
   const predictionText = participant.role==='admin'
     ? 'Use Administración para revisar todos los participantes.'
