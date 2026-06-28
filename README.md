@@ -910,3 +910,16 @@ supabase/20260628_phase32_strict_lock_1400_penalties.sql
 ```
 
 Luego validar login antes de aplicar cualquier ajuste adicional de ranking con penalizaciones.
+
+
+## Penalizaciones visibles en Ranking FASE 2
+
+La APP ahora lee `phase32_match_penalties` y aplica 0 puntos al partido penalizado.
+
+Efecto:
+- Ranking FASE 2 usa penalizaciones.
+- Reporte usa ranking recalculado.
+- Pronóstico 16° muestra alerta en la tarjeta penalizada del usuario.
+- Administración usa los puntajes recalculados por participante.
+
+No requiere ejecutar SQL nuevamente si `phase32_match_penalties` ya existe.
