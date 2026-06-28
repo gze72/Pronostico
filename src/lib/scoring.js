@@ -337,7 +337,7 @@ export function evaluatePhase32Prediction(match, predictions, realResults) {
   const realHasScore = real.homeGoals !== '' && real.awayGoals !== '' && real.homeGoals != null && real.awayGoals != null;
 
   if (!predHasScore || !realHasScore) {
-    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0 };
+    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0, winnerPoints: 0, scorePoints: 0, penaltyPoints: 0 };
   }
 
   const predHome = Number(pred.homeGoals);
@@ -353,11 +353,21 @@ export function evaluatePhase32Prediction(match, predictions, realResults) {
   const realWinner = phase32WinnerFromScore(match, real);
 
   /*
-    Regla FASE 2:
-    - Si el partido real se define en tiempo regular, el punto de ganador se otorga por acertar al ganador.
-    - Si el partido real termina empatado y se define por penales, el acierto base equivale a haber pronosticado empate.
-      En ese caso, el usuario recibe 1 punto por acertar que el partido llegó igualado.
-    - El bonus de penales es independiente: se otorga solo si el usuario pronosticó empate y acertó el ganador de penales.
+    Regla definitiva FASE 2 / Pronóstico 16°:
+
+    Partido con ganador directo:
+    - 2 puntos por acertar ganador.
+    - 1 punto por acertar resultado exacto.
+    - Máximo: 3 puntos.
+
+    Partido empatado y definido por penales:
+    - 1 punto por acertar que el partido terminó empatado.
+    - 1 punto por acertar resultado exacto.
+    - 1 punto bonus por acertar ganador por penales.
+    - Máximo: 3 puntos.
+
+    Total máximo de fase:
+    16 partidos x 3 puntos = 48 puntos.
   */
   const winnerHit = realWentPenalties
     ? predTie
@@ -369,11 +379,18 @@ export function evaluatePhase32Prediction(match, predictions, realResults) {
     ? Boolean(predTie && pred.penaltyWinner && real.penaltyWinner && pred.penaltyWinner === real.penaltyWinner)
     : null;
 
+  const winnerPoints = winnerHit ? (realWentPenalties ? 1 : 2) : 0;
+  const scorePoints = scoreHit ? 1 : 0;
+  const penaltyPoints = penaltyHit ? 1 : 0;
+
   return {
     winnerHit,
     scoreHit,
     penaltyHit,
-    points: (winnerHit ? 1 : 0) + (scoreHit ? 1 : 0) + (penaltyHit ? 1 : 0)
+    winnerPoints,
+    scorePoints,
+    penaltyPoints,
+    points: winnerPoints + scorePoints + penaltyPoints
   };
 }
 
@@ -381,10 +398,10 @@ export function calculatePhase32Score(matches, predictions, realResults) {
   return matches.reduce((acc, match) => {
     const result = evaluatePhase32Prediction(match, predictions, realResults);
     if (result.winnerHit !== null || result.scoreHit !== null || result.penaltyHit !== null) acc.evaluatedMatches += 1;
-    if (result.winnerHit) acc.winnerPoints += 1;
-    if (result.scoreHit) acc.scorePoints += 1;
-    if (result.penaltyHit) acc.penaltyPoints += 1;
-    acc.totalPoints += result.points;
+    acc.winnerPoints += result.winnerPoints || 0;
+    acc.scorePoints += result.scorePoints || 0;
+    acc.penaltyPoints += result.penaltyPoints || 0;
+    acc.totalPoints += result.points || 0;
     return acc;
   }, { winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, totalPoints: 0, evaluatedMatches: 0 });
 }

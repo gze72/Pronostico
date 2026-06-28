@@ -834,3 +834,38 @@ También se actualizó el texto explicativo en la cabecera de Pronóstico 16° y
 ```text
 Esta fase ya no usa grupos: son 16 cruces directos.
 ```
+
+
+## Regla definitiva FASE 2: ganador directo 2 puntos
+
+Se actualizó la lógica de puntaje para garantizar el máximo de 48 puntos:
+
+```text
+16 enfrentamientos x 3 puntos = 48 puntos
+```
+
+### Partido con ganador directo
+
+```text
++2 puntos por acertar ganador directo
++1 punto por acertar resultado exacto
+= máximo 3 puntos
+```
+
+### Partido empatado y definido por penales
+
+```text
++1 punto por pronosticar empate
++1 punto por acertar resultado exacto
++1 punto bonus por acertar ganador en penales
+= máximo 3 puntos
+```
+
+### Archivos modificados
+
+```text
+src/lib/scoring.js
+src/App.jsx
+src/styles.css
+README.md
+```
