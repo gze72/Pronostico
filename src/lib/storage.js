@@ -226,7 +226,7 @@ export async function listParticipantsWithForecasts(){
   if (supabase) {
     const { data, error } = await supabase
       .from('participants')
-      .select('id,name,unique_key,role,created_at,forecasts(predictions,confirmed,status,confirmed_at,updated_at),participant_scores(total_points,winner_points,score_points,evaluated_matches,updated_at)')
+      .select('id,name,unique_key,role,created_at,forecasts(predictions,confirmed,status,confirmed_at,updated_at),phase32_forecasts(predictions,confirmed,status,confirmed_at,updated_at),participant_scores(total_points,winner_points,score_points,evaluated_matches,updated_at)')
       .order('created_at');
 
     if (error) throw error;
@@ -237,6 +237,7 @@ export async function listParticipantsWithForecasts(){
       uniqueKey:p.unique_key,
       role:p.role,
       forecast:p.forecasts?.[0],
+      phase32Forecast:p.phase32_forecasts?.[0],
       score:p.participant_scores?.[0] || { total_points:0, winner_points:0, score_points:0, evaluated_matches:0 }
     }));
   }
@@ -245,6 +246,7 @@ export async function listParticipantsWithForecasts(){
   return s.participants.map(p => ({
     ...p,
     forecast:s.forecasts.find(f=>f.participantId===p.id),
+    phase32Forecast:(s.phase32Forecasts || []).find(f=>f.participantId===p.id),
     score:s.participantScores?.[p.id] || { totalPoints:0, winnerPoints:0, scorePoints:0, evaluatedMatches:0 }
   }));
 }

@@ -2338,3 +2338,63 @@ nav button:disabled {
   .phase32-fixture-meta b{text-align:left;}
   .topbar-actions .progress-pill{display:inline-flex;}
 }
+
+
+
+/* ==========================================================
+   FASE 2 Ranking / Backup FASE 1
+   ========================================================== */
+
+.report-tabs-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.phase32-admin-detail-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 20px;
+}
+
+.phase32-admin-detail-row {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(185, 154, 86, .22);
+  border-radius: 14px;
+  background: rgba(255,255,255,.62);
+}
+
+.phase32-admin-detail-row strong {
+  color: var(--ink);
+}
+
+.phase32-admin-detail-row span,
+.phase32-admin-detail-row small {
+  color: var(--muted);
+}
+
+.admin-subtitle {
+  margin: 18px 0 10px;
+}
+
+.phase32-real-admin-row select {
+  min-width: 150px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+@media (max-width: 760px) {
+  .report-tabs-3 {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 6px;
+  }
+
+  .report-tabs-3 button {
+    min-width: max-content;
+    flex: 0 0 auto;
+  }
+}

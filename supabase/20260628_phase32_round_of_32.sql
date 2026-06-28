@@ -66,3 +66,32 @@ set predictions = '{}'::jsonb,
 insert into public.app_settings(key,value)
 values ('phase32_fixture_version','"real_round_of_32_20260628"'::jsonb)
 on conflict (key) do update set value = excluded.value;
+
+
+-- Respaldo lógico y ranking FASE 2
+-- La FASE 1 se conserva en public.participant_scores con phase='phase1'.
+-- La FASE 2 se calcula desde phase32_forecasts + phase32_results en frontend,
+-- y esta vista deja preparada la base para reportes SQL futuros.
+
+create or replace view public.phase32_participant_scores_view as
+select
+  p.id as participant_id,
+  p.name,
+  p.role,
+  f.confirmed,
+  f.status,
+  f.confirmed_at,
+  f.updated_at,
+  f.predictions
+from public.participants p
+left join public.phase32_forecasts f
+  on f.participant_id = p.id;
+
+insert into public.app_settings(key, value)
+values
+  ('active_report_phase', '"phase32"'::jsonb),
+  ('phase1_backup_status', '"closed_preserved_for_general_total"'::jsonb),
+  ('phase32_ranking_enabled', 'true'::jsonb)
+on conflict (key) do update set
+  value = excluded.value,
+  updated_at = now();

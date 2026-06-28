@@ -699,3 +699,44 @@ src/lib/scoring.js
 supabase/20260628_phase32_round_of_32.sql
 README.md
 ```
+
+
+## Ranking FASE 2 y respaldo FASE 1
+
+Esta versión separa los puntajes por fase:
+
+### FASE 1
+- Queda respaldada como histórico.
+- No se mezcla con Pronóstico 16°.
+- Se conserva para el futuro acumulado general.
+
+### FASE 2 / Pronóstico 16°
+- El ranking principal se calcula con los 16 enfrentamientos directos.
+- Puntaje:
+  - 1 punto por ganador.
+  - 1 punto por score exacto.
+  - 1 punto bonus si hubo penales y acierta ganador de penales.
+- El Reporte muestra por defecto el ranking FASE 2.
+- El Admin muestra puntaje FASE 2 y detalle por participante.
+- El Admin también conserva visible el histórico FASE 1.
+
+### Base de datos
+Ejecutar nuevamente:
+
+```text
+supabase/20260628_phase32_round_of_32.sql
+```
+
+La migración agrega la vista:
+
+```text
+public.phase32_participant_scores_view
+```
+
+y registra los settings:
+
+```text
+active_report_phase = phase32
+phase1_backup_status = closed_preserved_for_general_total
+phase32_ranking_enabled = true
+```

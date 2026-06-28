@@ -55,10 +55,11 @@ function App(){
   },[]);
 
   const currentScore = calculateParticipantScore(matches,predictions,realScores);
-  const publicRankingRows = useMemo(() => buildPremiumRankingRows(rankingRows,matches,realScores), [rankingRows,matches,realScores]);
-  const sidebarRankingRows = publicRankingRows.slice(0,5);
   const phase32Matches = useMemo(() => buildRealRoundOf32(matches,realScores), [matches,realScores]);
   const phase32Score = useMemo(() => calculatePhase32Score(phase32Matches,phase32Predictions,phase32RealScores), [phase32Matches,phase32Predictions,phase32RealScores]);
+  const publicRankingRows = useMemo(() => buildPremiumRankingRows(rankingRows,matches,realScores), [rankingRows,matches,realScores]);
+  const phase32RankingRows = useMemo(() => buildPremiumPhase32RankingRows(rankingRows,phase32Matches,phase32RealScores), [rankingRows,phase32Matches,phase32RealScores]);
+  const sidebarRankingRows = phase32RankingRows.slice(0,5);
   useEffect(()=>{ if(participant && matches.length) saveParticipantScore(participant.id,currentScore).catch(()=>{}); },[participant, matches, predictions, realScores]);
   const completedCount = GROUPS.filter(g=>groupCompleted(g.id,matches,predictions)).length;
   const canConfirm = allGroupsCompleted(matches,predictions);
@@ -104,15 +105,15 @@ function App(){
         {participant.role === 'admin' && <button className={view==='admin'?'active':''} onClick={()=>{setView('admin'); setSidebar(false)}}><ShieldCheck/> Administración</button>}
       </nav>
       <PremiumSidebarRanking rows={sidebarRankingRows} onOpenReport={()=>{setView('reporte'); setSidebar(false)}}/>
-      <div className="user-card"><span>{participant.role === 'admin' ? 'Administrador' : 'Participante'}</span><b>{participant.name}</b><div className="score-mini"><ScoreRatio score={currentScore} compact/><small>FASE 1 · {scorePercent(currentScore)}% aciertos</small></div><button onClick={()=>setParticipant(null)}><LogOut size={16}/> Salir</button></div>
+      <div className="user-card"><span>{participant.role === 'admin' ? 'Administrador' : 'Participante'}</span><b>{participant.name}</b><div className="score-mini"><ScoreRatio score={phase32Score} compact/><small>FASE 2 · {scorePercentPhase(phase32Score)}% aciertos</small></div><button onClick={()=>setParticipant(null)}><LogOut size={16}/> Salir</button></div>
     </aside>
     {sidebar && <button className="sidebar-overlay" aria-label="Cerrar menú" onClick={()=>setSidebar(false)} />}
     <main className="content">
       <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}<span>{sidebar ? "Cerrar" : "Menú"}</span></button><div><p>Campeonato Mundial de Fútbol 2026 · Zambranada</p><h1>{view==='pronostico16'?'Pronóstico 16°':view==='pronostico'?'Registro de pronóstico (FASE 1)':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className="sync-pill">{syncStatus}</div><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{view==='pronostico16' ? `${phase32Matches.length}/16 enfrentamientos` : `${completedCount}/12 grupos`}</div></div></header>
       {view==='pronostico16' && <Phase32PredictionView participant={participant} matches={phase32Matches} predictions={phase32Predictions} setPredictions={setPhase32Predictions} realScores={phase32RealScores} setRealScores={setPhase32RealScores} score={phase32Score} status={phase32Status} appSettings={appSettings} persist={persistPhase32}/>}
       {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} realScores={realScores} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm} forecastStatus={forecastStatus} appSettings={appSettings}/>} 
-      {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores} rankingRows={rankingRows}/>} 
-      {view==='admin' && participant.role === 'admin' && <AdminView matches={matches} realScores={realScores} setRealScores={setRealScores} participant={participant} appSettings={appSettings} setAppSettings={setAppSettings}/>} 
+      {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores} rankingRows={rankingRows} phase32Matches={phase32Matches} phase32RealScores={phase32RealScores}/>} 
+      {view==='admin' && participant.role === 'admin' && <AdminView matches={matches} realScores={realScores} setRealScores={setRealScores} participant={participant} appSettings={appSettings} setAppSettings={setAppSettings} phase32Matches={phase32Matches} phase32RealScores={phase32RealScores} setPhase32RealScores={setPhase32RealScores}/>} 
       {toast && <div className="toast">{toast}</div>}
       {showPrizePopup && <PrizePopup onClose={() => setShowPrizePopup(false)} />}
     </main>
@@ -183,6 +184,16 @@ function scoreRatioTitle(score) {
 
 function scorePercent(score) {
   const possible = maxPossiblePoints(score);
+  const earned = score?.totalPoints || 0;
+  return possible > 0 ? Math.round((earned / possible) * 100) : 0;
+}
+
+function maxPossiblePhase32Points(score) {
+  return (score?.evaluatedMatches || 0) * 3;
+}
+
+function scorePercentPhase(score) {
+  const possible = maxPossiblePhase32Points(score);
   const earned = score?.totalPoints || 0;
   return possible > 0 ? Math.round((earned / possible) * 100) : 0;
 }
@@ -268,17 +279,28 @@ function buildPremiumRankingRows(rows,matches,realScores){
     })
     .sort((a,b)=> b.score.totalPoints-a.score.totalPoints || a.name.localeCompare(b.name));
 }
+
+function buildPremiumPhase32RankingRows(rows,phase32Matches,phase32RealScores){
+  return rows.map(r=>{
+    const score=calculatePhase32Score(phase32Matches,r.phase32Forecast?.predictions || {},phase32RealScores);
+    const possible=(score.evaluatedMatches || 0)*3;
+    const percent=possible>0?Math.round((score.totalPoints/possible)*100):0;
+    return {...r,score,possible,percent,forecast:r.phase32Forecast,statusInfo:statusInfo(r.phase32Forecast)};
+  }).sort((a,b)=> b.score.totalPoints-a.score.totalPoints || b.score.winnerPoints-a.score.winnerPoints || b.score.scorePoints-a.score.scorePoints || b.score.penaltyPoints-a.score.penaltyPoints || a.name.localeCompare(b.name));
+}
+
 function PremiumSidebarRanking({rows,onOpenReport}){
   return <section className="premium-sidebar-ranking"><div className="premium-sidebar-ranking-head"><div><span>Ranking actual</span><small>Actualizado · ahora</small></div><b>🏆</b></div><div className="premium-sidebar-ranking-list">{rows.length?rows.map((row,index)=><div className={`premium-sidebar-rank rank-${index+1}`} key={row.id || row.name}><i>{rankMedal(index)}</i><div><strong>{row.name}</strong><small>{row.score.totalPoints} pts · {row.percent}%</small></div></div>):<p className="premium-sidebar-empty">Aún no hay ranking disponible.</p>}</div><button type="button" className="premium-sidebar-link" onClick={onOpenReport}>Ver ranking completo <span>›</span></button></section>
 }
-function PremiumRankingReport({rows}){
+function PremiumRankingReport({rows, phaseLabel='FASE 2 · Pronóstico 16°', showPenalty=true}){
   const leader=rows[0];
   const maxPoints=rows.reduce((max,r)=>Math.max(max,r.possible||0),0);
-  const evaluated=maxPoints>0?maxPoints/2:0;
+  const evaluated=showPenalty ? (maxPoints>0?Math.round(maxPoints/3):0) : (maxPoints>0?Math.round(maxPoints/2):0);
   const confirmed=rows.filter(r=>r.forecast?.confirmed).length;
   const winnerTotal=leader?.score?.winnerPoints || 0;
   const scoreTotal=leader?.score?.scorePoints || 0;
-  return <section className="premium-ranking-report"><div className="premium-ranking-hero"><div className="premium-ranking-icon">🏆</div><div><span>Reporte oficial</span><h2>Ranking de participantes</h2><p>Resumen general de puntos, rendimiento y estado de participación en la FASE 1.</p></div></div><div className="premium-ranking-metrics"><article><span>Puntos FASE 1</span><strong>{leader?`${leader.score.totalPoints} / ${maxPoints}`:`0 / ${maxPoints}`} <small>pts</small></strong><p>{leader?`${leader.percent}% de aciertos del líder`:'Sin puntaje registrado'}</p></article><article><span>Ganador</span><strong>{winnerTotal}</strong><p>Predicciones correctas del líder</p></article><article><span>Score exacto</span><strong>{scoreTotal}</strong><p>Marcadores exactos del líder</p></article><article><span>Partidos evaluados</span><strong>{evaluated}</strong><p>{rows.length} participantes · {confirmed} confirmados</p></article></div><div className="premium-ranking-table"><div className="premium-ranking-table-head"><span>Pos</span><span>Participante</span><span>Puntos</span><span>Porcentaje</span><span>Estado</span></div>{rows.length?rows.map((row,index)=><div key={row.id || row.name} className={`premium-ranking-line ${index===0?'leader':''}`}><span className="premium-pos">{rankMedal(index)}</span><div className="premium-participant"><i>{participantInitials(row.name)}</i><div><strong>{row.name}</strong><small>Ganador: {row.score.winnerPoints} · Score: {row.score.scorePoints}</small></div></div><b>{row.score.totalPoints} pts</b><em>{row.percent}%</em><span className={`premium-status ${row.statusInfo.cls}`}>{row.statusInfo.label}</span></div>):<p className="premium-ranking-empty">No hay participantes disponibles para mostrar.</p>}</div></section>
+  const penaltyTotal=leader?.score?.penaltyPoints || 0;
+  return <section className="premium-ranking-report"><div className="premium-ranking-hero"><div className="premium-ranking-icon">🏆</div><div><span>Reporte oficial</span><h2>Ranking de participantes</h2><p>Ranking actualizado de {phaseLabel}. La FASE 1 queda respaldada como histórico para el acumulado general final.</p></div></div><div className="premium-ranking-metrics"><article><span>Puntos {phaseLabel}</span><strong>{leader?`${leader.score.totalPoints} / ${maxPoints}`:`0 / ${maxPoints}`} <small>pts</small></strong><p>{leader?`${leader.percent}% de aciertos del líder`:'Sin puntaje registrado'}</p></article><article><span>Ganador</span><strong>{winnerTotal}</strong><p>Predicciones correctas del líder</p></article><article><span>Score exacto</span><strong>{scoreTotal}</strong><p>Marcadores exactos del líder</p></article><article><span>{showPenalty?'Bonus penales':'Partidos evaluados'}</span><strong>{showPenalty?penaltyTotal:evaluated}</strong><p>{showPenalty?`${evaluated} enfrentamientos evaluados`:`${rows.length} participantes · ${confirmed} confirmados`}</p></article></div><div className="premium-ranking-table"><div className="premium-ranking-table-head"><span>Pos</span><span>Participante</span><span>Puntos</span><span>Porcentaje</span><span>Estado</span></div>{rows.length?rows.map((row,index)=><div key={row.id || row.name} className={`premium-ranking-line ${index===0?'leader':''}`}><span className="premium-pos">{rankMedal(index)}</span><div className="premium-participant"><i>{participantInitials(row.name)}</i><div><strong>{row.name}</strong><small>Ganador: {row.score.winnerPoints || 0} · Score: {row.score.scorePoints || 0}{showPenalty?` · Penales: ${row.score.penaltyPoints || 0}`:''}</small></div></div><b>{row.score.totalPoints} pts</b><em>{row.percent}%</em><span className={`premium-status ${row.statusInfo.cls}`}>{row.statusInfo.label}</span></div>):<p className="premium-ranking-empty">No hay participantes disponibles para mostrar.</p>}</div></section>
 }
 
 
@@ -405,20 +427,25 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
   </section>
 }
 
-function ReportView({participant,matches,predictions,realScores,rankingRows=[]}){
-  const [reportTab,setReportTab] = useState('ranking');
+function ReportView({participant,matches,predictions,realScores,rankingRows=[],phase32Matches=[],phase32RealScores={}}){
+  const [reportTab,setReportTab] = useState('ranking16');
   const score = calculateParticipantScore(matches,predictions,realScores);
   const rankedRows = buildPremiumRankingRows(rankingRows,matches,realScores);
+  const phase32Rows = buildPremiumPhase32RankingRows(rankingRows,phase32Matches,phase32RealScores);
   const predictionTitle = participant.role==='admin' ? 'Consulta de pronóstico' : 'Mi pronóstico';
   const predictionText = participant.role==='admin'
     ? 'Use Administración para revisar todos los participantes.'
     : 'Vista privada de su pronóstico registrado o guardado.';
 
   return <div className="report-stack report-tabs-layout">
-    <section className="report-tabs-shell" aria-label="Opciones de reporte">
-      <button type="button" className={reportTab==='ranking'?'active':''} onClick={()=>setReportTab('ranking')}>
+    <section className="report-tabs-shell report-tabs-3" aria-label="Opciones de reporte">
+      <button type="button" className={reportTab==='ranking16'?'active':''} onClick={()=>setReportTab('ranking16')}>
         <Trophy size={16}/>
-        <span>Ranking de participantes</span>
+        <span>Ranking FASE 2</span>
+      </button>
+      <button type="button" className={reportTab==='historico1'?'active':''} onClick={()=>setReportTab('historico1')}>
+        <BarChart3 size={16}/>
+        <span>Histórico FASE 1</span>
       </button>
       <button type="button" className={reportTab==='pronosticos'?'active':''} onClick={()=>setReportTab('pronosticos')}>
         <BarChart3 size={16}/>
@@ -426,7 +453,9 @@ function ReportView({participant,matches,predictions,realScores,rankingRows=[]})
       </button>
     </section>
 
-    {reportTab==='ranking' && <PremiumRankingReport rows={rankedRows}/>}
+    {reportTab==='ranking16' && <PremiumRankingReport rows={phase32Rows} phaseLabel="FASE 2 · Pronóstico 16°" showPenalty={true}/>}
+
+    {reportTab==='historico1' && <PremiumRankingReport rows={rankedRows} phaseLabel="FASE 1" showPenalty={false}/>}
 
     {reportTab==='pronosticos' && <section className="panel report private-report report-tab-panel">
       <h2>{predictionTitle}</h2>
@@ -442,85 +471,7 @@ function ReportView({participant,matches,predictions,realScores,rankingRows=[]})
   </div>
 }
 
-function buildRankingShareText(rows, matches, realScores, editorialSummaryText='') {
-  const ranked = [...rows]
-    .map(r => ({
-      ...r,
-      score: calculateParticipantScore(matches, r.forecast?.predictions || {}, realScores)
-    }))
-    .sort((a,b) =>
-      b.score.totalPoints - a.score.totalPoints ||
-      a.name.localeCompare(b.name)
-    );
-
-  const possible = ranked.reduce((max, r) => Math.max(max, maxPossiblePoints(r.score)), 0);
-  const evaluatedMatches = possible > 0 ? possible / 2 : 0;
-  const confirmedCount = ranked.filter(r => r.forecast?.confirmed).length;
-  const now = new Date();
-
-  const date = now.toLocaleDateString('es-EC', {
-    day:'2-digit',
-    month:'short',
-    year:'numeric'
-  }).replace('.', '');
-
-  const time = now.toLocaleTimeString('es-EC', {
-    hour:'2-digit',
-    minute:'2-digit'
-  });
-
-  const leader = ranked[0];
-  const topScore = leader?.score?.totalPoints || 0;
-  const topPercent = leader ? scorePercent(leader.score) : 0;
-
-  const separator = '━━━━━━━━━━━━━━━━━━━━';
-  const thin = '────────────────────';
-
-  const podiumIcon = index => {
-    if (index === 0) return '🥇';
-    if (index === 1) return '🥈';
-    if (index === 2) return '🥉';
-    return `${String(index + 1).padStart(2, '0')}.`;
-  };
-
-  const statusIcon = r => {
-    if (r.forecast?.confirmed) return '●';
-    if (r.forecast?.status === 'draft') return '◐';
-    return '○';
-  };
-
-  const rankingLines = ranked.map((r, index) => {
-    const icon = podiumIcon(index);
-    const pct = `${scorePercent(r.score)}%`;
-    const pts = `${r.score.totalPoints} pts`;
-    const status = statusIcon(r);
-    return `${icon} ${r.name}\n   ${pts} · ${pct} ${status}`;
-  });
-
-  return [
-    '🏆 *ZAMBRANADA MUNDIAL 2026*',
-    '_Ranking oficial de participantes_',
-    separator,
-    `Actualizado: ${date} · ${time}`,
-    `Partidos evaluados: ${evaluatedMatches}`,
-    `Puntaje máximo: ${possible} pts`,
-    `Participantes: ${ranked.length} · Confirmados: ${confirmedCount}`,
-    thin,
-    ...(editorialSummaryText ? editorialSummaryText.split('\n') : ['Claves de la jornada:', '• Resumen editorial pendiente de actualización.']),
-    thin,
-    `Líder actual: ${leader?.name || 'Pendiente'}`,
-    `Marca líder: ${topScore} pts · ${topPercent}%`,
-    separator,
-    '*TABLA DE POSICIONES*',
-    '',
-    ...rankingLines,
-    separator,
-    '● Confirmado   ◐ Borrador   ○ Sin pronóstico',
-    '_Reporte generado desde el panel administrador._'
-  ].join('\n');
-}
-
-function AdminView({matches,realScores,setRealScores,participant,appSettings,setAppSettings}){
+function AdminView({matches,realScores,setRealScores,participant,appSettings,setAppSettings,phase32Matches=[],phase32RealScores={},setPhase32RealScores}){
   const [rows,setRows]=useState([]);
   const [selected,setSelected]=useState(null);
   const [participantSort,setParticipantSort]=useState('points_desc');
@@ -529,6 +480,7 @@ function AdminView({matches,realScores,setRealScores,participant,appSettings,set
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState('');
   const [scoreDraft,setScoreDraft]=useState({});
+  const [phase32ScoreDraft,setPhase32ScoreDraft]=useState({});
 
   async function syncNow(){
     try {
@@ -683,18 +635,39 @@ async function removeSelected(){
     }
   }
 
+
+  async function persistPhase32RealScore(match){
+    const draft = phase32ScoreDraft[match.id] || {};
+    const current = phase32RealScores[match.id] || {};
+    const homeGoals = draft.homeGoals ?? current.homeGoals ?? '';
+    const awayGoals = draft.awayGoals ?? current.awayGoals ?? '';
+    const penaltyWinner = draft.penaltyWinner ?? current.penaltyWinner ?? null;
+
+    try {
+      await savePhase32Result(participant.id, match.id, homeGoals, awayGoals, penaltyWinner, homeGoals === '' || awayGoals === '' ? 'scheduled' : 'finished');
+      const fresh = await getPhase32Results();
+      setPhase32RealScores?.(fresh);
+      setPhase32ScoreDraft(prev => ({...prev, [match.id]: {}}));
+      setMessage('Resultado real FASE 2 actualizado.');
+    } catch (ex) {
+      setMessage(ex.message || 'No se pudo guardar el resultado real FASE 2.');
+    }
+  }
+
   const detail=selected?.forecast?.predictions || {};
+  const phase32Detail=selected?.phase32Forecast?.predictions || {};
   const selectedScore = selected ? calculateParticipantScore(matches,detail,realScores) : null;
+  const selectedPhase32Score = selected ? calculatePhase32Score(phase32Matches,phase32Detail,phase32RealScores) : null;
   const sortedRows = [...rows].sort((a,b)=>{
-    const scoreA = calculateParticipantScore(matches,a.forecast?.predictions || {},realScores).totalPoints;
-    const scoreB = calculateParticipantScore(matches,b.forecast?.predictions || {},realScores).totalPoints;
+    const scoreA = calculatePhase32Score(phase32Matches,a.phase32Forecast?.predictions || {},phase32RealScores).totalPoints;
+    const scoreB = calculatePhase32Score(phase32Matches,b.phase32Forecast?.predictions || {},phase32RealScores).totalPoints;
     if (participantSort === 'points_desc') return scoreB - scoreA || a.name.localeCompare(b.name);
     if (participantSort === 'points_asc') return scoreA - scoreB || a.name.localeCompare(b.name);
     if (participantSort === 'name_desc') return b.name.localeCompare(a.name);
     return a.name.localeCompare(b.name);
   });
 
-  return <section className="admin-layout"><div className="panel admin-controls"><h2><ShieldCheck/> Controles de fase</h2><div className="control-grid"><div><b>Registro de nuevos usuarios</b><span>{appSettings.registrationEnabled ? 'Abierto' : 'Cerrado'}</span></div><button className="ghost" disabled={busy} onClick={()=>runPhaseAction('set_registration_enabled', !appSettings.registrationEnabled)}>{appSettings.registrationEnabled ? 'Inhabilitar registros' : 'Habilitar registros'}</button><div><b>Pronósticos FASE 1</b><span>{appSettings.phase1PredictionsLocked ? 'Bloqueados/confirmados' : 'Habilitados para edición'}</span></div><button className={appSettings.phase1PredictionsLocked ? 'ghost' : 'danger'} disabled={busy} onClick={()=>runPhaseAction(appSettings.phase1PredictionsLocked ? 'unlock_all_predictions' : 'lock_all_predictions')}>{appSettings.phase1PredictionsLocked ? 'Habilitar pronósticos' : 'Bloquear todos'}</button><div><b>Pronóstico 16°</b><span>{phase32DeadlinePassed() ? (appSettings.phase32PredictionsUnlocked ? 'Habilitado por ADMIN' : 'Bloqueado automáticamente') : 'Abierto hasta hoy 16:00'}</span></div><button className={appSettings.phase32PredictionsUnlocked ? 'danger' : 'ghost'} disabled={busy} onClick={()=>runPhaseAction('set_phase32_unlocked', !appSettings.phase32PredictionsUnlocked)}>{appSettings.phase32PredictionsUnlocked ? 'Bloquear Pronóstico 16°' : 'Habilitar Pronóstico 16°'}</button></div><p className="muted">Estas acciones afectan a todos los participantes. El bloqueo masivo coloca los pronósticos existentes en estado CONFIRMADO.</p></div><div className="panel"><h2><Users/> Participantes registrados</h2><div className="participant-sort"><label>Ordenar por</label><select value={participantSort} onChange={e=>setParticipantSort(e.target.value)}><option value="points_desc">Puntos: mayor a menor</option><option value="points_asc">Puntos: menor a mayor</option><option value="name_asc">Nombre: A-Z</option><option value="name_desc">Nombre: Z-A</option></select></div><div className="admin-share-actions"><button className="primary share-ranking-btn" disabled={!rows.length} onClick={shareRanking}><Share2 size={16}/> Compartir ranking</button></div><div className="participant-list">{sortedRows.map(r=>{const rowScore=calculateParticipantScore(matches,r.forecast?.predictions || {},realScores); return <button key={r.id} onClick={()=>setSelected(r)} className={selected?.id===r.id?'selected':''}><b>{r.name}</b><span>{r.role} · {r.forecast?.confirmed ? 'Confirmado' : r.forecast?.status === 'draft' ? 'Borrador' : 'Sin pronóstico'} · {scoreShortLabel(rowScore)}</span></button>})}</div></div><div className="panel"><div className="admin-title-row"><h2>Detalle</h2><button className="ghost" disabled={busy} onClick={syncNow}>Recalcular puntajes</button></div>{!selected ? <p className="muted">Seleccione un participante para consultar sus pronósticos.</p> : <><div className="admin-detail-head"><div><p><b>{selected.name}</b> · clave: {selected.uniqueKey}</p>{selectedScore && <p className="muted">Puntos FASE 1: <b>{scoreShortLabel(selectedScore)}</b> · Ganador: {selectedScore.winnerPoints} · Score: {selectedScore.scorePoints}</p>}</div>{selected.role !== 'admin' && <button className="danger" disabled={busy} onClick={removeSelected}>Eliminar usuario y pronóstico</button>}</div>{message && <p className="admin-message">{message}</p>}<details className="result-admin"><summary>Actualizar Score real FASE 1 <span className="admin-only-badge">Solo ADMIN</span></summary><div className="real-admin-list">{matches.map(m=>{const current=realScores[m.id] || {}; const draft=scoreDraft[m.id] || {}; return <div className="real-admin-row" key={m.id}><span>{m.matchNo}</span><b>{label(m.home)} vs {label(m.away)}</b><input type="number" min="0" max="99" value={draft.homeGoals ?? current.homeGoals ?? ''} onChange={e=>setScoreDraft(prev=>({...prev,[m.id]:{...(prev[m.id]||{}),homeGoals:e.target.value}}))}/><span>:</span><input type="number" min="0" max="99" value={draft.awayGoals ?? current.awayGoals ?? ''} onChange={e=>setScoreDraft(prev=>({...prev,[m.id]:{...(prev[m.id]||{}),awayGoals:e.target.value}}))}/><button className="ghost" onClick={()=>persistRealScore(m.id)}>Guardar</button></div>})}</div></details><div className="report-groups compact admin-standings-grid">{GROUPS.map(g=><div className="report-card" key={g.id}><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,detail)}/></div>)}</div></>}</div>{showSharePreview && <div className="share-preview-overlay" role="dialog" aria-modal="true"><div className="share-preview-card"><div className="share-preview-head"><div><span>Vista previa</span><h3>Ranking para compartir</h3></div><button className="ghost" onClick={()=>setShowSharePreview(false)}>Cerrar</button></div><pre>{shareText}</pre><div className="share-preview-actions"><button className="ghost" onClick={async()=>{await navigator.clipboard?.writeText(shareText); setMessage('Ranking copiado al portapapeles.');}}>Copiar texto</button><button className="primary" onClick={confirmShareRanking}><Share2 size={16}/> Compartir</button></div></div></div>}</section>
+  return <section className="admin-layout"><div className="panel admin-controls"><h2><ShieldCheck/> Controles de fase</h2><div className="control-grid"><div><b>Registro de nuevos usuarios</b><span>{appSettings.registrationEnabled ? 'Abierto' : 'Cerrado'}</span></div><button className="ghost" disabled={busy} onClick={()=>runPhaseAction('set_registration_enabled', !appSettings.registrationEnabled)}>{appSettings.registrationEnabled ? 'Inhabilitar registros' : 'Habilitar registros'}</button><div><b>Pronósticos FASE 1</b><span>{appSettings.phase1PredictionsLocked ? 'Bloqueados/confirmados' : 'Habilitados para edición'}</span></div><button className={appSettings.phase1PredictionsLocked ? 'ghost' : 'danger'} disabled={busy} onClick={()=>runPhaseAction(appSettings.phase1PredictionsLocked ? 'unlock_all_predictions' : 'lock_all_predictions')}>{appSettings.phase1PredictionsLocked ? 'Habilitar pronósticos' : 'Bloquear todos'}</button><div><b>Pronóstico 16°</b><span>{phase32DeadlinePassed() ? (appSettings.phase32PredictionsUnlocked ? 'Habilitado por ADMIN' : 'Bloqueado automáticamente') : 'Abierto hasta hoy 16:00'}</span></div><button className={appSettings.phase32PredictionsUnlocked ? 'danger' : 'ghost'} disabled={busy} onClick={()=>runPhaseAction('set_phase32_unlocked', !appSettings.phase32PredictionsUnlocked)}>{appSettings.phase32PredictionsUnlocked ? 'Bloquear Pronóstico 16°' : 'Habilitar Pronóstico 16°'}</button></div><p className="muted">Estas acciones afectan a todos los participantes. El bloqueo masivo coloca los pronósticos existentes en estado CONFIRMADO.</p></div><div className="panel"><h2><Users/> Participantes registrados</h2><div className="participant-sort"><label>Ordenar por</label><select value={participantSort} onChange={e=>setParticipantSort(e.target.value)}><option value="points_desc">Puntos: mayor a menor</option><option value="points_asc">Puntos: menor a mayor</option><option value="name_asc">Nombre: A-Z</option><option value="name_desc">Nombre: Z-A</option></select></div><div className="admin-share-actions"><button className="primary share-ranking-btn" disabled={!rows.length} onClick={shareRanking}><Share2 size={16}/> Compartir ranking</button></div><div className="participant-list">{sortedRows.map(r=>{const rowScore=calculatePhase32Score(phase32Matches,r.phase32Forecast?.predictions || {},phase32RealScores); return <button key={r.id} onClick={()=>setSelected(r)} className={selected?.id===r.id?'selected':''}><b>{r.name}</b><span>{r.role} · FASE 2: {r.phase32Forecast?.confirmed ? 'Confirmado' : r.phase32Forecast?.status === 'draft' ? 'Borrador' : 'Sin pronóstico'} · {rowScore.totalPoints} pts · {scorePercentPhase(rowScore)}%</span></button>})}</div></div><div className="panel"><div className="admin-title-row"><h2>Detalle</h2><button className="ghost" disabled={busy} onClick={syncNow}>Recalcular puntajes</button></div>{!selected ? <p className="muted">Seleccione un participante para consultar sus pronósticos.</p> : <><div className="admin-detail-head"><div><p><b>{selected.name}</b> · clave: {selected.uniqueKey}</p>{selectedPhase32Score && <p className="muted">Puntos FASE 2: <b>{selectedPhase32Score.totalPoints} pts · {scorePercentPhase(selectedPhase32Score)}%</b> · Ganador: {selectedPhase32Score.winnerPoints} · Score: {selectedPhase32Score.scorePoints} · Penales: {selectedPhase32Score.penaltyPoints}</p>}{selectedScore && <p className="muted">Histórico FASE 1 respaldado: <b>{scoreShortLabel(selectedScore)}</b> · Ganador: {selectedScore.winnerPoints} · Score: {selectedScore.scorePoints}</p>}</div>{selected.role !== 'admin' && <button className="danger" disabled={busy} onClick={removeSelected}>Eliminar usuario y pronóstico</button>}</div>{message && <p className="admin-message">{message}</p>}<details className="result-admin phase32-admin-real"><summary>Actualizar resultados reales FASE 2 · Pronóstico 16° <span className="admin-only-badge">Solo ADMIN</span></summary><div className="real-admin-list">{phase32Matches.map(match=>{const current=phase32RealScores[match.id] || {}; const draft=phase32ScoreDraft[match.id] || {}; const h=draft.homeGoals ?? current.homeGoals ?? ''; const a=draft.awayGoals ?? current.awayGoals ?? ''; const isTie=h!=='' && a!=='' && h!=null && a!=null && Number(h)===Number(a); const pw=draft.penaltyWinner ?? current.penaltyWinner ?? ''; return <div className="real-admin-row phase32-real-admin-row" key={match.id}><span>{match.matchNo}</span><b>{label(match.home)} vs {label(match.away)}</b><input type="number" min="0" max="99" value={h} onChange={e=>setPhase32ScoreDraft(prev=>({...prev,[match.id]:{...(prev[match.id]||{}),homeGoals:e.target.value}}))}/><span>:</span><input type="number" min="0" max="99" value={a} onChange={e=>setPhase32ScoreDraft(prev=>({...prev,[match.id]:{...(prev[match.id]||{}),awayGoals:e.target.value}}))}/>{isTie && <select value={pw} onChange={e=>setPhase32ScoreDraft(prev=>({...prev,[match.id]:{...(prev[match.id]||{}),penaltyWinner:e.target.value}}))}><option value="">Penales...</option><option value={match.home}>{TEAMS[match.home]?.name || match.home}</option><option value={match.away}>{TEAMS[match.away]?.name || match.away}</option></select>}<button className="ghost" onClick={()=>persistPhase32RealScore(match)}>Guardar</button></div>})}</div></details><details className="result-admin"><summary>Actualizar Score real FASE 1 <span className="admin-only-badge">Solo ADMIN</span></summary><div className="real-admin-list">{matches.map(m=>{const current=realScores[m.id] || {}; const draft=scoreDraft[m.id] || {}; return <div className="real-admin-row" key={m.id}><span>{m.matchNo}</span><b>{label(m.home)} vs {label(m.away)}</b><input type="number" min="0" max="99" value={draft.homeGoals ?? current.homeGoals ?? ''} onChange={e=>setScoreDraft(prev=>({...prev,[m.id]:{...(prev[m.id]||{}),homeGoals:e.target.value}}))}/><span>:</span><input type="number" min="0" max="99" value={draft.awayGoals ?? current.awayGoals ?? ''} onChange={e=>setScoreDraft(prev=>({...prev,[m.id]:{...(prev[m.id]||{}),awayGoals:e.target.value}}))}/><button className="ghost" onClick={()=>persistRealScore(m.id)}>Guardar</button></div>})}</div></details><div className="phase32-admin-detail-list">{phase32Matches.map(match=>{const p=phase32Detail[match.id] || {}; const real=phase32RealScores[match.id]; const evalResult=evaluatePhase32Prediction(match,phase32Detail,phase32RealScores); return <div className="phase32-admin-detail-row" key={match.id}><strong>{match.matchNo} · {label(match.home)} vs {label(match.away)}</strong><span>Pronóstico: {p.homeGoals ?? '—'} : {p.awayGoals ?? '—'} {p.penaltyWinner ? `· Penales: ${TEAMS[p.penaltyWinner]?.name || p.penaltyWinner}` : ''}</span><span>Real: {formatPhase32Real(real,match)}</span><small>Pts: {evalResult.points || 0} · G:{hitIcon(evalResult.winnerHit)} · Score:{hitIcon(evalResult.scoreHit)} · Pen:{hitIcon(evalResult.penaltyHit)}</small></div>})}</div><h3 className="admin-subtitle">Histórico FASE 1 respaldado</h3><div className="report-groups compact admin-standings-grid">{GROUPS.map(g=><div className="report-card" key={g.id}><h3>Grupo {g.id}</h3><Standings standings={calculateStandings(g.id,matches,detail)}/></div>)}</div></>}</div>{showSharePreview && <div className="share-preview-overlay" role="dialog" aria-modal="true"><div className="share-preview-card"><div className="share-preview-head"><div><span>Vista previa</span><h3>Ranking para compartir</h3></div><button className="ghost" onClick={()=>setShowSharePreview(false)}>Cerrar</button></div><pre>{shareText}</pre><div className="share-preview-actions"><button className="ghost" onClick={async()=>{await navigator.clipboard?.writeText(shareText); setMessage('Ranking copiado al portapapeles.');}}>Copiar texto</button><button className="primary" onClick={confirmShareRanking}><Share2 size={16}/> Compartir</button></div></div></div>}</section>
 }
 function Watermark() {
   return (
