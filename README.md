@@ -869,3 +869,26 @@ src/App.jsx
 src/styles.css
 README.md
 ```
+
+
+## Texto claro de puntaje FASE 2
+
+Se simplificó la explicación visible en Pronóstico 16°:
+
+```text
+Puntaje máximo por partido: 3 puntos.
+
+Resultado exacto:
+1 punto por acertar el marcador en los 90 minutos.
+
+Ganador directo:
+2 puntos por acertar el ganador directo.
+
+Empate y penales:
+1 punto por pronosticar empate + 1 punto por acertar el ganador por penales.
+```
+
+La lógica de cálculo no cambia respecto a la versión anterior:
+- ganador directo vale 2 puntos;
+- resultado exacto vale 1 punto;
+- empate/penales suma 1 punto por empate y 1 punto por ganador en penales.

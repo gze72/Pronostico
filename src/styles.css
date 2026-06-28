@@ -2501,3 +2501,61 @@ nav button:disabled {
 .phase32-hidden-copy {
   display: none;
 }
+
+
+
+/* Explicación clara de puntaje FASE 2 */
+.phase32-rules-note--clear {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid rgba(185, 154, 86, .28);
+  border-radius: 16px;
+  background: rgba(255, 248, 231, .82);
+  color: #5d4b2f;
+}
+
+.phase32-rules-note--clear > b {
+  display: block;
+  margin-bottom: 10px;
+  color: #8c6724;
+  font-size: .9rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.phase32-score-rules {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.phase32-score-rules div {
+  padding: 10px 12px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .72);
+  border: 1px solid rgba(185, 154, 86, .18);
+}
+
+.phase32-score-rules strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #1f1d1a;
+  font-size: .86rem;
+}
+
+.phase32-score-rules span {
+  display: block;
+  color: #6f675d;
+  font-size: .84rem;
+  line-height: 1.35;
+}
+
+.phase32-hidden-copy {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .phase32-score-rules {
+    grid-template-columns: 1fr;
+  }
+}

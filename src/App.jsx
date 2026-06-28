@@ -383,7 +383,14 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
         <span className="phase32-eyebrow">Segunda fase · 16 enfrentamientos directos</span>
         <h2>Pronóstico 16°</h2>
         <p className="phase32-deadline">Tiene hasta las <b>16:00 de hoy 28/jun/2026</b> para pronosticar. Después de esa hora se bloqueará automáticamente; solo ADMIN podrá habilitar nuevamente.</p>
-        <p className="phase32-rules">Puntaje: 2 puntos por acertar el ganador directo y 1 punto por resultado exacto. Si el partido termina empatado y se define por penales, el empate pronosticado suma 1 punto; además, recibe 1 punto por resultado exacto y 1 punto bonus si acierta el ganador por penales.</p><div className="phase32-rules-note"><b>Regla de puntaje:</b> ganador directo vale 2 puntos. Si el partido llega a penales, el empate pronosticado vale 1 punto y el ganador correcto en penales suma 1 punto bonus. El resultado exacto siempre suma 1 punto.</div><p className="phase32-hidden-copy"></p>
+        <p className="phase32-rules">Puntaje máximo por partido: 3 puntos.</p><div className="phase32-rules-note phase32-rules-note--clear">
+        <b>Puntaje:</b>
+        <div className="phase32-score-rules">
+          <div><strong>Resultado exacto</strong><span>1 punto por acertar el marcador en los 90 minutos.</span></div>
+          <div><strong>Ganador directo</strong><span>2 puntos por acertar el ganador directo.</span></div>
+          <div><strong>Empate y penales</strong><span>1 punto por pronosticar empate + 1 punto por acertar el ganador por penales.</span></div>
+        </div>
+      </div><p className="phase32-hidden-copy"></p>
       </div>
       <div className={`phase32-lock-card ${locked?'locked':'open'}`}>
         <b>{locked ? 'Bloqueado' : 'Abierto'}</b>
