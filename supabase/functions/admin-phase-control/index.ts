@@ -62,6 +62,12 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true, message: Boolean(value) ? "Registro de nuevos usuarios habilitado" : "Registro de nuevos usuarios inhabilitado" });
     }
 
+    if (action === "set_phase32_unlocked") {
+      await setSetting(supabase, "phase32_predictions_unlocked", Boolean(value));
+      await logAction(supabase, adminParticipantId, action, { value: Boolean(value) });
+      return json({ ok: true, message: Boolean(value) ? "Pronóstico 16° habilitado por ADMIN" : "Pronóstico 16° bloqueado por ADMIN" });
+    }
+
     if (action === "lock_all_predictions") {
       const now = new Date().toISOString();
       const { error } = await supabase

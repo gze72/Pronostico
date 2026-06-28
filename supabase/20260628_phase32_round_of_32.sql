@@ -1,0 +1,48 @@
+-- Segunda fase / Pronóstico 16°
+
+create table if not exists public.phase32_forecasts (
+  id uuid primary key default gen_random_uuid(),
+  participant_id uuid not null references public.participants(id) on delete cascade,
+  predictions jsonb not null default '{}'::jsonb,
+  confirmed boolean not null default false,
+  status text not null default 'draft',
+  confirmed_at timestamptz,
+  updated_at timestamptz not null default now(),
+  unique(participant_id)
+);
+
+create table if not exists public.phase32_results (
+  id uuid primary key default gen_random_uuid(),
+  match_id text not null unique,
+  home_goals integer,
+  away_goals integer,
+  went_penalties boolean not null default false,
+  penalty_winner text,
+  status text not null default 'scheduled',
+  source text not null default 'manual-admin',
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+insert into public.app_settings(key,value)
+values ('phase32_predictions_unlocked','false'::jsonb)
+on conflict (key) do nothing;
+
+alter table public.phase32_forecasts enable row level security;
+alter table public.phase32_results enable row level security;
+
+drop policy if exists "phase32_forecasts_public_read" on public.phase32_forecasts;
+create policy "phase32_forecasts_public_read" on public.phase32_forecasts
+for select using (true);
+
+drop policy if exists "phase32_forecasts_public_write" on public.phase32_forecasts;
+create policy "phase32_forecasts_public_write" on public.phase32_forecasts
+for all using (true) with check (true);
+
+drop policy if exists "phase32_results_public_read" on public.phase32_results;
+create policy "phase32_results_public_read" on public.phase32_results
+for select using (true);
+
+drop policy if exists "phase32_results_public_write" on public.phase32_results;
+create policy "phase32_results_public_write" on public.phase32_results
+for all using (true) with check (true);

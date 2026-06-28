@@ -279,3 +279,113 @@ export function calculateRealStandings(groupId, matches, realScores) {
   );
 }
 
+
+
+export function buildRealQualified(matches, realScores) {
+  const standings = Object.fromEntries(
+    GROUPS.map(g => [g.id, calculateRealStandings(g.id, matches, realScores)])
+  );
+
+  const firstSecond = GROUPS.flatMap(g => [
+    { ...standings[g.id][0], groupId: g.id, groupRank: 1, slot: `1${g.id}` },
+    { ...standings[g.id][1], groupId: g.id, groupRank: 2, slot: `2${g.id}` }
+  ]);
+
+  const thirdRanked = GROUPS
+    .map(g => ({ ...standings[g.id][2], groupId: g.id, groupRank: 3, slot: `3${g.id}` }))
+    .sort(rankTeams);
+
+  const bestThird = thirdRanked.slice(0, 8);
+
+  return {
+    standings,
+    firstSecond,
+    bestThird,
+    bestThirdGroups: bestThird.map(t => t.groupId),
+    qualifiedTeams: [...firstSecond, ...bestThird]
+  };
+}
+
+export function buildRealRoundOf32(matches, realScores) {
+  const qualified = buildRealQualified(matches, realScores);
+  const usedTeamCodes = new Set();
+  const usedThirdGroups = new Set();
+
+  return ROUND_OF_32_TEMPLATE.map(([id, aToken, bToken], index) => {
+    let a = resolveDirectToken(aToken, qualified);
+    if (!a && aToken.startsWith('3')) a = resolveThirdToken(aToken, qualified, usedTeamCodes, usedThirdGroups);
+    if (a && !aToken.startsWith('3')) usedTeamCodes.add(a);
+
+    let b = resolveDirectToken(bToken, qualified);
+    if (!b && bToken.startsWith('3')) b = resolveThirdToken(bToken, qualified, usedTeamCodes, usedThirdGroups);
+    if (b && !bToken.startsWith('3')) usedTeamCodes.add(b);
+
+    return {
+      id,
+      matchNo: `16°-${index + 1}`,
+      phase: 'ROUND_OF_32',
+      aToken,
+      bToken,
+      home: a || aToken,
+      away: b || bToken
+    };
+  });
+}
+
+export function phase32WinnerFromScore(match, record) {
+  if (!record || record.homeGoals === '' || record.awayGoals === '' || record.homeGoals == null || record.awayGoals == null) return null;
+  const h = Number(record.homeGoals);
+  const a = Number(record.awayGoals);
+  if (Number.isNaN(h) || Number.isNaN(a)) return null;
+  if (h > a) return match.home;
+  if (a > h) return match.away;
+  return record.penaltyWinner || null;
+}
+
+export function phase32WentPenalties(record) {
+  if (!record || record.homeGoals === '' || record.awayGoals === '' || record.homeGoals == null || record.awayGoals == null) return false;
+  const h = Number(record.homeGoals);
+  const a = Number(record.awayGoals);
+  return !Number.isNaN(h) && !Number.isNaN(a) && h === a;
+}
+
+export function evaluatePhase32Prediction(match, predictions, realResults) {
+  const prediction = predictions?.[match.id];
+  const real = realResults?.[match.id];
+
+  if (!prediction || !real || real.homeGoals == null || real.awayGoals == null) {
+    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0 };
+  }
+
+  const predictedWinner = phase32WinnerFromScore(match, prediction);
+  const realWinner = phase32WinnerFromScore(match, real);
+  const predictedWentPenalties = phase32WentPenalties(prediction);
+  const realWentPenalties = Boolean(real.wentPenalties || phase32WentPenalties(real));
+
+  if (!predictedWinner || !realWinner) {
+    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0 };
+  }
+
+  const scoreHit = Number(prediction.homeGoals) === Number(real.homeGoals) && Number(prediction.awayGoals) === Number(real.awayGoals);
+  const winnerHit = predictedWinner === realWinner;
+  const penaltyHit = realWentPenalties ? (predictedWentPenalties && prediction.penaltyWinner === real.penaltyWinner) : null;
+
+  return {
+    winnerHit,
+    scoreHit,
+    penaltyHit,
+    points: (winnerHit ? 1 : 0) + (scoreHit ? 1 : 0) + (penaltyHit ? 1 : 0)
+  };
+}
+
+export function calculatePhase32Score(matches, predictions, realResults) {
+  return matches.reduce((acc, match) => {
+    const result = evaluatePhase32Prediction(match, predictions, realResults);
+    if (result.winnerHit !== null || result.scoreHit !== null || result.penaltyHit !== null) acc.evaluatedMatches += 1;
+    if (result.winnerHit) acc.winnerPoints += 1;
+    if (result.scoreHit) acc.scorePoints += 1;
+    if (result.penaltyHit) acc.penaltyPoints += 1;
+    acc.totalPoints += result.points;
+    return acc;
+  }, { winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, totalPoints: 0, evaluatedMatches: 0 });
+}

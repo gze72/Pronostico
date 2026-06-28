@@ -2248,3 +2248,69 @@ input:focus-visible{
     flex-basis: 86%;
   }
 }
+
+
+/* ==========================================================
+   Phase32 UI - Round of 32 / Pronóstico 16°
+   ========================================================== */
+nav button.disabled,
+nav button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+  filter: grayscale(.35);
+}
+.phase32-page { display: grid; gap: 18px; }
+.phase32-hero { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; }
+.phase32-eyebrow { color: var(--gold); text-transform:uppercase; letter-spacing:.12em; font-size:.75rem; font-weight:900; }
+.phase32-hero h2 { margin:.25rem 0 .45rem; font-size: clamp(1.8rem, 3vw, 2.6rem); }
+.phase32-deadline { color: #3b352c; margin:.25rem 0; }
+.phase32-rules { color: var(--muted); margin:.35rem 0 0; max-width: 920px; }
+.phase32-lock-card { min-width: 220px; padding: 16px; border-radius: 18px; border:1px solid var(--line); background: rgba(255,255,255,.68); box-shadow: var(--shadow); }
+.phase32-lock-card b { display:block; font-size:1.1rem; }
+.phase32-lock-card span { display:block; margin-top:4px; color:var(--muted); font-size:.86rem; }
+.phase32-lock-card.open { border-color: rgba(65,150,97,.28); background: rgba(229,244,234,.72); }
+.phase32-lock-card.locked { border-color: rgba(185,154,86,.32); background: rgba(247,240,224,.82); }
+.phase32-summary { display:grid; grid-template-columns: repeat(4,minmax(150px,1fr)); gap:12px; }
+.phase32-summary article { padding:16px; border-radius:18px; background:rgba(255,255,255,.72); border:1px solid var(--line); box-shadow:0 12px 30px rgba(31,28,22,.06); }
+.phase32-summary span { display:block; color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; font-weight:900; }
+.phase32-summary strong { display:inline-block; margin-top:8px; font-size:1.55rem; }
+.phase32-summary small { margin-left:4px; color:var(--muted); }
+.phase32-matches { display:grid; grid-template-columns: repeat(2,minmax(320px,1fr)); gap:14px; }
+.phase32-match-card { border:1px solid var(--line); border-radius:22px; background:rgba(255,255,255,.74); padding:16px; box-shadow:0 16px 34px rgba(31,28,22,.07); }
+.phase32-match-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; color:var(--muted); font-size:.82rem; }
+.phase32-match-head b { color:var(--gold); }
+.phase32-teams { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; margin-bottom:12px; }
+.phase32-teams .team { justify-content:center; text-align:center; }
+.phase32-teams > span { color:var(--muted); font-weight:900; }
+.phase32-score-inputs { display:flex; justify-content:center; align-items:center; gap:10px; margin:8px 0 12px; }
+.phase32-score-inputs input { width:68px; text-align:center; font-weight:900; font-size:1.1rem; border:1px solid var(--line); border-radius:14px; padding:9px; background:#fff; }
+.phase32-score-inputs span { font-size:1.2rem; font-weight:900; }
+.phase32-penalties { padding:10px; border-radius:16px; background:rgba(185,154,86,.08); border:1px solid rgba(185,154,86,.18); margin-bottom:10px; }
+.phase32-penalties small { color:var(--muted); font-weight:800; }
+.phase32-penalties div { display:flex; gap:8px; margin-top:7px; }
+.phase32-penalties button { flex:1; padding:8px 10px; border-radius:12px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+.phase32-penalties button.active { background:var(--gold); color:#fff; border-color:var(--gold); font-weight:900; }
+.phase32-result-line,.phase32-real-line { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-top:1px solid rgba(228,222,211,.7); }
+.phase32-result-line small,.phase32-real-line small { color:var(--muted); }
+.phase32-real-line b { color:#1e6746; }
+.phase32-hits { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-top:10px; }
+.phase32-hits span { display:flex; justify-content:space-between; align-items:center; border-radius:12px; background:rgba(246,244,239,.9); padding:8px; font-size:.82rem; color:var(--muted); }
+.phase32-actions { justify-content:flex-end; }
+.phase32-admin-real summary { cursor:pointer; font-weight:900; }
+.phase32-real-admin-list { display:grid; gap:10px; margin-top:14px; }
+.phase32-real-admin-row { display:grid; grid-template-columns:70px minmax(220px,1fr) 70px auto 70px minmax(110px,150px) auto; gap:8px; align-items:center; padding:10px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.65); }
+.phase32-real-admin-row input,.phase32-real-admin-row select { width:100%; border:1px solid var(--line); border-radius:10px; padding:8px; background:#fff; }
+@media (max-width: 900px){
+  .phase32-hero { flex-direction:column; }
+  .phase32-lock-card { width:100%; }
+  .phase32-summary { grid-template-columns:repeat(2,1fr); }
+  .phase32-matches { grid-template-columns:1fr; }
+  .phase32-real-admin-row { grid-template-columns:1fr 1fr; }
+  .phase32-real-admin-row b { grid-column:1/-1; }
+}
+@media (max-width: 520px){
+  .phase32-summary { grid-template-columns:1fr; }
+  .phase32-teams { grid-template-columns:1fr; }
+  .phase32-teams > span { text-align:center; }
+  .phase32-hits { grid-template-columns:1fr; }
+}

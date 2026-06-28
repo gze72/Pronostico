@@ -615,3 +615,47 @@ src/styles.css
 README.md
 docs/ranking-premium-mockup.png
 ```
+
+
+## Pronóstico 16°
+
+Se agregó la segunda fase de la quiniela: `Pronóstico 16°`.
+
+Cambios principales:
+
+- La sección `Pronóstico` de FASE 1 queda inhabilitada en el menú.
+- Se agrega nueva sección `Pronóstico 16°`.
+- Se presentan los 16 enfrentamientos de dieciseisavos usando la llave oficial definida en `ROUND_OF_32_TEMPLATE` y la clasificación real calculada desde los resultados cargados.
+- Cada participante puede pronosticar:
+  - Goles del equipo local.
+  - Goles del equipo visitante.
+  - Ganador por penales cuando el marcador pronosticado es empate.
+- Puntaje de Pronóstico 16°:
+  - 1 punto por acertar ganador.
+  - 1 punto por acertar resultado exacto.
+  - 1 punto bonus si llega a penales y acierta ganador por penales.
+- Se muestra resultado REAL por partido con marcador y ganador por penales cuando aplique.
+- Fecha límite visible en cabecera: hasta las 16:00 del 28/jun/2026.
+- Después del cierre, se bloquea automáticamente salvo que ADMIN habilite nuevamente.
+- ADMIN puede habilitar/bloquear Pronóstico 16° desde Controles de fase.
+- ADMIN puede cargar resultados reales de Pronóstico 16° desde la misma sección.
+
+### Migración requerida
+
+Ejecutar en Supabase SQL Editor:
+
+```text
+supabase/20260628_phase32_round_of_32.sql
+```
+
+### Archivos modificados
+
+```text
+src/App.jsx
+src/styles.css
+src/lib/scoring.js
+src/lib/storage.js
+supabase/20260628_phase32_round_of_32.sql
+supabase/functions/admin-phase-control/index.ts
+README.md
+```

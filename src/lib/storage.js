@@ -289,7 +289,8 @@ export async function getDailyEditorialSummary(date, options = {}){
 export async function getAppSettings(){
   const defaults = {
     registrationEnabled: true,
-    phase1PredictionsLocked: false
+    phase1PredictionsLocked: false,
+    phase32PredictionsUnlocked: false
   };
 
   if (supabase) {
@@ -305,7 +306,8 @@ export async function getAppSettings(){
     const map = Object.fromEntries((data || []).map(row => [row.key, row.value]));
     return {
       registrationEnabled: map.registration_enabled ?? true,
-      phase1PredictionsLocked: map.phase1_predictions_locked ?? false
+      phase1PredictionsLocked: map.phase1_predictions_locked ?? false,
+      phase32PredictionsUnlocked: map.phase32_predictions_unlocked ?? false
     };
   }
 
@@ -334,7 +336,8 @@ export async function adminPhaseControl(adminParticipantId, action, value){
 
   s.settings = s.settings || {
     registrationEnabled: true,
-    phase1PredictionsLocked: false
+    phase1PredictionsLocked: false,
+    phase32PredictionsUnlocked: false
   };
 
   if (action === 'set_registration_enabled') {
@@ -418,3 +421,155 @@ export async function syncResultsAndScores(){
   return data;
 }
 
+
+
+export async function getPhase32Forecast(participantId){
+  if (!participantId) return null;
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('phase32_forecasts')
+      .select('*')
+      .eq('participant_id', participantId)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('No se pudo leer phase32_forecasts:', error.message);
+      return null;
+    }
+
+    return data ? {
+      predictions:data.predictions || {},
+      confirmed:data.confirmed,
+      status:data.status || (data.confirmed ? 'confirmed' : 'draft'),
+      confirmedAt:data.confirmed_at
+    } : null;
+  }
+
+  const s = loadLocal();
+  s.phase32Forecasts = s.phase32Forecasts || [];
+  return s.phase32Forecasts.find(f => f.participantId === participantId) || null;
+}
+
+export async function savePhase32Forecast(participantId, predictions, confirmed=false){
+  if (!participantId) throw new Error('Participante requerido.');
+
+  if (supabase) {
+    const existing = await getPhase32Forecast(participantId);
+    const { error } = await supabase.from('phase32_forecasts').upsert({
+      participant_id: participantId,
+      predictions,
+      confirmed,
+      status: confirmed ? 'confirmed' : 'draft',
+      confirmed_at: confirmed ? (existing?.confirmedAt || new Date().toISOString()) : null,
+      updated_at: new Date().toISOString()
+    }, { onConflict:'participant_id' });
+
+    if (error) throw error;
+    return true;
+  }
+
+  const s = loadLocal();
+  s.phase32Forecasts = s.phase32Forecasts || [];
+  const i = s.phase32Forecasts.findIndex(f => f.participantId === participantId);
+  const current = i >= 0 ? s.phase32Forecasts[i] : null;
+  const rec = {
+    participantId,
+    predictions,
+    confirmed,
+    status: confirmed ? 'confirmed' : 'draft',
+    confirmedAt: confirmed ? (current?.confirmedAt || new Date().toISOString()) : null,
+    updatedAt: new Date().toISOString()
+  };
+  if (i >= 0) s.phase32Forecasts[i] = rec; else s.phase32Forecasts.push(rec);
+  saveLocal(s);
+  return true;
+}
+
+function normalizePhase32Result(row) {
+  if (!row) return null;
+  return {
+    matchId: row.match_id || row.matchId,
+    homeGoals: row.home_goals ?? row.homeGoals,
+    awayGoals: row.away_goals ?? row.awayGoals,
+    wentPenalties: row.went_penalties ?? row.wentPenalties ?? false,
+    penaltyWinner: row.penalty_winner || row.penaltyWinner || null,
+    status: row.status || 'scheduled',
+    source: row.source || 'manual-admin',
+    updatedAt: row.updated_at || row.updatedAt
+  };
+}
+
+export async function getPhase32Results(){
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('phase32_results')
+      .select('*');
+
+    if (error) {
+      console.warn('No se pudo leer phase32_results:', error.message);
+      return {};
+    }
+
+    return Object.fromEntries((data || []).map(row => {
+      const r = normalizePhase32Result(row);
+      return [r.matchId, r];
+    }));
+  }
+
+  const s = loadLocal();
+  return s.phase32Results || {};
+}
+
+export async function savePhase32Result(adminParticipantId, matchId, homeGoals, awayGoals, penaltyWinner, status='finished'){
+  if (!adminParticipantId) throw new Error('Solo el administrador puede registrar resultados reales.');
+  if (!matchId) throw new Error('Partido requerido.');
+
+  const parsedHome = homeGoals === '' || homeGoals == null ? null : Number(homeGoals);
+  const parsedAway = awayGoals === '' || awayGoals == null ? null : Number(awayGoals);
+  const wentPenalties = parsedHome != null && parsedAway != null && parsedHome === parsedAway;
+
+  if (wentPenalties && !penaltyWinner) throw new Error('Seleccione ganador por penales.');
+
+  if (supabase) {
+    const { data: admin, error: readErr } = await supabase
+      .from('participants')
+      .select('id,role')
+      .eq('id', adminParticipantId)
+      .maybeSingle();
+
+    if (readErr) throw readErr;
+    if (!admin || admin.role !== 'admin') throw new Error('Solo el administrador puede registrar resultados reales.');
+
+    const { error } = await supabase.from('phase32_results').upsert({
+      match_id: matchId,
+      home_goals: parsedHome,
+      away_goals: parsedAway,
+      went_penalties: wentPenalties,
+      penalty_winner: wentPenalties ? penaltyWinner : null,
+      status,
+      source: 'manual-admin',
+      updated_at: new Date().toISOString()
+    }, { onConflict:'match_id' });
+
+    if (error) throw error;
+    return true;
+  }
+
+  const s = loadLocal();
+  const admin = s.participants.find(p => p.id === adminParticipantId);
+  if (!admin || admin.role !== 'admin') throw new Error('Solo el administrador puede registrar resultados reales.');
+  s.phase32Results = s.phase32Results || {};
+  s.phase32Results[matchId] = {
+    matchId,
+    homeGoals: parsedHome,
+    awayGoals: parsedAway,
+    wentPenalties,
+    penaltyWinner: wentPenalties ? penaltyWinner : null,
+    status,
+    source: 'manual-admin',
+    updatedAt: new Date().toISOString()
+  };
+  saveLocal(s);
+  return true;
+}
