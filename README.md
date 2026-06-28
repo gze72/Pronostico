@@ -790,3 +790,23 @@ src/App.jsx
 src/styles.css
 README.md
 ```
+
+
+## Fix ganador pronosticado y Admin FASE 2
+
+Correcciones incluidas:
+
+- En `Pronóstico 16°` se resalta visualmente el ganador pronosticado aunque el partido no sea empate.
+- Si el pronóstico es empate, se mantiene el resaltado del ganador por penales.
+- En Administración se corrige la lectura de pronósticos FASE 2 por participante.
+- `listParticipantsWithForecasts()` ya no depende de relaciones embebidas de Supabase para `phase32_forecasts`; ahora consulta y cruza los datos por `participant_id`.
+- Esto permite que los pronósticos confirmados de ADMIN, Gregory y demás usuarios aparezcan correctamente en el detalle administrativo.
+
+Archivos modificados:
+
+```text
+src/App.jsx
+src/styles.css
+src/lib/storage.js
+README.md
+```

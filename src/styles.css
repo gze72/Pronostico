@@ -2430,3 +2430,52 @@ nav button:disabled {
 .phase32-admin-real[open] > summary {
   color: #276a47;
 }
+
+
+
+/* ==========================================================
+   FASE 2: ganador pronosticado + lectura robusta Admin
+   ========================================================== */
+
+.phase32-team-pick {
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 8px 10px;
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.phase32-team-pick.predicted-winner {
+  border-color: rgba(185,154,86,.55);
+  background: linear-gradient(180deg, rgba(255,244,212,.95), rgba(255,255,255,.68));
+  box-shadow: 0 10px 26px rgba(185,154,86,.16), inset 0 1px 0 rgba(255,255,255,.72);
+  transform: translateY(-1px);
+}
+
+.phase32-team-pick.predicted-winner .team b {
+  color: #6f4f12;
+}
+
+.phase32-team-pick.predicted-winner::after {
+  content: 'Ganador';
+  display: inline-flex;
+  margin-top: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(185,154,86,.16);
+  color: #7a5a1a;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .phase32-team-pick {
+    padding: 7px 8px;
+  }
+
+  .phase32-team-pick.predicted-winner::after {
+    font-size: .62rem;
+    padding: 3px 7px;
+  }
+}

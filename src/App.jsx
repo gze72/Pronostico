@@ -404,9 +404,14 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
         const real = realScores[match.id];
         const ev = evaluatePhase32Prediction(match,predictions,realScores);
         const tie = prediction.homeGoals !== '' && prediction.awayGoals !== '' && prediction.homeGoals != null && prediction.awayGoals != null && Number(prediction.homeGoals) === Number(prediction.awayGoals);
+        const predictedWinner = phase32WinnerFromScore(match,prediction);
         return <article className="phase32-match-card" key={match.id}>
           <div className="phase32-match-head"><span>{match.matchNo}</span><b>{match.id}</b></div>
-          <div className="phase32-teams"><Team code={match.home}/><span>vs</span><Team code={match.away}/></div>
+          <div className="phase32-teams">
+            <div className={`phase32-team-pick ${predictedWinner===match.home?'predicted-winner':''}`}><Team code={match.home}/></div>
+            <span>vs</span>
+            <div className={`phase32-team-pick ${predictedWinner===match.away?'predicted-winner':''}`}><Team code={match.away}/></div>
+          </div>
           <div className="phase32-fixture-meta"><span>{formatPhase32Date(match.date)} · {match.time}</span><b>{match.stadium}</b></div>
           <div className="phase32-score-inputs">
             <input type="number" min="0" max="30" disabled={locked} value={prediction.homeGoals ?? ''} onChange={e=>setPhase32Field(setPredictions,match.id,'homeGoals',e.target.value)} />

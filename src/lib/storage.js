@@ -224,21 +224,35 @@ export async function saveParticipantScore(participantId, score){
 
 export async function listParticipantsWithForecasts(){
   if (supabase) {
-    const { data, error } = await supabase
+    const { data: participants, error: participantsError } = await supabase
       .from('participants')
-      .select('id,name,unique_key,role,created_at,forecasts(predictions,confirmed,status,confirmed_at,updated_at),phase32_forecasts(predictions,confirmed,status,confirmed_at,updated_at),participant_scores(total_points,winner_points,score_points,evaluated_matches,updated_at)')
+      .select('id,name,unique_key,role,created_at')
       .order('created_at');
 
-    if (error) throw error;
+    if (participantsError) throw participantsError;
 
-    return data.map(p => ({
+    const [{ data: phase1Forecasts, error: f1Error }, { data: phase32Forecasts, error: f2Error }, { data: scores, error: scoresError }] = await Promise.all([
+      supabase.from('forecasts').select('participant_id,predictions,confirmed,status,confirmed_at,updated_at'),
+      supabase.from('phase32_forecasts').select('participant_id,predictions,confirmed,status,confirmed_at,updated_at'),
+      supabase.from('participant_scores').select('participant_id,total_points,winner_points,score_points,evaluated_matches,updated_at')
+    ]);
+
+    if (f1Error) console.warn('No se pudieron leer forecasts FASE 1:', f1Error.message);
+    if (f2Error) console.warn('No se pudieron leer phase32_forecasts:', f2Error.message);
+    if (scoresError) console.warn('No se pudieron leer participant_scores:', scoresError.message);
+
+    const f1ByParticipant = new Map((phase1Forecasts || []).map(row => [row.participant_id, row]));
+    const f2ByParticipant = new Map((phase32Forecasts || []).map(row => [row.participant_id, row]));
+    const scoreByParticipant = new Map((scores || []).map(row => [row.participant_id, row]));
+
+    return (participants || []).map(p => ({
       id:p.id,
       name:p.name,
       uniqueKey:p.unique_key,
       role:p.role,
-      forecast:p.forecasts?.[0],
-      phase32Forecast:p.phase32_forecasts?.[0],
-      score:p.participant_scores?.[0] || { total_points:0, winner_points:0, score_points:0, evaluated_matches:0 }
+      forecast:f1ByParticipant.get(p.id) || null,
+      phase32Forecast:f2ByParticipant.get(p.id) || null,
+      score:scoreByParticipant.get(p.id) || { total_points:0, winner_points:0, score_points:0, evaluated_matches:0 }
     }));
   }
 
@@ -250,7 +264,6 @@ export async function listParticipantsWithForecasts(){
     score:s.participantScores?.[p.id] || { totalPoints:0, winnerPoints:0, scorePoints:0, evaluatedMatches:0 }
   }));
 }
-
 
 
 export async function getDailyEditorialSummary(date, options = {}){
