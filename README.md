@@ -894,63 +894,19 @@ La lógica de cálculo no cambia respecto a la versión anterior:
 - empate/penales suma 1 punto por empate y 1 punto por ganador en penales.
 
 
-## Bloqueo diario FASE 2 14:30 Ecuador
+## Recuperación segura: login + cierre 14:00 + penalizaciones SQL
 
-Se actualizó el bloqueo de Pronóstico 16°:
+Este paquete restaura una base estable para evitar pantalla blanca.
 
-```text
-- Bloqueo diario a las 14:30 hora Ecuador.
-- Se bloquean los partidos que se juegan ese día.
-- Si un partido inicia antes de las 14:30, se bloquea antes del inicio.
-- Los partidos de días posteriores siguen disponibles.
-- Si el usuario confirma Pronóstico 16°, se bloquea todo el pronóstico del usuario.
-- El ADMIN puede habilitar nuevamente usando el control de Pronóstico 16°.
-```
-
-La regla por partido usa:
-
-```text
-deadline = menor valor entre:
-1. fecha del partido a las 14:30 Ecuador
-2. hora de inicio del partido
-```
-
-Archivos modificados:
-
-```text
-src/App.jsx
-src/styles.css
-README.md
-```
-
-
-## Bloqueo estricto 14:00 Ecuador y penalizaciones
-
-Esta versión ajusta Pronóstico 16°:
-
-```text
-- Nueva hora tope diaria: 14:00 Ecuador.
-- Los partidos ya concluidos o vencidos quedan bloqueados.
-- Los partidos por jugarse siguen habilitados hasta su cierre.
-- La habilitación general de ADMIN no reabre partidos vencidos para usuarios normales.
-- Las penalizaciones se consultan desde phase32_match_penalties.
-```
-
-### Penalización aplicada para R32-01
-
-El SQL incluido penaliza con 0 puntos el partido Sudáfrica vs Canadá a:
-
-```text
-Alessia
-PATITO
-Carlin
-Fernanda
-Freddy
-Mathew
-```
+Incluye:
+- Ajuste visual de cierre a 14:00 Ecuador.
+- SQL de penalización R32-01.
+- No introduce cambios invasivos en el render del login.
 
 Ejecutar en Supabase SQL Editor:
 
 ```text
 supabase/20260628_phase32_strict_lock_1400_penalties.sql
 ```
+
+Luego validar login antes de aplicar cualquier ajuste adicional de ranking con penalizaciones.

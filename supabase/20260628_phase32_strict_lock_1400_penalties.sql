@@ -1,5 +1,5 @@
 -- FASE 2 / Pronóstico 16°
--- Bloqueo estricto 14:00 Ecuador + penalizaciones por partido
+-- Penalizaciones R32-01 + configuración cierre 14:00 Ecuador
 
 create table if not exists public.phase32_match_penalties (
   id uuid primary key default gen_random_uuid(),

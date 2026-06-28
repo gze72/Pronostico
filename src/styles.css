@@ -2562,67 +2562,7 @@ nav button:disabled {
 
 
 
-/* Bloqueo diario FASE 2 */
-.phase32-lock-card small {
-  display: block;
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: .78rem;
-}
-
-.match-lock-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  padding: 5px 9px;
-  border-radius: 999px;
-  font-style: normal;
-  font-size: .72rem;
-  font-weight: 800;
-}
-
-.match-lock-chip.open {
-  color: #276a47;
-  background: rgba(83,176,120,.14);
-  border: 1px solid rgba(83,176,120,.25);
-}
-
-.match-lock-chip.locked {
-  color: #8a5b12;
-  background: rgba(185,154,86,.14);
-  border: 1px solid rgba(185,154,86,.28);
-}
-
-.phase32-match-card.match-locked {
-  opacity: .82;
-  background: rgba(246,244,239,.72);
-}
-
-.phase32-match-card.match-locked .phase32-score-inputs input,
-.phase32-match-card.match-locked .phase32-penalties button {
-  cursor: not-allowed;
-}
-
-@media (max-width: 760px) {
-  .match-lock-chip {
-    width: 100%;
-    margin-left: 0;
-    margin-top: 6px;
-  }
-}
-
-
-
-/* Penalizaciones FASE 2 */
-.phase32-penalty-alert {
-  margin-top: 10px;
-  padding: 9px 11px;
-  border-radius: 12px;
-  border: 1px solid rgba(176, 74, 74, .22);
-  background: rgba(255, 235, 235, .82);
-  color: #8a2d2d;
-  font-size: .82rem;
-  line-height: 1.35;
-  font-weight: 700;
+/* Safe recovery cierre 14:00 */
+.phase32-deadline b {
+  color: #8c6724;
 }
