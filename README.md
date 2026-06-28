@@ -763,3 +763,26 @@ También se ajustó la tarjeta lateral para mostrar correctamente el máximo de 
 ```text
 16 enfrentamientos x 3 pts = 48 pts
 ```
+
+
+## Administración FASE 2 activa
+
+Esta versión corrige el panel de Administración para que la fase activa sea:
+
+```text
+FASE 2 · Pronóstico 16°
+```
+
+Cambios:
+
+- FASE 1 queda archivada como histórico.
+- Se elimina el botón operativo para habilitar pronósticos FASE 1.
+- La carga de resultados reales FASE 2 queda abierta por defecto.
+- El score real FASE 1 pasa a una sección archivada y colapsada.
+- El detalle del participante prioriza puntaje FASE 2.
+- Se agrega resumen administrativo:
+  - Fase activa.
+  - Puntaje FASE 2 del seleccionado.
+  - Estado de FASE 1 archivada.
+
+La FASE 1 sigue disponible para consulta histórica y acumulado general futuro.
