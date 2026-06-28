@@ -329,9 +329,24 @@ export function phase32WentPenalties(record) {
   return !Number.isNaN(h) && !Number.isNaN(a) && h === a;
 }
 
-export function evaluatePhase32Prediction(match, predictions, realResults) {
+export function evaluatePhase32Prediction(match, predictions, realResults, penalties = {}) {
   const pred = predictions?.[match.id] || {};
   const real = realResults?.[match.id] || {};
+  const penalty = penalties?.[match.id];
+
+  if (penalty) {
+    return {
+      winnerHit: false,
+      scoreHit: false,
+      penaltyHit: false,
+      points: 0,
+      winnerPoints: 0,
+      scorePoints: 0,
+      penaltyPoints: 0,
+      penalized: true,
+      penaltyReason: penalty.reason || 'Pronóstico fuera de hora o no registrado antes del cierre.'
+    };
+  }
 
   const predHasScore = pred.homeGoals !== '' && pred.awayGoals !== '' && pred.homeGoals != null && pred.awayGoals != null;
   const realHasScore = real.homeGoals !== '' && real.awayGoals !== '' && real.homeGoals != null && real.awayGoals != null;
@@ -394,9 +409,9 @@ export function evaluatePhase32Prediction(match, predictions, realResults) {
   };
 }
 
-export function calculatePhase32Score(matches, predictions, realResults) {
+export function calculatePhase32Score(matches, predictions, realResults, penalties = {}) {
   return matches.reduce((acc, match) => {
-    const result = evaluatePhase32Prediction(match, predictions, realResults);
+    const result = evaluatePhase32Prediction(match, predictions, realResults, penalties);
     if (result.winnerHit !== null || result.scoreHit !== null || result.penaltyHit !== null) acc.evaluatedMatches += 1;
     acc.winnerPoints += result.winnerPoints || 0;
     acc.scorePoints += result.scorePoints || 0;

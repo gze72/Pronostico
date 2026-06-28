@@ -922,3 +922,35 @@ src/App.jsx
 src/styles.css
 README.md
 ```
+
+
+## Bloqueo estricto 14:00 Ecuador y penalizaciones
+
+Esta versión ajusta Pronóstico 16°:
+
+```text
+- Nueva hora tope diaria: 14:00 Ecuador.
+- Los partidos ya concluidos o vencidos quedan bloqueados.
+- Los partidos por jugarse siguen habilitados hasta su cierre.
+- La habilitación general de ADMIN no reabre partidos vencidos para usuarios normales.
+- Las penalizaciones se consultan desde phase32_match_penalties.
+```
+
+### Penalización aplicada para R32-01
+
+El SQL incluido penaliza con 0 puntos el partido Sudáfrica vs Canadá a:
+
+```text
+Alessia
+PATITO
+Carlin
+Fernanda
+Freddy
+Mathew
+```
+
+Ejecutar en Supabase SQL Editor:
+
+```text
+supabase/20260628_phase32_strict_lock_1400_penalties.sql
+```

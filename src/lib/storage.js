@@ -515,6 +515,23 @@ function normalizePhase32Result(row) {
   };
 }
 
+
+export async function getPhase32Penalties() {
+  if (!supabase) return {};
+  const { data, error } = await supabase
+    .from('phase32_match_penalties')
+    .select('participant_id, match_id, penalty_type, reason, deadline_at, applied_by, created_at');
+  if (error) {
+    console.warn('No se pudieron leer penalizaciones FASE 2:', error.message);
+    return {};
+  }
+  return (data || []).reduce((acc, row) => {
+    if (!acc[row.participant_id]) acc[row.participant_id] = {};
+    acc[row.participant_id][row.match_id] = row;
+    return acc;
+  }, {});
+}
+
 export async function getPhase32Results(){
   if (supabase) {
     const { data, error } = await supabase
