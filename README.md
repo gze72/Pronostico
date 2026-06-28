@@ -765,24 +765,28 @@ También se ajustó la tarjeta lateral para mostrar correctamente el máximo de 
 ```
 
 
-## Administración FASE 2 activa
+## Recuperación pantalla en blanco
 
-Esta versión corrige el panel de Administración para que la fase activa sea:
+Este paquete revierte la parte invasiva del ajuste anterior de Administración que podía producir pantalla en blanco después del login.
+
+Se mantiene:
+
+- Pronóstico 16°.
+- Ranking FASE 2.
+- Histórico FASE 1 respaldado.
+- FASE 1 marcada como archivada.
+- Administración orientada a FASE 2.
+
+Se evita:
+
+- Inyección de bloques JSX con variables fuera de alcance.
+- Cambios de lógica en el render principal.
+- Errores runtime después del login.
+
+Archivos modificados:
 
 ```text
-FASE 2 · Pronóstico 16°
+src/App.jsx
+src/styles.css
+README.md
 ```
-
-Cambios:
-
-- FASE 1 queda archivada como histórico.
-- Se elimina el botón operativo para habilitar pronósticos FASE 1.
-- La carga de resultados reales FASE 2 queda abierta por defecto.
-- El score real FASE 1 pasa a una sección archivada y colapsada.
-- El detalle del participante prioriza puntaje FASE 2.
-- Se agrega resumen administrativo:
-  - Fase activa.
-  - Puntaje FASE 2 del seleccionado.
-  - Estado de FASE 1 archivada.
-
-La FASE 1 sigue disponible para consulta histórica y acumulado general futuro.

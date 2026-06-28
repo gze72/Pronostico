@@ -2402,7 +2402,7 @@ nav button:disabled {
 
 
 /* ==========================================================
-   Administración FASE 2 activa / FASE 1 archivada
+   Safe Recovery: FASE 2 activa / FASE 1 archivada
    ========================================================== */
 
 .archived-action,
@@ -2413,54 +2413,8 @@ nav button:disabled {
   background: rgba(120, 112, 104, .08);
 }
 
-.admin-phase-active-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 14px 0 18px;
-}
-
-.admin-phase-active-summary > div {
-  padding: 14px 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(185,154,86,.24);
-  background: linear-gradient(180deg, rgba(255,250,238,.92), rgba(255,255,255,.72));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
-}
-
-.admin-phase-active-summary span {
-  display: block;
-  margin-bottom: 5px;
-  color: #8b7651;
-  font-size: .72rem;
-  font-weight: 900;
-  letter-spacing: .09em;
-  text-transform: uppercase;
-}
-
-.admin-phase-active-summary b {
-  display: block;
-  color: var(--ink);
-  font-size: 1.08rem;
-}
-
-.admin-phase-active-summary small {
-  display: block;
-  margin-top: 5px;
-  color: var(--muted);
-}
-
-.phase-active-admin {
-  border-color: rgba(83, 176, 120, .35) !important;
-  background: linear-gradient(180deg, rgba(239, 250, 243, .78), rgba(255,255,255,.7));
-}
-
-.phase-active-admin > summary {
-  color: #276a47;
-}
-
 .phase1-archive-admin {
-  opacity: .88;
+  opacity: .9;
   background: rgba(246,244,239,.6);
 }
 
@@ -2468,13 +2422,11 @@ nav button:disabled {
   color: #8a8175;
 }
 
-.phase1-archive-admin .real-admin-list {
-  max-height: 420px;
-  overflow: auto;
+.phase32-admin-real[open] {
+  border-color: rgba(83, 176, 120, .35);
+  background: linear-gradient(180deg, rgba(239, 250, 243, .78), rgba(255,255,255,.7));
 }
 
-@media (max-width: 900px) {
-  .admin-phase-active-summary {
-    grid-template-columns: 1fr;
-  }
+.phase32-admin-real[open] > summary {
+  color: #276a47;
 }
