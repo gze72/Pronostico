@@ -1,4 +1,4 @@
-import { GROUPS, TEAMS, ROUND_OF_32_TEMPLATE } from './worldcupData';
+import { GROUPS, TEAMS, ROUND_OF_32_TEMPLATE, REAL_ROUND_OF_32_MATCHES } from './worldcupData';
 
 export function emptyPredictions() { return {}; }
 
@@ -307,29 +307,9 @@ export function buildRealQualified(matches, realScores) {
 }
 
 export function buildRealRoundOf32(matches, realScores) {
-  const qualified = buildRealQualified(matches, realScores);
-  const usedTeamCodes = new Set();
-  const usedThirdGroups = new Set();
-
-  return ROUND_OF_32_TEMPLATE.map(([id, aToken, bToken], index) => {
-    let a = resolveDirectToken(aToken, qualified);
-    if (!a && aToken.startsWith('3')) a = resolveThirdToken(aToken, qualified, usedTeamCodes, usedThirdGroups);
-    if (a && !aToken.startsWith('3')) usedTeamCodes.add(a);
-
-    let b = resolveDirectToken(bToken, qualified);
-    if (!b && bToken.startsWith('3')) b = resolveThirdToken(bToken, qualified, usedTeamCodes, usedThirdGroups);
-    if (b && !bToken.startsWith('3')) usedTeamCodes.add(b);
-
-    return {
-      id,
-      matchNo: `16°-${index + 1}`,
-      phase: 'ROUND_OF_32',
-      aToken,
-      bToken,
-      home: a || aToken,
-      away: b || bToken
-    };
-  });
+  // Segunda fase oficial cargada de forma estática según los clasificados definidos por el administrador.
+  // No depende de la tabla de grupos ni de ROUND_OF_32_TEMPLATE para evitar cruces calculados incorrectos.
+  return REAL_ROUND_OF_32_MATCHES.map(match => ({ ...match }));
 }
 
 export function phase32WinnerFromScore(match, record) {

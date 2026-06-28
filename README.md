@@ -659,3 +659,43 @@ supabase/20260628_phase32_round_of_32.sql
 supabase/functions/admin-phase-control/index.ts
 README.md
 ```
+
+
+## Corrección Pronóstico 16° - fixtures reales
+
+Se reemplazaron los cruces calculados por los 16 enfrentamientos directos definidos para la segunda fase:
+
+1. Sudáfrica vs Canadá — 28/jun/2026 16:00 — Los Ángeles Stadium
+2. Brasil vs Japón — 29/jun/2026 14:00 — Houston Stadium
+3. Alemania vs Paraguay — 29/jun/2026 17:30 — Boston Stadium
+4. Países Bajos vs Marruecos — 29/jun/2026 22:00 — Estadio Monterrey
+5. Costa de Marfil vs Noruega — 30/jun/2026 14:00 — Dallas Stadium
+6. Francia vs Suecia — 30/jun/2026 18:00 — New York New Jersey Stadium
+7. México vs Ecuador — 30/jun/2026 22:00 — Estadio Ciudad de México
+8. Inglaterra vs RD Congo — 01/jul/2026 13:00 — Atlanta Stadium
+9. Bélgica vs Senegal — 01/jul/2026 17:00 — Seattle Stadium
+10. Estados Unidos vs Bosnia — 01/jul/2026 21:00 — San Francisco Bay Area Stadium
+11. España vs Austria — 02/jul/2026 16:00 — Los Ángeles Stadium
+12. Portugal vs Croacia — 02/jul/2026 20:00 — Toronto Stadium
+13. Suiza vs Argelia — 03/jul/2026 17:00 — BC Place Vancouver
+14. Australia vs Egipto — 03/jul/2026 15:00 — Dallas Stadium
+15. Argentina vs Cabo Verde — 03/jul/2026 19:00 — Miami Stadium
+16. Colombia vs Ghana — 03/jul/2026 22:30 — Kansas City Stadium
+
+Cambios principales:
+
+- El indicador superior cambia de `12/12 grupos` a `16/16 enfrentamientos` cuando se está en Pronóstico 16°.
+- La fase 16° ya no usa grupos ni cruces calculados por ranking de fase 1.
+- Se muestran fecha, hora y estadio en cada tarjeta de partido.
+- La migración limpia resultados/pronósticos previos de Pronóstico 16° generados con cruces incorrectos.
+
+Archivos modificados:
+
+```text
+src/App.jsx
+src/styles.css
+src/lib/worldcupData.js
+src/lib/scoring.js
+supabase/20260628_phase32_round_of_32.sql
+README.md
+```

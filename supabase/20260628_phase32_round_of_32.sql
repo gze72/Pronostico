@@ -46,3 +46,23 @@ for select using (true);
 drop policy if exists "phase32_results_public_write" on public.phase32_results;
 create policy "phase32_results_public_write" on public.phase32_results
 for all using (true) with check (true);
+
+
+-- Ajuste 2026-06-28: fixtures reales de 16avos definidos por el administrador.
+-- Se limpian únicamente los resultados de la fase 16° con IDs anteriores calculados erróneamente.
+delete from public.phase32_results
+where match_id like 'M%' or match_id like '16°-%';
+
+-- Como los cruces anteriores eran incorrectos, se reinicia el pronóstico 16° para evitar
+-- que un participante quede confirmado/bloqueado con partidos que ya no corresponden.
+update public.phase32_forecasts
+set predictions = '{}'::jsonb,
+    confirmed = false,
+    status = 'draft',
+    confirmed_at = null,
+    updated_at = now();
+
+-- Registro informativo de la configuración vigente.
+insert into public.app_settings(key,value)
+values ('phase32_fixture_version','"real_round_of_32_20260628"'::jsonb)
+on conflict (key) do update set value = excluded.value;

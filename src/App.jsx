@@ -108,7 +108,7 @@ function App(){
     </aside>
     {sidebar && <button className="sidebar-overlay" aria-label="Cerrar menú" onClick={()=>setSidebar(false)} />}
     <main className="content">
-      <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}<span>{sidebar ? "Cerrar" : "Menú"}</span></button><div><p>Campeonato Mundial de Fútbol 2026 · Zambranada</p><h1>{view==='pronostico16'?'Pronóstico 16°':view==='pronostico'?'Registro de pronóstico (FASE 1)':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className="sync-pill">{syncStatus}</div><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{completedCount}/12 grupos</div></div></header>
+      <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}<span>{sidebar ? "Cerrar" : "Menú"}</span></button><div><p>Campeonato Mundial de Fútbol 2026 · Zambranada</p><h1>{view==='pronostico16'?'Pronóstico 16°':view==='pronostico'?'Registro de pronóstico (FASE 1)':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className="sync-pill">{syncStatus}</div><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{view==='pronostico16' ? `${phase32Matches.length}/16 enfrentamientos` : `${completedCount}/12 grupos`}</div></div></header>
       {view==='pronostico16' && <Phase32PredictionView participant={participant} matches={phase32Matches} predictions={phase32Predictions} setPredictions={setPhase32Predictions} realScores={phase32RealScores} setRealScores={setPhase32RealScores} score={phase32Score} status={phase32Status} appSettings={appSettings} persist={persistPhase32}/>}
       {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} realScores={realScores} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm} forecastStatus={forecastStatus} appSettings={appSettings}/>} 
       {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores} rankingRows={rankingRows}/>} 
@@ -282,6 +282,14 @@ function PremiumRankingReport({rows}){
 }
 
 
+
+function formatPhase32Date(value){
+  if (!value) return '';
+  const [year,month,day] = String(value).split('-').map(Number);
+  const d = new Date(year, month - 1, day);
+  return d.toLocaleDateString('es-EC', { weekday:'short', day:'2-digit', month:'short' });
+}
+
 function phase32DeadlinePassed(){
   const deadline = new Date('2026-06-28T16:00:00-05:00');
   return Date.now() >= deadline.getTime();
@@ -350,10 +358,10 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
   return <section className="phase32-page">
     <div className="phase32-hero panel">
       <div>
-        <span className="phase32-eyebrow">Segunda fase · Dieciseisavos</span>
+        <span className="phase32-eyebrow">Segunda fase · 16 enfrentamientos directos</span>
         <h2>Pronóstico 16°</h2>
         <p className="phase32-deadline">Tiene hasta las <b>16:00 de hoy 28/jun/2026</b> para pronosticar. Después de esa hora se bloqueará automáticamente; solo ADMIN podrá habilitar nuevamente.</p>
-        <p className="phase32-rules">Puntaje: 1 punto por ganador, 1 punto por resultado exacto y 1 punto bonus si el partido llega a penales y acierta el ganador por penales.</p>
+        <p className="phase32-rules">Puntaje: 1 punto por ganador, 1 punto por resultado exacto y 1 punto bonus si el partido llega a penales y acierta el ganador por penales. Esta fase ya no usa grupos: son 16 cruces directos.</p>
       </div>
       <div className={`phase32-lock-card ${locked?'locked':'open'}`}>
         <b>{locked ? 'Bloqueado' : 'Abierto'}</b>
@@ -377,6 +385,7 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
         return <article className="phase32-match-card" key={match.id}>
           <div className="phase32-match-head"><span>{match.matchNo}</span><b>{match.id}</b></div>
           <div className="phase32-teams"><Team code={match.home}/><span>vs</span><Team code={match.away}/></div>
+          <div className="phase32-fixture-meta"><span>{formatPhase32Date(match.date)} · {match.time}</span><b>{match.stadium}</b></div>
           <div className="phase32-score-inputs">
             <input type="number" min="0" max="30" disabled={locked} value={prediction.homeGoals ?? ''} onChange={e=>setPhase32Field(setPredictions,match.id,'homeGoals',e.target.value)} />
             <span>:</span>

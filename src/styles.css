@@ -2314,3 +2314,27 @@ nav button:disabled {
   .phase32-teams > span { text-align:center; }
   .phase32-hits { grid-template-columns:1fr; }
 }
+
+
+/* ===== Pronóstico 16° fixtures reales / fase directa ===== */
+.phase32-fixture-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:9px 11px;
+  border-radius:14px;
+  background:rgba(255,255,255,.62);
+  border:1px solid rgba(198,162,93,.18);
+  color:#786d5e;
+  font-size:12px;
+}
+.phase32-fixture-meta span{font-weight:850;color:#a06b23;text-transform:capitalize;}
+.phase32-fixture-meta b{font-weight:760;color:#554d43;text-align:right;}
+.topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+.progress-pill{white-space:nowrap;}
+@media(max-width:900px){
+  .phase32-fixture-meta{align-items:flex-start;flex-direction:column;gap:4px;}
+  .phase32-fixture-meta b{text-align:left;}
+  .topbar-actions .progress-pill{display:inline-flex;}
+}
