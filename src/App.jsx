@@ -56,10 +56,13 @@ function App(){
   },[]);
 
   const currentScore = calculateParticipantScore(matches,predictions,realScores);
-  const publicRankingRows = useMemo(() => buildPremiumRankingRows(rankingRows,matches,realScores), [rankingRows,matches,realScores]);
-  const sidebarRankingRows = publicRankingRows.slice(0,5);
   const phase32Matches = useMemo(() => buildRealRoundOf32(matches,realScores), [matches,realScores]);
   const phase32Score = useMemo(() => calculatePhase32Score(phase32Matches, phase32Predictions, phase32RealScores, { confirmedAt: phase32ConfirmedAt, status: phase32Status, confirmed: phase32Status === 'confirmed', role: participant?.role }), [phase32Matches, phase32Predictions, phase32RealScores, phase32ConfirmedAt, phase32Status, participant?.role]);
+
+  // Ranking visible desde 16avos: la FASE 1 queda histórica, no se suma al ranking actual.
+  const phase32RankingRows = useMemo(() => buildPhase32RankingRows(rankingRows, phase32Matches, phase32RealScores), [rankingRows, phase32Matches, phase32RealScores]);
+  const publicRankingRows = useMemo(() => buildPremiumRankingRows(rankingRows,matches,realScores), [rankingRows,matches,realScores]);
+  const sidebarRankingRows = phase32RankingRows.slice(0,5);
   useEffect(()=>{ if(participant && matches.length) saveParticipantScore(participant.id,currentScore).catch(()=>{}); },[participant, matches, predictions, realScores]);
   const completedCount = GROUPS.filter(g=>groupCompleted(g.id,matches,predictions)).length;
   const canConfirm = allGroupsCompleted(matches,predictions);
@@ -106,14 +109,14 @@ function App(){
         {participant.role === 'admin' && <button className={view==='admin'?'active':''} onClick={()=>{setView('admin'); setSidebar(false)}}><ShieldCheck/> Administración</button>}
       </nav>
       <PremiumSidebarRanking rows={sidebarRankingRows} onOpenReport={()=>{setView('reporte'); setSidebar(false)}}/>
-      <div className="user-card"><span>{participant.role === 'admin' ? 'Administrador' : 'Participante'}</span><b>{participant.name}</b><div className="score-mini"><ScoreRatio score={currentScore} compact/><small>FASE 1 · {scorePercent(currentScore)}% aciertos</small></div><button onClick={()=>setParticipant(null)}><LogOut size={16}/> Salir</button></div>
+      <div className="user-card"><span>{participant.role === 'admin' ? 'Administrador' : 'Participante'}</span><b>{participant.name}</b><div className="score-mini"><b>{phase32Score.totalPoints} / 48 pts</b><small>Pronóstico 16° · fase actual</small></div><button onClick={()=>setParticipant(null)}><LogOut size={16}/> Salir</button></div>
     </aside>
     {sidebar && <button className="sidebar-overlay" aria-label="Cerrar menú" onClick={()=>setSidebar(false)} />}
     <main className="content">
       <header className="topbar"><button className="mobile-menu" onClick={()=>setSidebar(!sidebar)}>{sidebar?<X/>:<Menu/>}<span>{sidebar ? "Cerrar" : "Menú"}</span></button><div><p>Campeonato Mundial de Fútbol 2026 · Zambranada</p><h1>{view==='pronostico16'?'Pronóstico 16°':view==='pronostico'?'Registro de pronóstico (FASE 1)':view==='reporte'?'Reportes':'Panel administrador'}</h1></div><div className="topbar-actions"><div className="sync-pill">{syncStatus}</div><div className={`status-pill ${forecastStatus}`}><Save size={16}/>{forecastStatus === 'confirmed' ? 'Confirmado' : forecastStatus === 'draft' ? 'Borrador guardado' : 'Sin guardar'}</div><div className="progress-pill"><CheckCircle2 size={16}/>{view==='pronostico16' ? `${phase32Matches.length}/16 enfrentamientos` : `${completedCount}/12 grupos`}</div></div></header>
       {view==='pronostico16' && <Phase32PredictionView participant={participant} matches={phase32Matches} predictions={phase32Predictions} setPredictions={setPhase32Predictions} realScores={phase32RealScores} setRealScores={setPhase32RealScores} score={phase32Score} status={phase32Status} appSettings={appSettings} persist={persistPhase32}/>}
       {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} realScores={realScores} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm} forecastStatus={forecastStatus} appSettings={appSettings}/>} 
-      {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores} rankingRows={rankingRows}/>} 
+      {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores} rankingRows={rankingRows} phase32Matches={phase32Matches} phase32RealScores={phase32RealScores}/>} 
       {view==='admin' && participant.role === 'admin' && <AdminView matches={matches} realScores={realScores} setRealScores={setRealScores} participant={participant} appSettings={appSettings} setAppSettings={setAppSettings}/>} 
       {toast && <div className="toast">{toast}</div>}
       {showPrizePopup && <PrizePopup onClose={() => setShowPrizePopup(false)} />}
@@ -270,17 +273,46 @@ function buildPremiumRankingRows(rows,matches,realScores){
     })
     .sort((a,b)=> b.score.totalPoints-a.score.totalPoints || a.name.localeCompare(b.name));
 }
+
+function premiumPhase32Status(row){
+  const forecast = row?.phase32Forecast;
+  if(forecast?.confirmed) return {label:'Confirmado', cls:'confirmed'};
+  if(forecast?.status==='draft') return {label:'Borrador', cls:'draft'};
+  return {label:'Sin pronóstico', cls:'empty'};
+}
+
+function buildPhase32RankingRows(rows,phase32Matches,phase32RealScores){
+  const possible = (phase32Matches?.length || 16) * 3;
+  return [...(rows||[])]
+    .map(r=>{
+      const forecast = r.phase32Forecast || {};
+      const score = calculatePhase32Score(phase32Matches, forecast.predictions || {}, phase32RealScores, {
+        confirmedAt: forecast.confirmed_at || forecast.confirmedAt,
+        status: forecast.status,
+        confirmed: forecast.confirmed,
+        role: r.role
+      });
+      const pct = possible > 0 ? Math.round((score.totalPoints / possible) * 100) : 0;
+      const statusInfo = score.latePenalty
+        ? {label:'Fuera de horario', cls:'draft'}
+        : score.notConfirmed
+          ? premiumPhase32Status(r)
+          : premiumPhase32Status(r);
+      return {...r, forecast, phase32Forecast: forecast, score, possible, percent:pct, statusInfo};
+    })
+    .sort((a,b)=> b.score.totalPoints-a.score.totalPoints || a.name.localeCompare(b.name));
+}
 function PremiumSidebarRanking({rows,onOpenReport}){
-  return <section className="premium-sidebar-ranking"><div className="premium-sidebar-ranking-head"><div><span>Ranking actual</span><small>Actualizado · ahora</small></div><b>🏆</b></div><div className="premium-sidebar-ranking-list">{rows.length?rows.map((row,index)=><div className={`premium-sidebar-rank rank-${index+1}`} key={row.id || row.name}><i>{rankMedal(index)}</i><div><strong>{row.name}</strong><small>{row.score.totalPoints} pts · {row.percent}%</small></div></div>):<p className="premium-sidebar-empty">Aún no hay ranking disponible.</p>}</div><button type="button" className="premium-sidebar-link" onClick={onOpenReport}>Ver ranking completo <span>›</span></button></section>
+  return <section className="premium-sidebar-ranking"><div className="premium-sidebar-ranking-head"><div><span>Ranking actual</span><small>Pronóstico 16° · fase actual</small></div><b>🏆</b></div><div className="premium-sidebar-ranking-list">{rows.length?rows.map((row,index)=><div className={`premium-sidebar-rank rank-${index+1}`} key={row.id || row.name}><i>{rankMedal(index)}</i><div><strong>{row.name}</strong><small>{row.score.totalPoints} pts · {row.percent}%</small></div></div>):<p className="premium-sidebar-empty">Aún no hay ranking disponible.</p>}</div><button type="button" className="premium-sidebar-link" onClick={onOpenReport}>Ver ranking completo <span>›</span></button></section>
 }
 function PremiumRankingReport({rows}){
   const leader=rows[0];
   const maxPoints=rows.reduce((max,r)=>Math.max(max,r.possible||0),0);
-  const evaluated=maxPoints>0?maxPoints/2:0;
-  const confirmed=rows.filter(r=>r.forecast?.confirmed).length;
+  const evaluated=maxPoints>0?maxPoints/3:0;
+  const confirmed=rows.filter(r=>r.statusInfo?.cls==='confirmed').length;
   const winnerTotal=leader?.score?.winnerPoints || 0;
   const scoreTotal=leader?.score?.scorePoints || 0;
-  return <section className="premium-ranking-report"><div className="premium-ranking-hero"><div className="premium-ranking-icon">🏆</div><div><span>Reporte oficial</span><h2>Ranking de participantes</h2><p>Resumen general de puntos, rendimiento y estado de participación en la FASE 1.</p></div></div><div className="premium-ranking-metrics"><article><span>Puntos FASE 1</span><strong>{leader?`${leader.score.totalPoints} / ${maxPoints}`:`0 / ${maxPoints}`} <small>pts</small></strong><p>{leader?`${leader.percent}% de aciertos del líder`:'Sin puntaje registrado'}</p></article><article><span>Ganador</span><strong>{winnerTotal}</strong><p>Predicciones correctas del líder</p></article><article><span>Score exacto</span><strong>{scoreTotal}</strong><p>Marcadores exactos del líder</p></article><article><span>Partidos evaluados</span><strong>{evaluated}</strong><p>{rows.length} participantes · {confirmed} confirmados</p></article></div><div className="premium-ranking-table"><div className="premium-ranking-table-head"><span>Pos</span><span>Participante</span><span>Puntos</span><span>Porcentaje</span><span>Estado</span></div>{rows.length?rows.map((row,index)=><div key={row.id || row.name} className={`premium-ranking-line ${index===0?'leader':''}`}><span className="premium-pos">{rankMedal(index)}</span><div className="premium-participant"><i>{participantInitials(row.name)}</i><div><strong>{row.name}</strong><small>Ganador: {row.score.winnerPoints} · Score: {row.score.scorePoints}</small></div></div><b>{row.score.totalPoints} pts</b><em>{row.percent}%</em><span className={`premium-status ${row.statusInfo.cls}`}>{row.statusInfo.label}</span></div>):<p className="premium-ranking-empty">No hay participantes disponibles para mostrar.</p>}</div></section>
+  return <section className="premium-ranking-report"><div className="premium-ranking-hero"><div className="premium-ranking-icon">🏆</div><div><span>Reporte oficial</span><h2>Ranking de participantes</h2><p>Ranking de la fase actual: Pronóstico 16°. La FASE 1 queda histórica para el acumulado final del campeonato.</p></div></div><div className="premium-ranking-metrics"><article><span>Puntos 16°</span><strong>{leader?`${leader.score.totalPoints} / ${maxPoints}`:`0 / ${maxPoints}`} <small>pts</small></strong><p>{leader?`${leader.percent}% de aciertos del líder`:'Sin puntaje registrado'}</p></article><article><span>Ganador</span><strong>{winnerTotal}</strong><p>Predicciones correctas del líder</p></article><article><span>Score exacto</span><strong>{scoreTotal}</strong><p>Marcadores exactos del líder</p></article><article><span>Partidos evaluados</span><strong>{evaluated}</strong><p>{rows.length} participantes · {confirmed} confirmados</p></article></div><div className="premium-ranking-table"><div className="premium-ranking-table-head"><span>Pos</span><span>Participante</span><span>Puntos</span><span>Porcentaje</span><span>Estado</span></div>{rows.length?rows.map((row,index)=><div key={row.id || row.name} className={`premium-ranking-line ${index===0?'leader':''}`}><span className="premium-pos">{rankMedal(index)}</span><div className="premium-participant"><i>{participantInitials(row.name)}</i><div><strong>{row.name}</strong><small>Ganador: {row.score.winnerPoints} · Score: {row.score.scorePoints}</small></div></div><b>{row.score.totalPoints} pts</b><em>{row.percent}%</em><span className={`premium-status ${row.statusInfo.cls}`}>{row.statusInfo.label}</span></div>):<p className="premium-ranking-empty">No hay participantes disponibles para mostrar.</p>}</div></section>
 }
 
 
@@ -424,10 +456,10 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
   </section>
 }
 
-function ReportView({participant,matches,predictions,realScores,rankingRows=[]}){
+function ReportView({participant,matches,predictions,realScores,rankingRows=[],phase32Matches=[],phase32RealScores={}}){
   const [reportTab,setReportTab] = useState('ranking');
   const score = calculateParticipantScore(matches,predictions,realScores);
-  const rankedRows = buildPremiumRankingRows(rankingRows,matches,realScores);
+  const rankedRows = buildPhase32RankingRows(rankingRows,phase32Matches,phase32RealScores);
   const predictionTitle = participant.role==='admin' ? 'Consulta de pronóstico' : 'Mi pronóstico';
   const predictionText = participant.role==='admin'
     ? 'Use Administración para revisar todos los participantes.'

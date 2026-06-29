@@ -832,3 +832,19 @@ Archivo de migración:
 ```text
 supabase/20260629_phase32_cutoff_1430_y_12.sql
 ```
+
+
+## Fix visual y separación histórica de fases
+
+Corrección aplicada después del deploy que dañó la visualización de Pronóstico 16°.
+
+### Cambios incluidos
+
+- Se restauran los estilos completos de Pronóstico 16° (`phase32-*`).
+- Se mantiene la regla corregida:
+  - 28/jun/2026: cierre excepcional 14:30 Ecuador.
+  - Desde 29/jun/2026: cierre diario 12:00 Ecuador.
+- El ranking visible del sidebar y del módulo Reporte ahora usa la fase actual `Pronóstico 16°`.
+- La FASE 1 queda histórica y no se suma al ranking actual de 16avos.
+- El acumulado histórico se preserva para validación final del campeonato.
+- Alessia queda fuera de horario; PATITO no confirmado/borrador no puntúa.
