@@ -246,6 +246,7 @@ export async function listParticipantsWithForecasts(){
   return s.participants.map(p => ({
     ...p,
     forecast:s.forecasts.find(f=>f.participantId===p.id),
+    phase32Forecast:(s.phase32Forecasts||[]).find(f=>f.participantId===p.id),
     score:s.participantScores?.[p.id] || { totalPoints:0, winnerPoints:0, scorePoints:0, evaluatedMatches:0 }
   }));
 }
@@ -291,10 +292,7 @@ export async function getAppSettings(){
   const defaults = {
     registrationEnabled: true,
     phase1PredictionsLocked: false,
-    phase32PredictionsUnlocked: false,
-    phase32DailyLockHourEc: 12,
-    phase32DailyLockMinuteEc: 0,
-    phase32LatePenaltyEnabled: true
+    phase32PredictionsUnlocked: false
   };
 
   if (supabase) {
@@ -311,10 +309,7 @@ export async function getAppSettings(){
     return {
       registrationEnabled: map.registration_enabled ?? true,
       phase1PredictionsLocked: map.phase1_predictions_locked ?? false,
-      phase32PredictionsUnlocked: map.phase32_predictions_unlocked ?? false,
-      phase32DailyLockHourEc: Number(map.phase32_daily_lock_hour_ec ?? 12),
-      phase32DailyLockMinuteEc: Number(map.phase32_daily_lock_minute_ec ?? 0),
-      phase32LatePenaltyEnabled: map.phase32_late_penalty_enabled ?? true
+      phase32PredictionsUnlocked: map.phase32_predictions_unlocked ?? false
     };
   }
 
@@ -344,10 +339,7 @@ export async function adminPhaseControl(adminParticipantId, action, value){
   s.settings = s.settings || {
     registrationEnabled: true,
     phase1PredictionsLocked: false,
-    phase32PredictionsUnlocked: false,
-    phase32DailyLockHourEc: 12,
-    phase32DailyLockMinuteEc: 0,
-    phase32LatePenaltyEnabled: true
+    phase32PredictionsUnlocked: false
   };
 
   if (action === 'set_registration_enabled') {

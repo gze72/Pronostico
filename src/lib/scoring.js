@@ -1,4 +1,4 @@
-import { GROUPS, TEAMS, ROUND_OF_32_TEMPLATE } from './worldcupData';
+import { GROUPS, TEAMS, ROUND_OF_32_TEMPLATE, PHASE32_OFFICIAL_MATCHES } from './worldcupData';
 
 export function emptyPredictions() { return {}; }
 
@@ -306,106 +306,29 @@ export function buildRealQualified(matches, realScores) {
   };
 }
 
+const REAL_ROUND_OF_32_FIXTURES = [
+  { id:'R32-01', matchNo:'16°-1', matchNumber:73, home:'GER', away:'PAR', date:'2026-06-29T17:30:00-04:00', venue:'Boston Stadium' },
+  { id:'R32-02', matchNo:'16°-2', matchNumber:74, home:'FRA', away:'SWE', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-03', matchNo:'16°-3', matchNumber:75, home:'RSA', away:'CAN', date:'2026-06-28T16:00:00-07:00', venue:'Los Ángeles Stadium' },
+  { id:'R32-04', matchNo:'16°-4', matchNumber:76, home:'NED', away:'MAR', date:'2026-06-29T22:00:00-06:00', venue:'Estadio Monterrey' },
+  { id:'R32-05', matchNo:'16°-5', matchNumber:77, home:'POR', away:'CRO', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-06', matchNo:'16°-6', matchNumber:78, home:'ESP', away:'AUT', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-07', matchNo:'16°-7', matchNumber:79, home:'USA', away:'BIH', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-08', matchNo:'16°-8', matchNumber:80, home:'BEL', away:'SEN', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-09', matchNo:'16°-9', matchNumber:81, home:'BRA', away:'JPN', date:'2026-06-29T14:00:00-05:00', venue:'Houston Stadium' },
+  { id:'R32-10', matchNo:'16°-10', matchNumber:82, home:'IRL', away:'NOR', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-11', matchNo:'16°-11', matchNumber:83, home:'MEX', away:'ECU', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-12', matchNo:'16°-12', matchNumber:84, home:'ENG', away:'COD', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-13', matchNo:'16°-13', matchNumber:85, home:'ARG', away:'CPV', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-14', matchNo:'16°-14', matchNumber:86, home:'AUS', away:'EGY', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-15', matchNo:'16°-15', matchNumber:87, home:'SUI', away:'ALG', date:null, venue:'Horario FIFA por confirmar en app' },
+  { id:'R32-16', matchNo:'16°-16', matchNumber:88, home:'COL', away:'GHA', date:null, venue:'Horario FIFA por confirmar en app' }
+];
+
 export function buildRealRoundOf32(matches, realScores) {
-  const qualified = buildRealQualified(matches, realScores);
-  const usedTeamCodes = new Set();
-  const usedThirdGroups = new Set();
-
-  return ROUND_OF_32_TEMPLATE.map(([id, aToken, bToken], index) => {
-    let a = resolveDirectToken(aToken, qualified);
-    if (!a && aToken.startsWith('3')) a = resolveThirdToken(aToken, qualified, usedTeamCodes, usedThirdGroups);
-    if (a && !aToken.startsWith('3')) usedTeamCodes.add(a);
-
-    let b = resolveDirectToken(bToken, qualified);
-    if (!b && bToken.startsWith('3')) b = resolveThirdToken(bToken, qualified, usedTeamCodes, usedThirdGroups);
-    if (b && !bToken.startsWith('3')) usedTeamCodes.add(b);
-
-    return {
-      id,
-      matchNo: `16°-${index + 1}`,
-      phase: 'ROUND_OF_32',
-      aToken,
-      bToken,
-      home: a || aToken,
-      away: b || bToken
-    };
-  });
-}
-
-// Reglas de cierre Pronóstico 16°:
-// - 28/jun/2026: cierre excepcional 14:30 Ecuador = 19:30 UTC.
-// - Desde 29/jun/2026 en adelante: cierre diario 12:00 Ecuador = 17:00 UTC.
-export const PHASE32_INITIAL_CUTOFF_ISO = '2026-06-28T19:30:00.000Z';
-export const PHASE32_DAILY_LOCK_HOUR_EC = 12;
-export const PHASE32_DAILY_LOCK_MINUTE_EC = 0;
-
-function ecLocalPartsFromUtc(dateLike) {
-  const time = new Date(dateLike).getTime();
-  if (!Number.isFinite(time)) return null;
-  const ecDate = new Date(time - (5 * 60 * 60 * 1000));
-  return {
-    year: ecDate.getUTCFullYear(),
-    month: ecDate.getUTCMonth() + 1,
-    day: ecDate.getUTCDate(),
-    hour: ecDate.getUTCHours(),
-    minute: ecDate.getUTCMinutes(),
-    second: ecDate.getUTCSeconds()
-  };
-}
-
-export function phase32CutoffIsoForConfirmedAt(confirmedAt) {
-  const parts = ecLocalPartsFromUtc(confirmedAt);
-  if (!parts) return PHASE32_INITIAL_CUTOFF_ISO;
-
-  if (parts.year === 2026 && parts.month === 6 && parts.day === 28) {
-    return PHASE32_INITIAL_CUTOFF_ISO;
-  }
-
-  // Para fechas desde el 29/jun/2026, el corte diario es 12:00 Ecuador.
-  const cutoffUtc = Date.UTC(
-    parts.year,
-    parts.month - 1,
-    parts.day,
-    PHASE32_DAILY_LOCK_HOUR_EC + 5,
-    PHASE32_DAILY_LOCK_MINUTE_EC,
-    0,
-    0
-  );
-
-  return new Date(cutoffUtc).toISOString();
-}
-
-export function isPhase32ForecastLate(metaOrConfirmedAt) {
-  const meta = typeof metaOrConfirmedAt === 'string' ? { confirmedAt: metaOrConfirmedAt, status: 'confirmed', confirmed: true } : (metaOrConfirmedAt || {});
-  const confirmedAt = meta.confirmedAt || meta.confirmed_at;
-  const status = String(meta.status || '').toLowerCase();
-  const confirmed = meta.confirmed ?? status === 'confirmed';
-
-  if (!confirmed || !confirmedAt) return false;
-
-  const confirmedTime = new Date(confirmedAt).getTime();
-  const cutoffTime = new Date(phase32CutoffIsoForConfirmedAt(confirmedAt)).getTime();
-
-  return Number.isFinite(confirmedTime) && Number.isFinite(cutoffTime) && confirmedTime > cutoffTime;
-}
-
-export function isPhase32ForecastNotConfirmed(meta = {}) {
-  const status = String(meta.status || '').toLowerCase();
-  const confirmed = meta.confirmed ?? status === 'confirmed';
-  return !confirmed;
-}
-
-export function zeroPhase32Score(reason = 'Pronóstico registrado fuera del horario permitido', flags = {}) {
-  return {
-    winnerPoints: 0,
-    scorePoints: 0,
-    penaltyPoints: 0,
-    totalPoints: 0,
-    evaluatedMatches: 0,
-    latePenalty: Boolean(flags.latePenalty),
-    notConfirmed: Boolean(flags.notConfirmed),
-    latePenaltyReason: reason
-  };
+  // Segunda fase oficial: ya no se calcula por grupos.
+  // Se usa la llave real de Dieciseisavos cargada en worldcupData.js.
+  return PHASE32_OFFICIAL_MATCHES.map(match => ({ ...match }));
 }
 
 export function phase32WinnerFromScore(match, record) {
@@ -456,47 +379,26 @@ export function evaluatePhase32Prediction(match, predictions, realResults) {
 
 export function calculatePhase32Score(matches, predictions, realResults, forecastMeta = {}) {
   if (isPhase32ForecastNotConfirmed(forecastMeta)) {
-    return zeroPhase32Score('Pronóstico 16° no confirmado. No genera puntos.', { notConfirmed: true });
+    return { winnerPoints:0, scorePoints:0, penaltyPoints:0, totalPoints:0, evaluatedMatches:0, notConfirmed:true, latePenalty:false, latePenaltyReason:'Pronóstico 16° no confirmado. No genera puntos.' };
   }
 
   if (isPhase32ForecastLate(forecastMeta)) {
-    return zeroPhase32Score('Pronóstico registrado fuera del horario permitido.', { latePenalty: true });
+    return { winnerPoints:0, scorePoints:0, penaltyPoints:0, totalPoints:0, evaluatedMatches:0, notConfirmed:false, latePenalty:true, latePenaltyReason:'Pronóstico registrado fuera del horario permitido.' };
   }
 
   return matches.reduce((acc, match) => {
-    const result = evaluatePhase32Prediction(match, predictions, realResults);
+    const result = evaluatePhase32Prediction(match,predictions,realResults);
     if (result.winnerHit !== null || result.scoreHit !== null || result.penaltyHit !== null) acc.evaluatedMatches += 1;
     if (result.winnerHit) acc.winnerPoints += 1;
     if (result.scoreHit) acc.scorePoints += 1;
     if (result.penaltyHit) acc.penaltyPoints += 1;
     acc.totalPoints += result.points;
     return acc;
-  }, { winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, totalPoints: 0, evaluatedMatches: 0 });
+  }, { winnerPoints:0, scorePoints:0, penaltyPoints:0, totalPoints:0, evaluatedMatches:0 });
 }
 
-
-export function getPhase32CutoffUtc(dateValue = new Date()) {
-  const d = new Date(dateValue);
-  const ymd = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Guayaquil',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).format(d);
-
-  // Regla excepcional: el 28/jun/2026 cerró a las 14:30 Ecuador.
-  if (ymd === '2026-06-28') return new Date('2026-06-28T19:30:00.000Z');
-
-  // Desde el 29/jun/2026 en adelante, cierre diario 12:00 Ecuador = 17:00 UTC.
-  return new Date(`${ymd}T17:00:00.000Z`);
+export function isPhase32ForecastNotConfirmed(meta = {}) {
+  const status = String(meta.status || '').toLowerCase();
+  const confirmed = meta.confirmed ?? status === 'confirmed';
+  return !confirmed;
 }
-
-export function isPhase32LateForecast(confirmedAt, role = 'user') {
-  if (!confirmedAt) return false;
-  if (role === 'admin') return false;
-  const confirmed = new Date(confirmedAt);
-  if (Number.isNaN(confirmed.getTime())) return false;
-  const cutoff = getPhase32CutoffUtc(confirmed);
-  return confirmed > cutoff;
-}
-
