@@ -36,21 +36,21 @@ export const ROUND_OF_32_TEMPLATE = [
 ];
 
 
-export const REAL_ROUND_OF_32_MATCHES = [
-  { id:'R32-01', matchNo:'16°-01', phase:'ROUND_OF_32', home:'RSA', away:'CAN', date:'2026-06-28', time:'16:00', stadium:'Los Ángeles Stadium' },
-  { id:'R32-02', matchNo:'16°-02', phase:'ROUND_OF_32', home:'BRA', away:'JPN', date:'2026-06-29', time:'14:00', stadium:'Houston Stadium' },
-  { id:'R32-03', matchNo:'16°-03', phase:'ROUND_OF_32', home:'GER', away:'PAR', date:'2026-06-29', time:'17:30', stadium:'Boston Stadium' },
-  { id:'R32-04', matchNo:'16°-04', phase:'ROUND_OF_32', home:'NED', away:'MAR', date:'2026-06-29', time:'22:00', stadium:'Estadio Monterrey' },
-  { id:'R32-05', matchNo:'16°-05', phase:'ROUND_OF_32', home:'CIV', away:'NOR', date:'2026-06-30', time:'14:00', stadium:'Dallas Stadium' },
-  { id:'R32-06', matchNo:'16°-06', phase:'ROUND_OF_32', home:'FRA', away:'SWE', date:'2026-06-30', time:'18:00', stadium:'New York New Jersey Stadium' },
-  { id:'R32-07', matchNo:'16°-07', phase:'ROUND_OF_32', home:'MEX', away:'ECU', date:'2026-06-30', time:'22:00', stadium:'Estadio Ciudad de México' },
-  { id:'R32-08', matchNo:'16°-08', phase:'ROUND_OF_32', home:'ENG', away:'COD', date:'2026-07-01', time:'13:00', stadium:'Atlanta Stadium' },
-  { id:'R32-09', matchNo:'16°-09', phase:'ROUND_OF_32', home:'BEL', away:'SEN', date:'2026-07-01', time:'17:00', stadium:'Seattle Stadium' },
-  { id:'R32-10', matchNo:'16°-10', phase:'ROUND_OF_32', home:'USA', away:'BIH', date:'2026-07-01', time:'21:00', stadium:'San Francisco Bay Area Stadium' },
-  { id:'R32-11', matchNo:'16°-11', phase:'ROUND_OF_32', home:'ESP', away:'AUT', date:'2026-07-02', time:'16:00', stadium:'Los Ángeles Stadium' },
-  { id:'R32-12', matchNo:'16°-12', phase:'ROUND_OF_32', home:'POR', away:'CRO', date:'2026-07-02', time:'20:00', stadium:'Toronto Stadium' },
-  { id:'R32-13', matchNo:'16°-13', phase:'ROUND_OF_32', home:'SUI', away:'ALG', date:'2026-07-03', time:'17:00', stadium:'BC Place Vancouver' },
-  { id:'R32-14', matchNo:'16°-14', phase:'ROUND_OF_32', home:'AUS', away:'EGY', date:'2026-07-03', time:'15:00', stadium:'Dallas Stadium' },
-  { id:'R32-15', matchNo:'16°-15', phase:'ROUND_OF_32', home:'ARG', away:'CPV', date:'2026-07-03', time:'19:00', stadium:'Miami Stadium' },
-  { id:'R32-16', matchNo:'16°-16', phase:'ROUND_OF_32', home:'COL', away:'GHA', date:'2026-07-03', time:'22:30', stadium:'Kansas City Stadium' }
+export const PHASE32_OFFICIAL_MATCHES = [
+  { id:'M73', matchNo:'16°-1', phase:'ROUND_OF_32', home:'RSA', away:'CAN', kickoff:'2026-06-28T16:00:00-07:00', venue:'Los Ángeles Stadium' },
+  { id:'M74', matchNo:'16°-2', phase:'ROUND_OF_32', home:'BRA', away:'JPN', kickoff:'2026-06-29T14:00:00-05:00', venue:'Houston Stadium' },
+  { id:'M75', matchNo:'16°-3', phase:'ROUND_OF_32', home:'GER', away:'PAR', kickoff:'2026-06-29T17:30:00-04:00', venue:'Boston Stadium' },
+  { id:'M76', matchNo:'16°-4', phase:'ROUND_OF_32', home:'NED', away:'MAR', kickoff:'2026-06-29T22:00:00-06:00', venue:'Estadio Monterrey' },
+  { id:'M77', matchNo:'16°-5', phase:'ROUND_OF_32', home:'FRA', away:'SWE', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M78', matchNo:'16°-6', phase:'ROUND_OF_32', home:'POR', away:'CRO', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M79', matchNo:'16°-7', phase:'ROUND_OF_32', home:'ESP', away:'AUT', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M80', matchNo:'16°-8', phase:'ROUND_OF_32', home:'USA', away:'BIH', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M81', matchNo:'16°-9', phase:'ROUND_OF_32', home:'BEL', away:'SEN', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M82', matchNo:'16°-10', phase:'ROUND_OF_32', home:'CIV', away:'NOR', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M83', matchNo:'16°-11', phase:'ROUND_OF_32', home:'MEX', away:'ECU', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M84', matchNo:'16°-12', phase:'ROUND_OF_32', home:'ENG', away:'COD', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M85', matchNo:'16°-13', phase:'ROUND_OF_32', home:'ARG', away:'CPV', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M86', matchNo:'16°-14', phase:'ROUND_OF_32', home:'AUS', away:'EGY', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M87', matchNo:'16°-15', phase:'ROUND_OF_32', home:'SUI', away:'ALG', kickoff:null, venue:'Sede FIFA por confirmar en app' },
+  { id:'M88', matchNo:'16°-16', phase:'ROUND_OF_32', home:'COL', away:'GHA', kickoff:null, venue:'Sede FIFA por confirmar en app' }
 ];

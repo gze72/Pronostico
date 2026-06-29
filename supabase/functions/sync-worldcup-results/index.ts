@@ -17,103 +17,38 @@ const GROUP_LETTER_MAP: Record<string, string> = {
   "Grupo I": "I", "Grupo J": "J", "Grupo K": "K", "Grupo L": "L"
 };
 
-// Tu APP usa códigos FIFA de 3 letras en worldcupData.js.
-// Por eso NO debemos convertir a 2 letras.
 const TEAM_CODE_MAP: Record<string, string> = {
-  RSA: "RSA",
-  CZE: "CZE",
-  SUI: "SUI",
-  HAI: "HAI",
-  USA: "USA",
-  PAR: "PAR",
-  AUS: "AUS",
-  TUR: "TUR",
-  ECU: "ECU",
-  GER: "GER",
-  CIV: "CIV",
-  CUW: "CUW",
-  JPN: "JPN",
-  NED: "NED",
-  SWE: "SWE",
-  TUN: "TUN",
-  BEL: "BEL",
-  EGY: "EGY",
-  IRN: "IRN",
-  NZL: "NZL",
-  ESP: "ESP",
-  CPV: "CPV",
-  KSA: "KSA",
-  URU: "URU",
-  FRA: "FRA",
-  SEN: "SEN",
-  IRQ: "IRQ",
-  NOR: "NOR",
-  ARG: "ARG",
-  ALG: "ALG",
-  AUT: "AUT",
-  JOR: "JOR",
-  POR: "POR",
-  COD: "COD",
-  UZB: "UZB",
-  COL: "COL",
-  ENG: "ENG",
-  CRO: "CRO",
-  GHA: "GHA",
-  PAN: "PAN",
-  BRA: "BRA",
-  MAR: "MAR",
-  SCO: "SCO",
-  MEX: "MEX",
-  KOR: "KOR",
-  CAN: "CAN",
-  BIH: "BIH",
-  QAT: "QAT"
+  MEX:"MEX", RSA:"RSA", KOR:"KOR", CZE:"CZE", CAN:"CAN", BIH:"BIH", QAT:"QAT", SUI:"SUI",
+  BRA:"BRA", MAR:"MAR", HAI:"HAI", SCO:"SCO", USA:"USA", PAR:"PAR", AUS:"AUS", TUR:"TUR",
+  GER:"GER", CUW:"CUW", CIV:"CIV", ECU:"ECU", NED:"NED", JPN:"JPN", SWE:"SWE", TUN:"TUN",
+  BEL:"BEL", EGY:"EGY", IRN:"IRN", NZL:"NZL", ESP:"ESP", CPV:"CPV", KSA:"KSA", URU:"URU",
+  FRA:"FRA", SEN:"SEN", IRQ:"IRQ", NOR:"NOR", ARG:"ARG", ALG:"ALG", AUT:"AUT", JOR:"JOR",
+  POR:"POR", COD:"COD", UZB:"UZB", COL:"COL", ENG:"ENG", CRO:"CRO", GHA:"GHA", PAN:"PAN"
 };
 
-// Mapeo generado desde src/lib/worldcupData.js:
-// const [a,b,c,d] = group.teams;
-// pairings = [[a,b],[c,d],[a,c],[d,b],[d,a],[b,c]]
-const SAFE_MATCH_MAP: Record<string, string> = {
-  "A|MEX|RSA": "A1", "A|KOR|CZE": "A2", "A|MEX|KOR": "A3", "A|CZE|RSA": "A4", "A|CZE|MEX": "A5", "A|RSA|KOR": "A6",
-  "B|CAN|BIH": "B1", "B|QAT|SUI": "B2", "B|CAN|QAT": "B3", "B|SUI|BIH": "B4", "B|SUI|CAN": "B5", "B|BIH|QAT": "B6",
-  "C|BRA|MAR": "C1", "C|HAI|SCO": "C2", "C|BRA|HAI": "C3", "C|SCO|MAR": "C4", "C|SCO|BRA": "C5", "C|MAR|HAI": "C6",
-  "D|USA|PAR": "D1", "D|AUS|TUR": "D2", "D|USA|AUS": "D3", "D|TUR|PAR": "D4", "D|TUR|USA": "D5", "D|PAR|AUS": "D6",
-  "E|GER|CUW": "E1", "E|CIV|ECU": "E2", "E|GER|CIV": "E3", "E|ECU|CUW": "E4", "E|ECU|GER": "E5", "E|CUW|CIV": "E6",
-  "F|NED|JPN": "F1", "F|SWE|TUN": "F2", "F|NED|SWE": "F3", "F|TUN|JPN": "F4", "F|TUN|NED": "F5", "F|JPN|SWE": "F6",
-  "G|BEL|EGY": "G1", "G|IRN|NZL": "G2", "G|BEL|IRN": "G3", "G|NZL|EGY": "G4", "G|NZL|BEL": "G5", "G|EGY|IRN": "G6",
-  "H|ESP|CPV": "H1", "H|KSA|URU": "H2", "H|ESP|KSA": "H3", "H|URU|CPV": "H4", "H|URU|ESP": "H5", "H|CPV|KSA": "H6",
-  "I|FRA|SEN": "I1", "I|IRQ|NOR": "I2", "I|FRA|IRQ": "I3", "I|NOR|SEN": "I4", "I|NOR|FRA": "I5", "I|SEN|IRQ": "I6",
-  "J|ARG|ALG": "J1", "J|AUT|JOR": "J2", "J|ARG|AUT": "J3", "J|JOR|ALG": "J4", "J|JOR|ARG": "J5", "J|ALG|AUT": "J6",
-  "K|POR|COD": "K1", "K|UZB|COL": "K2", "K|POR|UZB": "K3", "K|COL|COD": "K4", "K|COL|POR": "K5", "K|COD|UZB": "K6",
-  "L|ENG|CRO": "L1", "L|GHA|PAN": "L2", "L|ENG|GHA": "L3", "L|PAN|CRO": "L4", "L|PAN|ENG": "L5", "L|CRO|GHA": "L6"
+const PHASE1_MATCH_MAP: Record<string, string> = {
+  "A|MEX|RSA":"A1", "A|KOR|CZE":"A2", "A|MEX|KOR":"A3", "A|CZE|RSA":"A4", "A|CZE|MEX":"A5", "A|RSA|KOR":"A6",
+  "B|CAN|BIH":"B1", "B|QAT|SUI":"B2", "B|CAN|QAT":"B3", "B|SUI|BIH":"B4", "B|SUI|CAN":"B5", "B|BIH|QAT":"B6",
+  "C|BRA|MAR":"C1", "C|HAI|SCO":"C2", "C|BRA|HAI":"C3", "C|SCO|MAR":"C4", "C|SCO|BRA":"C5", "C|MAR|HAI":"C6",
+  "D|USA|PAR":"D1", "D|AUS|TUR":"D2", "D|USA|AUS":"D3", "D|TUR|PAR":"D4", "D|TUR|USA":"D5", "D|PAR|AUS":"D6",
+  "E|GER|CUW":"E1", "E|CIV|ECU":"E2", "E|GER|CIV":"E3", "E|ECU|CUW":"E4", "E|ECU|GER":"E5", "E|CUW|CIV":"E6",
+  "F|NED|JPN":"F1", "F|SWE|TUN":"F2", "F|NED|SWE":"F3", "F|TUN|JPN":"F4", "F|TUN|NED":"F5", "F|JPN|SWE":"F6",
+  "G|BEL|EGY":"G1", "G|IRN|NZL":"G2", "G|BEL|IRN":"G3", "G|NZL|EGY":"G4", "G|NZL|BEL":"G5", "G|EGY|IRN":"G6",
+  "H|ESP|CPV":"H1", "H|KSA|URU":"H2", "H|ESP|KSA":"H3", "H|URU|CPV":"H4", "H|URU|ESP":"H5", "H|CPV|KSA":"H6",
+  "I|FRA|SEN":"I1", "I|IRQ|NOR":"I2", "I|FRA|IRQ":"I3", "I|NOR|SEN":"I4", "I|NOR|FRA":"I5", "I|SEN|IRQ":"I6",
+  "J|ARG|ALG":"J1", "J|AUT|JOR":"J2", "J|ARG|AUT":"J3", "J|JOR|ALG":"J4", "J|JOR|ARG":"J5", "J|ALG|AUT":"J6",
+  "K|POR|COD":"K1", "K|UZB|COL":"K2", "K|POR|UZB":"K3", "K|COL|COD":"K4", "K|COL|POR":"K5", "K|COD|UZB":"K6",
+  "L|ENG|CRO":"L1", "L|GHA|PAN":"L2", "L|ENG|GHA":"L3", "L|PAN|CRO":"L4", "L|PAN|ENG":"L5", "L|CRO|GHA":"L6"
 };
 
-type FifaMatch = {
-  IdMatch: string;
-  MatchNumber?: number;
-  Date?: string;
-  LocalDate?: string;
-  GroupName?: Array<{ Locale: string; Description: string }>;
-  Home?: {
-    Score?: number;
-    Abbreviation?: string;
-    IdCountry?: string;
-    ShortClubName?: string;
-    TeamName?: Array<{ Locale: string; Description: string }>;
-  };
-  Away?: {
-    Score?: number;
-    Abbreviation?: string;
-    IdCountry?: string;
-    ShortClubName?: string;
-    TeamName?: Array<{ Locale: string; Description: string }>;
-  };
-  HomeTeamScore?: number;
-  AwayTeamScore?: number;
-  MatchStatus?: number;
-  ResultType?: number;
-  MatchTime?: string;
+const PHASE32_MATCH_MAP: Record<string, string> = {
+  "RSA|CAN":"M73", "BRA|JPN":"M74", "GER|PAR":"M75", "NED|MAR":"M76",
+  "FRA|SWE":"M77", "POR|CRO":"M78", "ESP|AUT":"M79", "USA|BIH":"M80",
+  "BEL|SEN":"M81", "CIV|NOR":"M82", "MEX|ECU":"M83", "ENG|COD":"M84",
+  "ARG|CPV":"M85", "AUS|EGY":"M86", "SUI|ALG":"M87", "COL|GHA":"M88"
 };
+
+type FifaMatch = Record<string, any>;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -122,86 +57,64 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function textOf(list?: Array<{ Locale: string; Description: string }>) {
-  return list?.[0]?.Description || "";
+function textOf(value: any): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value[0]?.Description || value[0]?.Name || value[0]?.Text || "";
+  return value.Description || value.Name || value.Text || "";
+}
+
+function stageName(match: FifaMatch) {
+  return textOf(match.StageName) || textOf(match.Stage) || textOf(match.PhaseName) || textOf(match.RoundName) || textOf(match.CompetitionStage) || "";
 }
 
 function groupLetter(match: FifaMatch) {
   return GROUP_LETTER_MAP[textOf(match.GroupName)] || null;
 }
 
-function normalizeTeamCode(fifaCode?: string) {
-  if (!fifaCode) return null;
-  const key = String(fifaCode).toUpperCase();
+function normalizeTeamCode(code?: string) {
+  if (!code) return null;
+  const key = String(code).toUpperCase();
   return TEAM_CODE_MAP[key] || key;
 }
 
 function homeCode(match: FifaMatch) {
-  return normalizeTeamCode(match.Home?.Abbreviation || match.Home?.IdCountry);
+  return normalizeTeamCode(match.Home?.Abbreviation || match.Home?.IdCountry || match.HomeTeam?.Abbreviation || match.HomeTeam?.IdCountry);
 }
 
 function awayCode(match: FifaMatch) {
-  return normalizeTeamCode(match.Away?.Abbreviation || match.Away?.IdCountry);
+  return normalizeTeamCode(match.Away?.Abbreviation || match.Away?.IdCountry || match.AwayTeam?.Abbreviation || match.AwayTeam?.IdCountry);
 }
 
-function teamName(team?: FifaMatch["Home"]) {
-  return textOf(team?.TeamName) || team?.ShortClubName || team?.Abbreviation || "";
-}
-
-function scoreHome(match: FifaMatch) {
-  return match.HomeTeamScore ?? match.Home?.Score;
-}
-
-function scoreAway(match: FifaMatch) {
-  return match.AwayTeamScore ?? match.Away?.Score;
-}
-
-function matchKey(match: FifaMatch) {
-  const g = groupLetter(match);
-  const h = homeCode(match);
-  const a = awayCode(match);
-  if (!g || !h || !a) return null;
-  return `${g}|${h}|${a}`;
-}
-
-function internalMatchId(match: FifaMatch) {
-  const key = matchKey(match);
-  return key ? SAFE_MATCH_MAP[key] || null : null;
-}
-
-function minutesPlayed(match: FifaMatch) {
-  return Number(String(match.MatchTime || "").replace(/[^0-9]/g, ""));
-}
-
-function hasScore(match: FifaMatch) {
-  return scoreHome(match) != null && scoreAway(match) != null;
-}
+function scoreHome(match: FifaMatch) { return match.HomeTeamScore ?? match.Home?.Score ?? match.HomeScore; }
+function scoreAway(match: FifaMatch) { return match.AwayTeamScore ?? match.Away?.Score ?? match.AwayScore; }
+function penaltyHome(match: FifaMatch) { return match.HomeTeamPenaltyScore ?? match.HomePenaltyScore ?? match.Home?.PenaltyScore ?? match.PenaltyScoreHome; }
+function penaltyAway(match: FifaMatch) { return match.AwayTeamPenaltyScore ?? match.AwayPenaltyScore ?? match.Away?.PenaltyScore ?? match.PenaltyScoreAway; }
+function hasScore(match: FifaMatch) { return scoreHome(match) != null && scoreAway(match) != null; }
 
 function kickoffTime(match: FifaMatch) {
-  const value = match.Date || match.LocalDate || "";
+  const value = match.Date || match.LocalDate || match.MatchDate || "";
   const time = Date.parse(value);
   return Number.isFinite(time) ? time : null;
 }
 
 function isFuture(match: FifaMatch) {
   const t = kickoffTime(match);
-  if (!t) return false;
-  return t > Date.now();
+  return t ? t > Date.now() : false;
+}
+
+function minutesPlayed(match: FifaMatch) {
+  return Number(String(match.MatchTime || "").replace(/[^0-9]/g, ""));
 }
 
 function isFinal(match: FifaMatch) {
-  if (!hasScore(match)) return false;
-  if (isFuture(match)) return false;
+  if (!hasScore(match) || isFuture(match)) return false;
   if (match.ResultType === 1) return true;
-  return minutesPlayed(match) >= 90;
-}
 
-function isLive(match: FifaMatch) {
-  if (!hasScore(match)) return false;
-  if (isFinal(match)) return false;
-  if (isFuture(match)) return false;
-  const min = minutesPlayed(match);
-  return min > 0 && min < 130;
+  const status = String(match.MatchStatusName || match.StatusName || match.MatchStatus || match.Status || "").toLowerCase();
+  if (status.includes("final") || status.includes("termin") || status.includes("completed")) return true;
+
+  return minutesPlayed(match) >= 90;
 }
 
 function isManualAdminScore(row: any) {
@@ -214,52 +127,40 @@ function hasStoredScore(row: any) {
 }
 
 function isAutoScore(row: any) {
-  if (!row) return false;
-  if (isManualAdminScore(row)) return false;
+  if (!row || isManualAdminScore(row)) return false;
   const source = String(row.source || "").toLowerCase();
   return source.includes("fifa") || source.includes("auto") || source.includes("sync") || source === "";
 }
 
-async function assertAdmin(supabase: any, adminParticipantId: string | null) {
-  if (!adminParticipantId) {
-    return { ok: true, mode: "frontend-without-admin-id" };
-  }
-
-  const { data, error } = await supabase
-    .from("participants")
-    .select("id,role")
-    .eq("id", adminParticipantId)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data || data.role !== "admin") {
-    throw new Error("Solo el rol administrador puede sincronizar resultados oficiales.");
-  }
-
-  return { ok: true, mode: "admin-validated" };
+function phase1Key(match: FifaMatch) {
+  const g = groupLetter(match);
+  const h = homeCode(match);
+  const a = awayCode(match);
+  return g && h && a ? `${g}|${h}|${a}` : null;
 }
 
-async function loadExistingResults(supabase: any) {
-  const { data, error } = await supabase
-    .from("match_results")
-    .select("match_id,home_goals,away_goals,status,source,updated_at,external_match_key");
+function phase32Key(match: FifaMatch) {
+  const h = homeCode(match);
+  const a = awayCode(match);
+  return h && a ? `${h}|${a}` : null;
+}
 
-  if (error) throw error;
+function isPhase32(match: FifaMatch) {
+  const stage = stageName(match).toLowerCase();
+  const key = phase32Key(match) || "";
+  return stage.includes("dieciseis") || stage.includes("round of 32") || Boolean(PHASE32_MATCH_MAP[key]);
+}
 
-  const map = new Map<string, any>();
-  for (const row of data || []) {
-    map.set(String(row.match_id), row);
-  }
-
-  return map;
+function phase32PenaltyWinner(match: FifaMatch) {
+  const ph = penaltyHome(match);
+  const pa = penaltyAway(match);
+  if (ph != null && pa != null && Number(ph) !== Number(pa)) return Number(ph) > Number(pa) ? homeCode(match) : awayCode(match);
+  return null;
 }
 
 async function fetchFifaMatches() {
   const res = await fetch(FIFA_CALENDAR_URL, {
-    headers: {
-      "Accept": "application/json",
-      "User-Agent": "Zambranada-Mundial-2026/1.0"
-    }
+    headers: { "Accept": "application/json", "User-Agent": "Zambranada-Mundial-2026/1.0" }
   });
 
   if (!res.ok) throw new Error(`FIFA HTTP ${res.status}`);
@@ -268,26 +169,28 @@ async function fetchFifaMatches() {
   return Array.isArray(payload?.Results) ? payload.Results as FifaMatch[] : [];
 }
 
-function toDebugMatch(match: FifaMatch) {
-  return {
-    fifaId: match.IdMatch,
-    matchNumber: match.MatchNumber,
-    group: groupLetter(match),
-    key: matchKey(match),
-    internalMatchId: internalMatchId(match),
-    home: teamName(match.Home),
-    away: teamName(match.Away),
-    homeCode: homeCode(match),
-    awayCode: awayCode(match),
-    score: hasScore(match) ? `${scoreHome(match)}-${scoreAway(match)}` : null,
-    kickoff: match.Date || match.LocalDate || null,
-    matchTime: match.MatchTime,
-    resultType: match.ResultType,
-    matchStatus: match.MatchStatus,
-    future: isFuture(match),
-    final: isFinal(match),
-    live: isLive(match)
-  };
+async function loadMap(supabase: any, table: string) {
+  const { data, error } = await supabase.from(table).select("*");
+  if (error) throw error;
+
+  const map = new Map<string, any>();
+  for (const row of data || []) map.set(String(row.match_id), row);
+  return map;
+}
+
+async function assertAdmin(supabase: any, adminParticipantId: string | null) {
+  if (!adminParticipantId) return { ok: true, mode: "frontend-without-admin-id" };
+
+  const { data, error } = await supabase
+    .from("participants")
+    .select("id,role")
+    .eq("id", adminParticipantId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data || data.role !== "admin") throw new Error("Solo el rol administrador puede sincronizar resultados oficiales.");
+
+  return { ok: true, mode: "admin-validated" };
 }
 
 Deno.serve(async (req: Request) => {
@@ -300,96 +203,41 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const adminParticipantId = body?.adminParticipantId || null;
     const debug = Boolean(body?.debug);
-    const clearKnownBadAuto = body?.clearKnownBadAuto !== false;
-
-    const adminCheck = await assertAdmin(supabase, adminParticipantId);
+    const adminCheck = await assertAdmin(supabase, body?.adminParticipantId || null);
 
     const fifaMatches = await fetchFifaMatches();
-    const existingResults = await loadExistingResults(supabase);
+    const phase1Existing = await loadMap(supabase, "match_results");
+    const phase32Existing = await loadMap(supabase, "phase32_results");
 
-    const updated: any[] = [];
-    const correctedAuto: any[] = [];
-    const clearedAuto: any[] = [];
-    const protectedRows: any[] = [];
-    const liveRows: any[] = [];
+    const phase1Updated: any[] = [];
+    const phase1Cleared: any[] = [];
+    const phase1Protected: any[] = [];
+    const phase32Updated: any[] = [];
+    const phase32Cleared: any[] = [];
+    const phase32Protected: any[] = [];
     const skipped: any[] = [];
 
-    // Limpieza directa de errores conocidos generados por el mapeo anterior.
-    // Solo limpia si source es automático/FIFA; jamás toca manual/admin.
-    if (clearKnownBadAuto) {
-      for (const badId of ["D5", "D6"]) {
-        const existing = existingResults.get(badId);
-        if (hasStoredScore(existing) && isAutoScore(existing)) {
-          const { error } = await supabase
-            .from("match_results")
-            .upsert({
-              match_id: badId,
-              home_goals: null,
-              away_goals: null,
-              status: "scheduled",
-              source: "fifa-auto-cleared-bad-map",
-              source_url: FIFA_CALENDAR_URL,
-              external_match_key: existing.external_match_key || null,
-              fetched_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }, { onConflict: "match_id" });
-
-          if (!error) {
-            clearedAuto.push({
-              match_id: badId,
-              previous_home_goals: existing.home_goals,
-              previous_away_goals: existing.away_goals,
-              previous_source: existing.source,
-              reason: "Limpieza de marcador automático generado por mapeo anterior incorrecto."
-            });
-            existingResults.set(badId, {
-              ...existing,
-              home_goals: null,
-              away_goals: null,
-              status: "scheduled",
-              source: "fifa-auto-cleared-bad-map"
-            });
-          } else {
-            skipped.push({ match_id: badId, reason: error.message });
-          }
-        }
-      }
-    }
-
     for (const match of fifaMatches) {
-      const matchId = internalMatchId(match);
       const h = scoreHome(match);
       const a = scoreAway(match);
-      const existing = matchId ? existingResults.get(String(matchId)) : null;
+      const final = isFinal(match);
+      const p32Id = PHASE32_MATCH_MAP[phase32Key(match) || ""];
 
-      if (!matchId) {
-        if (hasScore(match) || debug) {
-          skipped.push({ ...toDebugMatch(match), reason: "Sin mapeo seguro por grupo/local/visitante." });
-        }
-        continue;
-      }
+      if (isPhase32(match) && p32Id) {
+        const existing = phase32Existing.get(p32Id);
 
-      if (!isFinal(match)) {
-        if (hasStoredScore(existing) && isManualAdminScore(existing)) {
-          protectedRows.push({
-            match_id: matchId,
-            ...toDebugMatch(match),
-            existing_home_goals: existing.home_goals,
-            existing_away_goals: existing.away_goals,
-            existing_source: existing.source,
-            reason: "Protegido: resultado manual/ADMIN. No se limpia."
-          });
-        } else if (hasStoredScore(existing) && isAutoScore(existing)) {
-          const newStatus = isLive(match) ? "live" : "scheduled";
-          const { error } = await supabase
-            .from("match_results")
-            .upsert({
-              match_id: matchId,
+        if (!final) {
+          if (hasStoredScore(existing) && isManualAdminScore(existing)) {
+            phase32Protected.push({ match_id: p32Id, reason: "manual/admin protegido" });
+          } else if (hasStoredScore(existing) && isAutoScore(existing)) {
+            const { error } = await supabase.from("phase32_results").upsert({
+              match_id: p32Id,
               home_goals: null,
               away_goals: null,
-              status: newStatus,
+              went_penalties: false,
+              penalty_winner: null,
+              status: "scheduled",
               source: "fifa-auto-cleared",
               source_url: FIFA_CALENDAR_URL,
               external_match_key: String(match.IdMatch),
@@ -397,59 +245,28 @@ Deno.serve(async (req: Request) => {
               updated_at: new Date().toISOString()
             }, { onConflict: "match_id" });
 
-          if (!error) {
-            clearedAuto.push({
-              match_id: matchId,
-              ...toDebugMatch(match),
-              previous_home_goals: existing.home_goals,
-              previous_away_goals: existing.away_goals,
-              previous_source: existing.source,
-              reason: "Score automático eliminado porque el partido no está finalizado."
-            });
-          } else {
-            skipped.push({ match_id: matchId, ...toDebugMatch(match), reason: error.message });
+            if (error) skipped.push({ phase: "phase32", match_id: p32Id, error: error.message });
+            else phase32Cleared.push({ match_id: p32Id });
           }
+          continue;
         }
 
-        if (isLive(match)) {
-          liveRows.push({
-            match_id: matchId,
-            ...toDebugMatch(match),
-            message: `Partido en curso: ${teamName(match.Home)} ${h}-${a} ${teamName(match.Away)}. Marcador parcial, puede cambiar.`
-          });
+        if (h == null || a == null) continue;
+
+        if (hasStoredScore(existing) && isManualAdminScore(existing)) {
+          phase32Protected.push({ match_id: p32Id, reason: "manual/admin protegido" });
+          continue;
         }
 
-        continue;
-      }
+        const wentPenalties = Number(h) === Number(a) && (penaltyHome(match) != null || penaltyAway(match) != null);
+        const penaltyWinner = wentPenalties ? phase32PenaltyWinner(match) : null;
 
-      if (h == null || a == null) {
-        skipped.push({ match_id: matchId, ...toDebugMatch(match), reason: "Partido final sin marcador numérico." });
-        continue;
-      }
-
-      if (hasStoredScore(existing) && isManualAdminScore(existing)) {
-        protectedRows.push({
-          match_id: matchId,
-          ...toDebugMatch(match),
-          existing_home_goals: existing.home_goals,
-          existing_away_goals: existing.away_goals,
-          existing_source: existing.source,
-          reason: "Protegido: resultado manual/ADMIN. FIFA no sobrescribe."
-        });
-        continue;
-      }
-
-      const isCorrection =
-        hasStoredScore(existing) &&
-        isAutoScore(existing) &&
-        (Number(existing.home_goals) !== Number(h) || Number(existing.away_goals) !== Number(a));
-
-      const { error } = await supabase
-        .from("match_results")
-        .upsert({
-          match_id: matchId,
+        const { error } = await supabase.from("phase32_results").upsert({
+          match_id: p32Id,
           home_goals: Number(h),
           away_goals: Number(a),
+          went_penalties: wentPenalties,
+          penalty_winner: penaltyWinner,
           status: "finished",
           source: "fifa",
           source_url: FIFA_CALENDAR_URL,
@@ -458,27 +275,78 @@ Deno.serve(async (req: Request) => {
           updated_at: new Date().toISOString()
         }, { onConflict: "match_id" });
 
-      if (error) {
-        skipped.push({ match_id: matchId, ...toDebugMatch(match), reason: error.message });
+        if (error) skipped.push({ phase: "phase32", match_id: p32Id, error: error.message });
+        else phase32Updated.push({
+          match_id: p32Id,
+          key: phase32Key(match),
+          score: `${h}-${a}`,
+          penalties: wentPenalties ? `${penaltyHome(match)}-${penaltyAway(match)}` : null,
+          penaltyWinner
+        });
         continue;
       }
 
-      const item = {
-        match_id: matchId,
-        ...toDebugMatch(match),
-        previous_home_goals: existing?.home_goals ?? null,
-        previous_away_goals: existing?.away_goals ?? null,
-        previous_source: existing?.source ?? null
-      };
+      const p1key = phase1Key(match);
+      const p1Id = p1key ? PHASE1_MATCH_MAP[p1key] : null;
 
-      if (isCorrection) correctedAuto.push(item);
-      else updated.push(item);
+      if (!p1Id) {
+        if (debug && (hasScore(match) || isPhase32(match))) {
+          skipped.push({ key: p1key || phase32Key(match), stage: stageName(match), reason: "Sin mapeo interno" });
+        }
+        continue;
+      }
+
+      const existing = phase1Existing.get(p1Id);
+
+      if (!final) {
+        if (hasStoredScore(existing) && isManualAdminScore(existing)) {
+          phase1Protected.push({ match_id: p1Id });
+        } else if (hasStoredScore(existing) && isAutoScore(existing)) {
+          const { error } = await supabase.from("match_results").upsert({
+            match_id: p1Id,
+            home_goals: null,
+            away_goals: null,
+            status: "scheduled",
+            source: "fifa-auto-cleared",
+            source_url: FIFA_CALENDAR_URL,
+            external_match_key: String(match.IdMatch),
+            fetched_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: "match_id" });
+
+          if (error) skipped.push({ phase: "phase1", match_id: p1Id, error: error.message });
+          else phase1Cleared.push({ match_id: p1Id });
+        }
+        continue;
+      }
+
+      if (h == null || a == null) continue;
+
+      if (hasStoredScore(existing) && isManualAdminScore(existing)) {
+        phase1Protected.push({ match_id: p1Id });
+        continue;
+      }
+
+      const { error } = await supabase.from("match_results").upsert({
+        match_id: p1Id,
+        home_goals: Number(h),
+        away_goals: Number(a),
+        status: "finished",
+        source: "fifa",
+        source_url: FIFA_CALENDAR_URL,
+        external_match_key: String(match.IdMatch),
+        fetched_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, { onConflict: "match_id" });
+
+      if (error) skipped.push({ phase: "phase1", match_id: p1Id, error: error.message });
+      else phase1Updated.push({ match_id: p1Id });
     }
 
     let recalculated = false;
     let recalculateError = null;
 
-    if (updated.length || correctedAuto.length || clearedAuto.length) {
+    if (phase1Updated.length || phase1Cleared.length) {
       try {
         const { error } = await supabase.rpc("recalculate_phase1_scores");
         if (error) recalculateError = error.message;
@@ -488,56 +356,36 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const liveMessage = liveRows.length
-      ? ` Hay ${liveRows.length} partido(s) en curso; el marcador parcial se informa, pero no altera puntajes hasta finalizar.`
-      : "";
-
-    const clearMessage = clearedAuto.length
-      ? ` Se limpiaron ${clearedAuto.length} score(s) automáticos incorrectos/no finalizados.`
-      : "";
-
     return json({
       ok: true,
       source: "fifa",
       endpoint: FIFA_CALENDAR_URL,
       adminCheck,
       fifaMatches: fifaMatches.length,
-      updated: updated.length,
-      correctedAuto: correctedAuto.length,
-      clearedAuto: clearedAuto.length,
-      protected: protectedRows.length,
-      liveMatches: liveRows.length,
+      phase1Updated: phase1Updated.length,
+      phase1Cleared: phase1Cleared.length,
+      phase1Protected: phase1Protected.length,
+      phase32Updated: phase32Updated.length,
+      phase32Cleared: phase32Cleared.length,
+      phase32Protected: phase32Protected.length,
       skipped: skipped.length,
       recalculated,
       recalculateError,
-      message: `Sincronización FIFA ejecutada. Nuevos: ${updated.length}. Corregidos auto: ${correctedAuto.length}. Protegidos ADMIN/manual: ${protectedRows.length}.${clearMessage}${liveMessage}`,
-      liveNotice: liveRows.length
-        ? "Existen partidos en curso. Los marcadores parciales no se usan para puntajes hasta que FIFA publique el resultado final."
-        : null,
-      futureNotice: clearedAuto.length
-        ? "Se eliminaron marcadores automáticos incorrectos o de partidos no finalizados."
-        : null,
-      protectedNotice: protectedRows.length
-        ? "Los resultados manuales/ADMIN se respetaron y no fueron modificados."
-        : null,
-      liveMatchesInfo: liveRows,
+      message: `Sincronización ejecutada. FASE 1: ${phase1Updated.length} actualizados. 16°: ${phase32Updated.length} actualizados.`,
       ...(debug ? {
-        updatedRows: updated,
-        correctedAutoRows: correctedAuto,
-        clearedAutoRows: clearedAuto,
-        protectedRows: protectedRows.slice(0, 100),
-        skippedRows: skipped.slice(0, 100),
-        liveRows
+        phase32UpdatedRows: phase32Updated,
+        phase32ClearedRows: phase32Cleared,
+        phase32ProtectedRows: phase32Protected,
+        skippedRows: skipped.slice(0, 150)
       } : {})
     });
   } catch (err) {
     console.error("sync-worldcup-results error", err);
-
     return json({
       ok: false,
       source: "fifa",
       error: err instanceof Error ? err.message : String(err),
-      message: "No se pudo sincronizar resultados desde FIFA. Puede registrar el Score real manualmente.",
+      message: "No se pudo sincronizar resultados desde FIFA.",
       handled: true
     }, 200);
   }

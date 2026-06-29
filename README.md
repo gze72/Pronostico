@@ -660,282 +660,106 @@ supabase/functions/admin-phase-control/index.ts
 README.md
 ```
 
+## Fix resultados FIFA Dieciseisavos / Pronóstico 16°
 
-## Corrección Pronóstico 16° - fixtures reales
+Esta actualización corrige la sincronización de resultados de la segunda fase.
 
-Se reemplazaron los cruces calculados por los 16 enfrentamientos directos definidos para la segunda fase:
+### Cambio principal
 
-1. Sudáfrica vs Canadá — 28/jun/2026 16:00 — Los Ángeles Stadium
-2. Brasil vs Japón — 29/jun/2026 14:00 — Houston Stadium
-3. Alemania vs Paraguay — 29/jun/2026 17:30 — Boston Stadium
-4. Países Bajos vs Marruecos — 29/jun/2026 22:00 — Estadio Monterrey
-5. Costa de Marfil vs Noruega — 30/jun/2026 14:00 — Dallas Stadium
-6. Francia vs Suecia — 30/jun/2026 18:00 — New York New Jersey Stadium
-7. México vs Ecuador — 30/jun/2026 22:00 — Estadio Ciudad de México
-8. Inglaterra vs RD Congo — 01/jul/2026 13:00 — Atlanta Stadium
-9. Bélgica vs Senegal — 01/jul/2026 17:00 — Seattle Stadium
-10. Estados Unidos vs Bosnia — 01/jul/2026 21:00 — San Francisco Bay Area Stadium
-11. España vs Austria — 02/jul/2026 16:00 — Los Ángeles Stadium
-12. Portugal vs Croacia — 02/jul/2026 20:00 — Toronto Stadium
-13. Suiza vs Argelia — 03/jul/2026 17:00 — BC Place Vancouver
-14. Australia vs Egipto — 03/jul/2026 15:00 — Dallas Stadium
-15. Argentina vs Cabo Verde — 03/jul/2026 19:00 — Miami Stadium
-16. Colombia vs Ghana — 03/jul/2026 22:30 — Kansas City Stadium
-
-Cambios principales:
-
-- El indicador superior cambia de `12/12 grupos` a `16/16 enfrentamientos` cuando se está en Pronóstico 16°.
-- La fase 16° ya no usa grupos ni cruces calculados por ranking de fase 1.
-- Se muestran fecha, hora y estadio en cada tarjeta de partido.
-- La migración limpia resultados/pronósticos previos de Pronóstico 16° generados con cruces incorrectos.
-
-Archivos modificados:
+La URL base de FIFA se mantiene:
 
 ```text
-src/App.jsx
-src/styles.css
-src/lib/worldcupData.js
-src/lib/scoring.js
-supabase/20260628_phase32_round_of_32.sql
-README.md
+https://api.fifa.com/api/v3/calendar/matches?language=es&count=500&idSeason=285023
 ```
 
+El filtro de pantalla de FIFA `stage=Dieciseisavos de final` no debe copiarse literalmente al backend como fuente principal. Ese filtro pertenece a la UI web de FIFA. La Edge Function ahora consulta el calendario de temporada y filtra internamente por:
 
-## Ranking FASE 2 y respaldo FASE 1
+- `StageName` / etapa con texto `Dieciseisavos de final` o `Round of 32`.
+- Coincidencia exacta local/visitante contra la llave oficial de 16 enfrentamientos.
 
-Esta versión separa los puntajes por fase:
+### Se actualiza
 
-### FASE 1
-- Queda respaldada como histórico.
-- No se mezcla con Pronóstico 16°.
-- Se conserva para el futuro acumulado general.
+- `sync-worldcup-results` ahora sincroniza:
+  - FASE 1 en `match_results`.
+  - Pronóstico 16° en `phase32_results`.
+- Se agregan columnas de auditoría FIFA a `phase32_results`.
+- La cabecera de Pronóstico 16° ya no muestra `12/12 grupos`; muestra `16/16 enfrentamientos`.
+- La sección Pronóstico 16° usa enfrentamientos fijos reales, no proyectados desde grupos.
 
-### FASE 2 / Pronóstico 16°
-- El ranking principal se calcula con los 16 enfrentamientos directos.
-- Puntaje:
-  - 1 punto por ganador.
-  - 1 punto por score exacto.
-  - 1 punto bonus si hubo penales y acierta ganador de penales.
-- El Reporte muestra por defecto el ranking FASE 2.
-- El Admin muestra puntaje FASE 2 y detalle por participante.
-- El Admin también conserva visible el histórico FASE 1.
-
-### Base de datos
-Ejecutar nuevamente:
-
-```text
-supabase/20260628_phase32_round_of_32.sql
-```
-
-La migración agrega la vista:
-
-```text
-public.phase32_participant_scores_view
-```
-
-y registra los settings:
-
-```text
-active_report_phase = phase32
-phase1_backup_status = closed_preserved_for_general_total
-phase32_ranking_enabled = true
-```
-
-
-## Fix login ranking FASE 2
-
-Se corrigió un error de ejecución que impedía ingresar a la APP después del login.
-
-Causa corregida:
-
-```text
-ReferenceError: statusInfo is not defined
-```
-
-Corrección aplicada:
-
-```text
-statusInfo: premiumStatus({ forecast: r.phase32Forecast })
-```
-
-También se ajustó la tarjeta lateral para mostrar correctamente el máximo de puntos FASE 2:
-
-```text
-16 enfrentamientos x 3 pts = 48 pts
-```
-
-
-## Recuperación pantalla en blanco
-
-Este paquete revierte la parte invasiva del ajuste anterior de Administración que podía producir pantalla en blanco después del login.
-
-Se mantiene:
-
-- Pronóstico 16°.
-- Ranking FASE 2.
-- Histórico FASE 1 respaldado.
-- FASE 1 marcada como archivada.
-- Administración orientada a FASE 2.
-
-Se evita:
-
-- Inyección de bloques JSX con variables fuera de alcance.
-- Cambios de lógica en el render principal.
-- Errores runtime después del login.
-
-Archivos modificados:
-
-```text
-src/App.jsx
-src/styles.css
-README.md
-```
-
-
-## Fix ganador pronosticado y Admin FASE 2
-
-Correcciones incluidas:
-
-- En `Pronóstico 16°` se resalta visualmente el ganador pronosticado aunque el partido no sea empate.
-- Si el pronóstico es empate, se mantiene el resaltado del ganador por penales.
-- En Administración se corrige la lectura de pronósticos FASE 2 por participante.
-- `listParticipantsWithForecasts()` ya no depende de relaciones embebidas de Supabase para `phase32_forecasts`; ahora consulta y cruza los datos por `participant_id`.
-- Esto permite que los pronósticos confirmados de ADMIN, Gregory y demás usuarios aparezcan correctamente en el detalle administrativo.
-
-Archivos modificados:
-
-```text
-src/App.jsx
-src/styles.css
-src/lib/storage.js
-README.md
-```
-
-
-## Regla de puntaje con penales FASE 2
-
-Se actualizó la lógica de `evaluatePhase32Prediction`.
-
-Regla vigente:
-
-```text
-Partido definido en tiempo regular:
-- 1 punto por acertar ganador.
-- 1 punto por acertar resultado exacto.
-
-Partido empatado y definido por penales:
-- 1 punto si el usuario pronosticó empate.
-- 1 punto por resultado exacto si acertó el marcador empatado.
-- 1 punto bonus si además acertó el ganador por penales.
-```
-
-También se actualizó el texto explicativo en la cabecera de Pronóstico 16° y se eliminó el comentario:
-
-```text
-Esta fase ya no usa grupos: son 16 cruces directos.
-```
-
-
-## Regla definitiva FASE 2: ganador directo 2 puntos
-
-Se actualizó la lógica de puntaje para garantizar el máximo de 48 puntos:
-
-```text
-16 enfrentamientos x 3 puntos = 48 puntos
-```
-
-### Partido con ganador directo
-
-```text
-+2 puntos por acertar ganador directo
-+1 punto por acertar resultado exacto
-= máximo 3 puntos
-```
-
-### Partido empatado y definido por penales
-
-```text
-+1 punto por pronosticar empate
-+1 punto por acertar resultado exacto
-+1 punto bonus por acertar ganador en penales
-= máximo 3 puntos
-```
-
-### Archivos modificados
-
-```text
-src/lib/scoring.js
-src/App.jsx
-src/styles.css
-README.md
-```
-
-
-## Texto claro de puntaje FASE 2
-
-Se simplificó la explicación visible en Pronóstico 16°:
-
-```text
-Puntaje máximo por partido: 3 puntos.
-
-Resultado exacto:
-1 punto por acertar el marcador en los 90 minutos.
-
-Ganador directo:
-2 puntos por acertar el ganador directo.
-
-Empate y penales:
-1 punto por pronosticar empate + 1 punto por acertar el ganador por penales.
-```
-
-La lógica de cálculo no cambia respecto a la versión anterior:
-- ganador directo vale 2 puntos;
-- resultado exacto vale 1 punto;
-- empate/penales suma 1 punto por empate y 1 punto por ganador en penales.
-
-
-## Recuperación segura: login + cierre 14:00 + penalizaciones SQL
-
-Este paquete restaura una base estable para evitar pantalla blanca.
-
-Incluye:
-- Ajuste visual de cierre a 14:00 Ecuador.
-- SQL de penalización R32-01.
-- No introduce cambios invasivos en el render del login.
+### Migración obligatoria
 
 Ejecutar en Supabase SQL Editor:
 
 ```text
-supabase/20260628_phase32_strict_lock_1400_penalties.sql
+supabase/20260629_phase32_fifa_sync_columns.sql
 ```
 
-Luego validar login antes de aplicar cualquier ajuste adicional de ranking con penalizaciones.
+### Edge Function obligatoria
 
-
-## Penalizaciones visibles en Ranking FASE 2
-
-La APP ahora lee `phase32_match_penalties` y aplica 0 puntos al partido penalizado.
-
-Efecto:
-- Ranking FASE 2 usa penalizaciones.
-- Reporte usa ranking recalculado.
-- Pronóstico 16° muestra alerta en la tarjeta penalizada del usuario.
-- Administración usa los puntajes recalculados por participante.
-
-No requiere ejecutar SQL nuevamente si `phase32_match_penalties` ya existe.
-
-
-## Corrección Reporte usa ranking penalizado
-
-Se corrigió una inconsistencia visual:
+Actualizar en Supabase:
 
 ```text
-Antes:
-- Menú lateral usaba phase32RankingRows con penalizaciones.
-- Reporte principal recalculaba phase32Rows sin pasar phase32Penalties.
-
-Ahora:
-- Reporte recibe phase32RankingRows desde App.
-- Reporte muestra la misma fuente que el ranking lateral.
-- Si un participante tiene penalizaciones, se muestra el conteo en el detalle.
+Edge Functions > sync-worldcup-results > Code > index.ts
 ```
+
+con el archivo:
+
+```text
+supabase/functions/sync-worldcup-results/index.ts
+```
+
+Luego presionar `Deploy updates`.
+
+### Prueba recomendada
+
+En Supabase Edge Function Test:
+
+```json
+{
+  "adminParticipantId": "e360d5ec-ddbe-46a8-b68d-60880951efc6",
+  "debug": true
+}
+```
+
+La respuesta debe incluir:
+
+```json
+{
+  "phase32Updated": 1,
+  "phase32UpdatedRows": []
+}
+```
+
+o valores mayores si FIFA ya publicó más resultados de Dieciseisavos.
+
+
+## Corrección incremental Pronóstico 16° / resultados FIFA
+
+Este paquete corrige únicamente lo pendiente frente a la versión ya publicada:
+
+- `sync-worldcup-results` ahora sincroniza también Dieciseisavos hacia `phase32_results`.
+- Se mantiene la URL base de FIFA y se filtra internamente por fase/llave real.
+- Se agregan columnas de trazabilidad FIFA en `phase32_results`: `source_url`, `external_match_key`, `fetched_at`.
+- Se mantiene `admin-phase-control` tal como está publicado; no requiere redeploy para esta corrección.
+- El bloqueo de Pronóstico 16° cambia a las 12:00.
+
+Archivos relevantes:
+
+```text
+src/App.jsx
+src/lib/worldcupData.js
+supabase/functions/sync-worldcup-results/index.ts
+supabase/20260629_phase32_fifa_sync_columns.sql
+README.md
+```
+
+Prueba recomendada en Edge Function:
+
+```json
+{
+  "adminParticipantId": "e360d5ec-ddbe-46a8-b68d-60880951efc6",
+  "debug": true
+}
+```
+
+La respuesta debe incluir `phase32Updated`, `phase32Cleared` y/o `phase32Protected`.
