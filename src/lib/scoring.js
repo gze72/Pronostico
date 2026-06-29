@@ -1,4 +1,4 @@
-import { GROUPS, TEAMS, ROUND_OF_32_TEMPLATE, REAL_ROUND_OF_32_MATCHES } from './worldcupData';
+import { GROUPS, TEAMS, ROUND_OF_32_TEMPLATE } from './worldcupData';
 
 export function emptyPredictions() { return {}; }
 
@@ -307,9 +307,105 @@ export function buildRealQualified(matches, realScores) {
 }
 
 export function buildRealRoundOf32(matches, realScores) {
-  // Segunda fase oficial cargada de forma estática según los clasificados definidos por el administrador.
-  // No depende de la tabla de grupos ni de ROUND_OF_32_TEMPLATE para evitar cruces calculados incorrectos.
-  return REAL_ROUND_OF_32_MATCHES.map(match => ({ ...match }));
+  const qualified = buildRealQualified(matches, realScores);
+  const usedTeamCodes = new Set();
+  const usedThirdGroups = new Set();
+
+  return ROUND_OF_32_TEMPLATE.map(([id, aToken, bToken], index) => {
+    let a = resolveDirectToken(aToken, qualified);
+    if (!a && aToken.startsWith('3')) a = resolveThirdToken(aToken, qualified, usedTeamCodes, usedThirdGroups);
+    if (a && !aToken.startsWith('3')) usedTeamCodes.add(a);
+
+    let b = resolveDirectToken(bToken, qualified);
+    if (!b && bToken.startsWith('3')) b = resolveThirdToken(bToken, qualified, usedTeamCodes, usedThirdGroups);
+    if (b && !bToken.startsWith('3')) usedTeamCodes.add(b);
+
+    return {
+      id,
+      matchNo: `16°-${index + 1}`,
+      phase: 'ROUND_OF_32',
+      aToken,
+      bToken,
+      home: a || aToken,
+      away: b || bToken
+    };
+  });
+}
+
+// Reglas de cierre Pronóstico 16°:
+// - 28/jun/2026: cierre excepcional 14:30 Ecuador = 19:30 UTC.
+// - Desde 29/jun/2026 en adelante: cierre diario 12:00 Ecuador = 17:00 UTC.
+export const PHASE32_INITIAL_CUTOFF_ISO = '2026-06-28T19:30:00.000Z';
+export const PHASE32_DAILY_LOCK_HOUR_EC = 12;
+export const PHASE32_DAILY_LOCK_MINUTE_EC = 0;
+
+function ecLocalPartsFromUtc(dateLike) {
+  const time = new Date(dateLike).getTime();
+  if (!Number.isFinite(time)) return null;
+  const ecDate = new Date(time - (5 * 60 * 60 * 1000));
+  return {
+    year: ecDate.getUTCFullYear(),
+    month: ecDate.getUTCMonth() + 1,
+    day: ecDate.getUTCDate(),
+    hour: ecDate.getUTCHours(),
+    minute: ecDate.getUTCMinutes(),
+    second: ecDate.getUTCSeconds()
+  };
+}
+
+export function phase32CutoffIsoForConfirmedAt(confirmedAt) {
+  const parts = ecLocalPartsFromUtc(confirmedAt);
+  if (!parts) return PHASE32_INITIAL_CUTOFF_ISO;
+
+  if (parts.year === 2026 && parts.month === 6 && parts.day === 28) {
+    return PHASE32_INITIAL_CUTOFF_ISO;
+  }
+
+  // Para fechas desde el 29/jun/2026, el corte diario es 12:00 Ecuador.
+  const cutoffUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    PHASE32_DAILY_LOCK_HOUR_EC + 5,
+    PHASE32_DAILY_LOCK_MINUTE_EC,
+    0,
+    0
+  );
+
+  return new Date(cutoffUtc).toISOString();
+}
+
+export function isPhase32ForecastLate(metaOrConfirmedAt) {
+  const meta = typeof metaOrConfirmedAt === 'string' ? { confirmedAt: metaOrConfirmedAt, status: 'confirmed', confirmed: true } : (metaOrConfirmedAt || {});
+  const confirmedAt = meta.confirmedAt || meta.confirmed_at;
+  const status = String(meta.status || '').toLowerCase();
+  const confirmed = meta.confirmed ?? status === 'confirmed';
+
+  if (!confirmed || !confirmedAt) return false;
+
+  const confirmedTime = new Date(confirmedAt).getTime();
+  const cutoffTime = new Date(phase32CutoffIsoForConfirmedAt(confirmedAt)).getTime();
+
+  return Number.isFinite(confirmedTime) && Number.isFinite(cutoffTime) && confirmedTime > cutoffTime;
+}
+
+export function isPhase32ForecastNotConfirmed(meta = {}) {
+  const status = String(meta.status || '').toLowerCase();
+  const confirmed = meta.confirmed ?? status === 'confirmed';
+  return !confirmed;
+}
+
+export function zeroPhase32Score(reason = 'Pronóstico registrado fuera del horario permitido', flags = {}) {
+  return {
+    winnerPoints: 0,
+    scorePoints: 0,
+    penaltyPoints: 0,
+    totalPoints: 0,
+    evaluatedMatches: 0,
+    latePenalty: Boolean(flags.latePenalty),
+    notConfirmed: Boolean(flags.notConfirmed),
+    latePenaltyReason: reason
+  };
 }
 
 export function phase32WinnerFromScore(match, record) {
@@ -329,94 +425,51 @@ export function phase32WentPenalties(record) {
   return !Number.isNaN(h) && !Number.isNaN(a) && h === a;
 }
 
-export function evaluatePhase32Prediction(match, predictions, realResults, penalties = {}) {
-  const pred = predictions?.[match.id] || {};
-  const real = realResults?.[match.id] || {};
-  const penalty = penalties?.[match.id];
+export function evaluatePhase32Prediction(match, predictions, realResults) {
+  const prediction = predictions?.[match.id];
+  const real = realResults?.[match.id];
 
-  if (penalty) {
-    return {
-      winnerHit: false,
-      scoreHit: false,
-      penaltyHit: false,
-      points: 0,
-      winnerPoints: 0,
-      scorePoints: 0,
-      penaltyPoints: 0,
-      penalized: true,
-      penaltyReason: penalty.reason || 'Pronóstico fuera de hora o no registrado antes del cierre.'
-    };
+  if (!prediction || !real || real.homeGoals == null || real.awayGoals == null) {
+    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0 };
   }
 
-  const predHasScore = pred.homeGoals !== '' && pred.awayGoals !== '' && pred.homeGoals != null && pred.awayGoals != null;
-  const realHasScore = real.homeGoals !== '' && real.awayGoals !== '' && real.homeGoals != null && real.awayGoals != null;
-
-  if (!predHasScore || !realHasScore) {
-    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0, winnerPoints: 0, scorePoints: 0, penaltyPoints: 0 };
-  }
-
-  const predHome = Number(pred.homeGoals);
-  const predAway = Number(pred.awayGoals);
-  const realHome = Number(real.homeGoals);
-  const realAway = Number(real.awayGoals);
-
-  const predTie = predHome === predAway;
-  const realTie = realHome === realAway;
-  const realWentPenalties = Boolean(real.wentPenalties) || realTie;
-
-  const predWinner = phase32WinnerFromScore(match, pred);
+  const predictedWinner = phase32WinnerFromScore(match, prediction);
   const realWinner = phase32WinnerFromScore(match, real);
+  const predictedWentPenalties = phase32WentPenalties(prediction);
+  const realWentPenalties = Boolean(real.wentPenalties || phase32WentPenalties(real));
 
-  /*
-    Regla definitiva FASE 2 / Pronóstico 16°:
+  if (!predictedWinner || !realWinner) {
+    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0 };
+  }
 
-    Partido con ganador directo:
-    - 2 puntos por acertar ganador.
-    - 1 punto por acertar resultado exacto.
-    - Máximo: 3 puntos.
-
-    Partido empatado y definido por penales:
-    - 1 punto por acertar que el partido terminó empatado.
-    - 1 punto por acertar resultado exacto.
-    - 1 punto bonus por acertar ganador por penales.
-    - Máximo: 3 puntos.
-
-    Total máximo de fase:
-    16 partidos x 3 puntos = 48 puntos.
-  */
-  const winnerHit = realWentPenalties
-    ? predTie
-    : (predWinner && realWinner ? predWinner === realWinner : false);
-
-  const scoreHit = predHome === realHome && predAway === realAway;
-
-  const penaltyHit = realWentPenalties
-    ? Boolean(predTie && pred.penaltyWinner && real.penaltyWinner && pred.penaltyWinner === real.penaltyWinner)
-    : null;
-
-  const winnerPoints = winnerHit ? (realWentPenalties ? 1 : 2) : 0;
-  const scorePoints = scoreHit ? 1 : 0;
-  const penaltyPoints = penaltyHit ? 1 : 0;
+  const scoreHit = Number(prediction.homeGoals) === Number(real.homeGoals) && Number(prediction.awayGoals) === Number(real.awayGoals);
+  const winnerHit = predictedWinner === realWinner;
+  const penaltyHit = realWentPenalties ? (predictedWentPenalties && prediction.penaltyWinner === real.penaltyWinner) : null;
 
   return {
     winnerHit,
     scoreHit,
     penaltyHit,
-    winnerPoints,
-    scorePoints,
-    penaltyPoints,
-    points: winnerPoints + scorePoints + penaltyPoints
+    points: (winnerHit ? 1 : 0) + (scoreHit ? 1 : 0) + (penaltyHit ? 1 : 0)
   };
 }
 
-export function calculatePhase32Score(matches, predictions, realResults, penalties = {}) {
+export function calculatePhase32Score(matches, predictions, realResults, forecastMeta = {}) {
+  if (isPhase32ForecastNotConfirmed(forecastMeta)) {
+    return zeroPhase32Score('Pronóstico 16° no confirmado. No genera puntos.', { notConfirmed: true });
+  }
+
+  if (isPhase32ForecastLate(forecastMeta)) {
+    return zeroPhase32Score('Pronóstico registrado fuera del horario permitido.', { latePenalty: true });
+  }
+
   return matches.reduce((acc, match) => {
-    const result = evaluatePhase32Prediction(match, predictions, realResults, penalties);
+    const result = evaluatePhase32Prediction(match, predictions, realResults);
     if (result.winnerHit !== null || result.scoreHit !== null || result.penaltyHit !== null) acc.evaluatedMatches += 1;
-    acc.winnerPoints += result.winnerPoints || 0;
-    acc.scorePoints += result.scorePoints || 0;
-    acc.penaltyPoints += result.penaltyPoints || 0;
-    acc.totalPoints += result.points || 0;
+    if (result.winnerHit) acc.winnerPoints += 1;
+    if (result.scoreHit) acc.scorePoints += 1;
+    if (result.penaltyHit) acc.penaltyPoints += 1;
+    acc.totalPoints += result.points;
     return acc;
   }, { winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, totalPoints: 0, evaluatedMatches: 0 });
 }

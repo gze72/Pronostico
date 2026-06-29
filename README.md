@@ -763,3 +763,72 @@ Prueba recomendada en Edge Function:
 ```
 
 La respuesta debe incluir `phase32Updated`, `phase32Cleared` y/o `phase32Protected`.
+
+## Fix incremental: cierre 12:00 y penalización por pronóstico fuera de horario
+
+Esta versión corrige dos puntos detectados después del último deploy:
+
+1. Se elimina el texto residual `Abierto hasta hoy 16:00` en Administración y se unifica a `12:00`.
+2. Se aplica penalización automática a los pronósticos de `Pronóstico 16°` confirmados después del corte oficial.
+
+Corte oficial aplicado:
+
+```text
+28/jun/2026 12:00 Ecuador
+UTC: 2026-06-28T17:00:00.000Z
+```
+
+Regla:
+
+```text
+Si phase32_forecasts.confirmed_at > 2026-06-28 17:00:00+00
+=> totalPoints = 0
+=> winnerPoints = 0
+=> scorePoints = 0
+=> penaltyPoints = 0
+```
+
+Archivos modificados:
+
+```text
+src/App.jsx
+src/lib/scoring.js
+src/lib/storage.js
+src/styles.css
+supabase/20260629_phase32_lock_12_late_penalty.sql
+```
+
+Ejecutar migración opcional/recomendada en Supabase:
+
+```sql
+insert into public.app_settings (key, value, updated_at)
+values
+  ('phase32_daily_lock_hour_ec', '12'::jsonb, now()),
+  ('phase32_daily_lock_minute_ec', '0'::jsonb, now()),
+  ('phase32_late_penalty_enabled', 'true'::jsonb, now())
+on conflict (key) do update
+set value = excluded.value,
+    updated_at = excluded.updated_at;
+```
+
+
+## Fix regla cierre 14:30 y 12:00
+
+Se corrige la penalización de Pronóstico 16°:
+
+- Para el 28/jun/2026 aplica cierre excepcional de 14:30 Ecuador.
+- Desde el 29/jun/2026 en adelante aplica cierre diario de 12:00 Ecuador.
+- Los pronósticos confirmados después del cierre vigente se muestran con 0 puntos.
+- Los usuarios en borrador o sin confirmación no generan puntos.
+
+Validación con datos actuales:
+
+- Válidos: Gregory, Dominic Ramirez, Edison, André Zambrano, Diego, Erick y Josua.
+- Penalizado confirmado fuera de hora: Alessia.
+- Borrador/no confirmado, no puntúa: PATITO.
+
+Archivo de migración:
+
+```text
+supabase/20260629_phase32_cutoff_1430_y_12.sql
+```
