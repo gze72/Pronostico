@@ -224,21 +224,60 @@ export async function saveParticipantScore(participantId, score){
 
 export async function listParticipantsWithForecasts(){
   if (supabase) {
-    const { data, error } = await supabase
+    // Consulta separada y merge manual para evitar fallos de relaciones embebidas
+    // y asegurar que Administración/Reporte reciban phase32Forecast.
+    const { data: participants, error: participantsError } = await supabase
       .from('participants')
-      .select('id,name,unique_key,role,created_at,forecasts(predictions,confirmed,status,confirmed_at,updated_at),phase32_forecasts(predictions,confirmed,status,confirmed_at,updated_at),participant_scores(total_points,winner_points,score_points,evaluated_matches,updated_at)')
+      .select('id,name,unique_key,role,created_at')
       .order('created_at');
 
-    if (error) throw error;
+    if (participantsError) throw participantsError;
 
-    return data.map(p => ({
-      id:p.id,
-      name:p.name,
-      uniqueKey:p.unique_key,
-      role:p.role,
-      forecast:p.forecasts?.[0],
-      phase32Forecast:p.phase32_forecasts?.[0],
-      score:p.participant_scores?.[0] || { total_points:0, winner_points:0, score_points:0, evaluated_matches:0 }
+    const ids = (participants || []).map(p => p.id);
+    if (!ids.length) return [];
+
+    const [
+      forecastsResult,
+      phase32ForecastsResult,
+      scoresResult
+    ] = await Promise.all([
+      supabase
+        .from('forecasts')
+        .select('participant_id,predictions,confirmed,status,confirmed_at,updated_at')
+        .in('participant_id', ids),
+
+      supabase
+        .from('phase32_forecasts')
+        .select('participant_id,predictions,confirmed,status,confirmed_at,updated_at')
+        .in('participant_id', ids),
+
+      supabase
+        .from('participant_scores')
+        .select('participant_id,total_points,winner_points,score_points,evaluated_matches,updated_at')
+        .in('participant_id', ids)
+    ]);
+
+    if (forecastsResult.error) throw forecastsResult.error;
+    if (phase32ForecastsResult.error) throw phase32ForecastsResult.error;
+    if (scoresResult.error) throw scoresResult.error;
+
+    const forecastByParticipant = new Map((forecastsResult.data || []).map(f => [f.participant_id, f]));
+    const phase32ByParticipant = new Map((phase32ForecastsResult.data || []).map(f => [f.participant_id, f]));
+    const scoreByParticipant = new Map((scoresResult.data || []).map(s => [s.participant_id, s]));
+
+    return (participants || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      uniqueKey: p.unique_key,
+      role: p.role,
+      forecast: forecastByParticipant.get(p.id) || null,
+      phase32Forecast: phase32ByParticipant.get(p.id) || null,
+      score: scoreByParticipant.get(p.id) || {
+        total_points: 0,
+        winner_points: 0,
+        score_points: 0,
+        evaluated_matches: 0
+      }
     }));
   }
 
@@ -246,7 +285,7 @@ export async function listParticipantsWithForecasts(){
   return s.participants.map(p => ({
     ...p,
     forecast:s.forecasts.find(f=>f.participantId===p.id),
-    phase32Forecast:(s.phase32Forecasts||[]).find(f=>f.participantId===p.id),
+    phase32Forecast:null,
     score:s.participantScores?.[p.id] || { totalPoints:0, winnerPoints:0, scorePoints:0, evaluatedMatches:0 }
   }));
 }
@@ -292,7 +331,10 @@ export async function getAppSettings(){
   const defaults = {
     registrationEnabled: true,
     phase1PredictionsLocked: false,
-    phase32PredictionsUnlocked: false
+    phase32PredictionsUnlocked: false,
+    phase32DailyLockHourEc: 12,
+    phase32DailyLockMinuteEc: 0,
+    phase32LatePenaltyEnabled: true
   };
 
   if (supabase) {
@@ -309,7 +351,10 @@ export async function getAppSettings(){
     return {
       registrationEnabled: map.registration_enabled ?? true,
       phase1PredictionsLocked: map.phase1_predictions_locked ?? false,
-      phase32PredictionsUnlocked: map.phase32_predictions_unlocked ?? false
+      phase32PredictionsUnlocked: map.phase32_predictions_unlocked ?? false,
+      phase32DailyLockHourEc: Number(map.phase32_daily_lock_hour_ec ?? 12),
+      phase32DailyLockMinuteEc: Number(map.phase32_daily_lock_minute_ec ?? 0),
+      phase32LatePenaltyEnabled: map.phase32_late_penalty_enabled ?? true
     };
   }
 
@@ -339,7 +384,10 @@ export async function adminPhaseControl(adminParticipantId, action, value){
   s.settings = s.settings || {
     registrationEnabled: true,
     phase1PredictionsLocked: false,
-    phase32PredictionsUnlocked: false
+    phase32PredictionsUnlocked: false,
+    phase32DailyLockHourEc: 12,
+    phase32DailyLockMinuteEc: 0,
+    phase32LatePenaltyEnabled: true
   };
 
   if (action === 'set_registration_enabled') {

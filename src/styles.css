@@ -2327,3 +2327,148 @@ nav button:disabled {
   font-weight:700;
   text-align:center;
 }
+
+
+/* ==========================================================
+   Fix visual Pronóstico 16° + ranking fase actual
+   ========================================================== */
+
+.phase32-late-warning,
+.phase32-penalty-warning {
+  margin: 14px 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(190, 120, 45, .28);
+  background: linear-gradient(180deg, rgba(255, 241, 220, .96), rgba(255, 248, 238, .92));
+  color: #7c4b12;
+  font-weight: 700;
+}
+
+.phase32-summary article strong small {
+  font-size: .78rem;
+  color: var(--muted);
+  margin-left: 3px;
+}
+
+.phase32-lock-card.locked span {
+  color: #6d6254;
+}
+
+.phase32-lock-card.open span {
+  color: #2f6f47;
+}
+
+.premium-ranking-report .phase-label,
+.premium-sidebar-ranking .phase-label {
+  display: inline-flex;
+  margin-top: 3px;
+  color: rgba(255,255,255,.58);
+  font-size: .7rem;
+}
+
+.premium-ranking-line .late,
+.premium-ranking-line .not-confirmed {
+  color: #9b6420;
+}
+
+@media (max-width: 720px) {
+  .phase32-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .phase32-match-card {
+    padding: 15px;
+  }
+
+  .phase32-teams {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+  }
+}
+
+
+
+/* Fix 3: Administración / Reporte enfocado en Pronóstico 16° */
+.admin-phase32-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.admin-phase32-card {
+  border: 1px solid rgba(185,154,86,.25);
+  border-radius: 18px;
+  background: rgba(255,255,255,.72);
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(35,30,20,.06);
+}
+
+.admin-phase32-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--gold);
+  font-weight: 900;
+  font-size: .82rem;
+  margin-bottom: 8px;
+}
+
+.admin-phase32-card strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: .95rem;
+}
+
+.admin-phase32-card p {
+  margin: 6px 0;
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+.admin-phase32-card p span {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .admin-phase32-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Fix 8: Administración de resultado real Pronóstico 16° */
+.phase32-real-admin-row {
+  grid-template-columns: 70px minmax(220px, 1fr) 70px 18px 70px auto auto auto;
+  gap: 8px;
+}
+
+.phase32-admin-penalty {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .78rem;
+  font-weight: 800;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.phase32-real-admin-row select {
+  border: 1px solid rgba(185,154,86,.30);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,.86);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+@media (max-width: 1000px) {
+  .phase32-real-admin-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .phase32-real-admin-row > b {
+    grid-column: 1 / -1;
+  }
+}
