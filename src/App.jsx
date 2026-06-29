@@ -380,8 +380,10 @@ function phase32WinnerLabel(match, record){
 function formatPhase32Real(real, match){
   if (!real || real.homeGoals == null || real.awayGoals == null) return '— : —';
   const base = `${real.homeGoals} : ${real.awayGoals}`;
-  if ((real.wentPenalties || phase32WentPenalties(real)) && real.penaltyWinner) return `${base} · Penales: ${TEAMS[real.penaltyWinner]?.name || real.penaltyWinner}`;
-  return base;
+  const penalties = Boolean(real.wentPenalties || phase32WentPenalties(real));
+  const winner = real.penaltyWinner || phase32WinnerFromScore(match, real);
+  const winnerName = winner ? (TEAMS[winner]?.name || winner) : 'Empate';
+  return `${winnerName} · ${base}${penalties && real.penaltyWinner ? ' · Penales' : ''}`;
 }
 function Phase32PredictionView({participant,matches,predictions,setPredictions,realScores,setRealScores,score,status,appSettings,persist}){
   const locked = phase32Locked(appSettings,status);
@@ -443,8 +445,8 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
             <input type="number" min="0" max="30" disabled={locked} value={prediction.awayGoals ?? ''} onChange={e=>setPhase32Field(setPredictions,match.id,'awayGoals',e.target.value)} />
           </div>
           {tie && <div className="phase32-penalties"><small>Ganador por penales</small><div><button type="button" disabled={locked} className={prediction.penaltyWinner===match.home?'active':''} onClick={()=>setPhase32Field(setPredictions,match.id,'penaltyWinner',match.home)}>{TEAMS[match.home]?.name || match.home}</button><button type="button" disabled={locked} className={prediction.penaltyWinner===match.away?'active':''} onClick={()=>setPhase32Field(setPredictions,match.id,'penaltyWinner',match.away)}>{TEAMS[match.away]?.name || match.away}</button></div></div>}
-          <div className="phase32-result-line"><small>Pronóstico ganador</small><b>{phase32WinnerLabel(match,prediction)}</b></div>
-          <div className="phase32-real-line"><small>Resultado REAL</small><b>{formatPhase32Real(real,match)}</b></div>
+          <div className="phase32-result-line"><small>Pronóstico ganador</small><b className="phase32-predicted-winner-chip">{phase32WinnerLabel(match,prediction)}</b></div>
+          <div className="phase32-real-line"><small>Resultado REAL</small><b className="phase32-real-score-chip">{formatPhase32Real(real,match)}</b></div>
           <div className="phase32-hits"><span>Ganador <b className={ev.winnerHit===null?'pending-hit':ev.winnerHit?'hit-ok':'hit-bad'}>{hitIcon(ev.winnerHit)}</b></span><span>Resultado <b className={ev.scoreHit===null?'pending-hit':ev.scoreHit?'hit-ok':'hit-bad'}>{hitIcon(ev.scoreHit)}</b></span><span>Penales <b className={ev.penaltyHit===null?'pending-hit':ev.penaltyHit?'hit-ok':'hit-bad'}>{hitIcon(ev.penaltyHit)}</b></span></div>
         </article>
       })}

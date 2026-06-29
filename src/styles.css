@@ -2285,11 +2285,11 @@ nav button:disabled {
 .phase32-score-inputs { display:flex; justify-content:center; align-items:center; gap:10px; margin:8px 0 12px; }
 .phase32-score-inputs input { width:68px; text-align:center; font-weight:900; font-size:1.1rem; border:1px solid var(--line); border-radius:14px; padding:9px; background:#fff; }
 .phase32-score-inputs span { font-size:1.2rem; font-weight:900; }
-.phase32-penalties { padding:10px; border-radius:16px; background:rgba(185,154,86,.08); border:1px solid rgba(185,154,86,.18); margin-bottom:10px; }
+.phase32-penalties { padding:10px; border-radius:16px; background:rgba(223,243,255,.50); border:1px solid rgba(11,79,113,.14); margin-bottom:10px; }
 .phase32-penalties small { color:var(--muted); font-weight:800; }
 .phase32-penalties div { display:flex; gap:8px; margin-top:7px; }
-.phase32-penalties button { flex:1; padding:8px 10px; border-radius:12px; border:1px solid var(--line); background:#fff; cursor:pointer; }
-.phase32-penalties button.active { background:var(--gold); color:#fff; border-color:var(--gold); font-weight:900; }
+.phase32-penalties button { flex:1; padding:8px 10px; border-radius:12px; border:1px solid var(--line); background:#fff; cursor:pointer; transition:.18s ease; }
+.phase32-penalties button.active { background:#dff3ff; color:#0b4f71; border-color:rgba(11,79,113,.18); font-weight:900; box-shadow:0 6px 16px rgba(11,79,113,.08); }
 .phase32-result-line,.phase32-real-line { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-top:1px solid rgba(228,222,211,.7); }
 .phase32-result-line small,.phase32-real-line small { color:var(--muted); }
 .phase32-real-line b { color:#1e6746; }
@@ -2471,4 +2471,39 @@ nav button:disabled {
   .phase32-real-admin-row > b {
     grid-column: 1 / -1;
   }
+}
+
+
+/* Fix 12: resaltar ganador pronosticado y resultado/ganador real */
+.phase32-result-line b.phase32-predicted-winner-chip,
+.phase32-real-line b.phase32-real-score-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-weight: 900;
+  letter-spacing: .01em;
+}
+
+.phase32-result-line b.phase32-predicted-winner-chip {
+  background: #dff3ff;
+  color: #0b4f71;
+  border: 1px solid rgba(11, 79, 113, .18);
+  box-shadow: 0 6px 16px rgba(11, 79, 113, .08);
+}
+
+.phase32-real-line b.phase32-real-score-chip {
+  background: #111;
+  color: #fff;
+  border: 1px solid rgba(0,0,0,.85);
+  box-shadow: 0 8px 18px rgba(0,0,0,.18);
+}
+
+.phase32-real-line b.phase32-real-score-chip:empty {
+  background: #f4efe7;
+  color: #7b7162;
+  border-color: rgba(185,154,86,.25);
+  box-shadow: none;
 }
