@@ -54,3 +54,279 @@ export const PHASE32_OFFICIAL_MATCHES = [
   { id:'M87', matchNo:'16°-15', phase:'ROUND_OF_32', home:'SUI', away:'ALG', kickoff:null, venue:'Sede FIFA por confirmar en app' },
   { id:'M88', matchNo:'16°-16', phase:'ROUND_OF_32', home:'COL', away:'GHA', kickoff:null, venue:'Sede FIFA por confirmar en app' }
 ];
+
+
+// Llave oficial definida para Pronóstico 16° (no se recalcula desde grupos).
+export const ROUND_OF_32_REAL_FIXTURES = [
+  {
+    "id": "R32-01",
+    "matchNumber": 73,
+    "home": {
+      "code": "GER",
+      "name": "Alemania",
+      "flag": "🇩🇪"
+    },
+    "away": {
+      "code": "PAR",
+      "name": "Paraguay",
+      "flag": "🇵🇾"
+    },
+    "date": "2026-06-29T17:30:00-04:00",
+    "venue": "Boston Stadium"
+  },
+  {
+    "id": "R32-02",
+    "matchNumber": 74,
+    "home": {
+      "code": "FRA",
+      "name": "Francia",
+      "flag": "🇫🇷"
+    },
+    "away": {
+      "code": "SWE",
+      "name": "Suecia",
+      "flag": "🇸🇪"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-03",
+    "matchNumber": 75,
+    "home": {
+      "code": "RSA",
+      "name": "Sudáfrica",
+      "flag": "🇿🇦"
+    },
+    "away": {
+      "code": "CAN",
+      "name": "Canadá",
+      "flag": "🇨🇦"
+    },
+    "date": "2026-06-28T16:00:00-07:00",
+    "venue": "Los Ángeles Stadium"
+  },
+  {
+    "id": "R32-04",
+    "matchNumber": 76,
+    "home": {
+      "code": "NED",
+      "name": "Países Bajos",
+      "flag": "🇳🇱"
+    },
+    "away": {
+      "code": "MAR",
+      "name": "Marruecos",
+      "flag": "🇲🇦"
+    },
+    "date": "2026-06-29T22:00:00-06:00",
+    "venue": "Estadio Monterrey"
+  },
+  {
+    "id": "R32-05",
+    "matchNumber": 77,
+    "home": {
+      "code": "POR",
+      "name": "Portugal",
+      "flag": "🇵🇹"
+    },
+    "away": {
+      "code": "CRO",
+      "name": "Croacia",
+      "flag": "🇭🇷"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-06",
+    "matchNumber": 78,
+    "home": {
+      "code": "ESP",
+      "name": "España",
+      "flag": "🇪🇸"
+    },
+    "away": {
+      "code": "AUT",
+      "name": "Austria",
+      "flag": "🇦🇹"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-07",
+    "matchNumber": 79,
+    "home": {
+      "code": "USA",
+      "name": "Estados Unidos",
+      "flag": "🇺🇸"
+    },
+    "away": {
+      "code": "BIH",
+      "name": "Bosnia y Herzegovina",
+      "flag": "🇧🇦"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-08",
+    "matchNumber": 80,
+    "home": {
+      "code": "BEL",
+      "name": "Bélgica",
+      "flag": "🇧🇪"
+    },
+    "away": {
+      "code": "SEN",
+      "name": "Senegal",
+      "flag": "🇸🇳"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-09",
+    "matchNumber": 81,
+    "home": {
+      "code": "BRA",
+      "name": "Brasil",
+      "flag": "🇧🇷"
+    },
+    "away": {
+      "code": "JPN",
+      "name": "Japón",
+      "flag": "🇯🇵"
+    },
+    "date": "2026-06-29T14:00:00-05:00",
+    "venue": "Houston Stadium"
+  },
+  {
+    "id": "R32-10",
+    "matchNumber": 82,
+    "home": {
+      "code": "IRL",
+      "name": "Irlanda",
+      "flag": "🇮🇪"
+    },
+    "away": {
+      "code": "NOR",
+      "name": "Noruega",
+      "flag": "🇳🇴"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-11",
+    "matchNumber": 83,
+    "home": {
+      "code": "MEX",
+      "name": "México",
+      "flag": "🇲🇽"
+    },
+    "away": {
+      "code": "ECU",
+      "name": "Ecuador",
+      "flag": "🇪🇨"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-12",
+    "matchNumber": 84,
+    "home": {
+      "code": "ENG",
+      "name": "Inglaterra",
+      "flag": "🏴"
+    },
+    "away": {
+      "code": "COD",
+      "name": "RD Congo",
+      "flag": "🇨🇩"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-13",
+    "matchNumber": 85,
+    "home": {
+      "code": "ARG",
+      "name": "Argentina",
+      "flag": "🇦🇷"
+    },
+    "away": {
+      "code": "CPV",
+      "name": "Cabo Verde",
+      "flag": "🇨🇻"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-14",
+    "matchNumber": 86,
+    "home": {
+      "code": "AUS",
+      "name": "Australia",
+      "flag": "🇦🇺"
+    },
+    "away": {
+      "code": "EGY",
+      "name": "Egipto",
+      "flag": "🇪🇬"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-15",
+    "matchNumber": 87,
+    "home": {
+      "code": "SUI",
+      "name": "Suiza",
+      "flag": "🇨🇭"
+    },
+    "away": {
+      "code": "ALG",
+      "name": "Argelia",
+      "flag": "🇩🇿"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  },
+  {
+    "id": "R32-16",
+    "matchNumber": 88,
+    "home": {
+      "code": "COL",
+      "name": "Colombia",
+      "flag": "🇨🇴"
+    },
+    "away": {
+      "code": "GHA",
+      "name": "Ghana",
+      "flag": "🇬🇭"
+    },
+    "date": null,
+    "venue": "Horario FIFA por confirmar en app"
+  }
+];
+
+
+export function buildRealRoundOf32() {
+  return ROUND_OF_32_REAL_FIXTURES.map((match) => ({
+    ...match,
+    stage: 'round-of-32',
+    label: `16°-${String(match.id).replace('R32-', '')}`,
+    homeCode: match.home.code,
+    awayCode: match.away.code,
+    homeName: match.home.name,
+    awayName: match.away.name,
+    homeFlag: match.home.flag,
+    awayFlag: match.away.flag,
+  }));
+}

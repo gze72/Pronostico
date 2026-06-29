@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Trophy, Users, BarChart3, LogOut, ShieldCheck, CheckCircle2, LockKeyhole, Menu, X, Save, PanelLeftClose, PanelLeftOpen, Share2 } from 'lucide-react';
-import { GROUPS, TEAMS } from './lib/worldcupData';
-import { allGroupsCompleted, buildQualified, buildRoundOf32, buildRealRoundOf32, calculateParticipantScore, calculatePhase32Score, calculateRealStandings, calculateStandings, evaluatePrediction, evaluatePhase32Prediction, groupCompleted, phase32WentPenalties, phase32WinnerFromScore, isPhase32ForecastLate, winnerLabel } from './lib/scoring';
+import { GROUPS, TEAMS, buildRealRoundOf32 } from './lib/worldcupData';
+import { allGroupsCompleted, buildQualified, buildRoundOf32, calculateParticipantScore, calculatePhase32Score, calculateRealStandings, calculateStandings, evaluatePrediction, evaluatePhase32Prediction, groupCompleted, phase32WentPenalties, phase32WinnerFromScore, isPhase32ForecastLate, winnerLabel } from './lib/scoring';
 import { adminPhaseControl, deleteParticipantAndForecast, getAppSettings, getForecast, getMatches, getRealScores, listParticipantsWithForecasts, loginOrCreateParticipant, saveForecast, saveParticipantScore, saveRealScore, supabase, syncResultsAndScores, getDailyEditorialSummary, getPhase32Forecast, savePhase32Forecast, getPhase32Results, savePhase32Result } from './lib/storage';
 import './styles.css';
 
@@ -56,7 +56,7 @@ function App(){
   },[]);
 
   const currentScore = calculateParticipantScore(matches,predictions,realScores);
-  const phase32Matches = useMemo(() => buildRealRoundOf32(matches,realScores), [matches,realScores]);
+  const phase32Matches = useMemo(() => buildRealRoundOf32(), []);
   const phase32Score = useMemo(() => calculatePhase32Score(phase32Matches, phase32Predictions, phase32RealScores, { confirmedAt: phase32ConfirmedAt, status: phase32Status, confirmed: phase32Status === 'confirmed', role: participant?.role }), [phase32Matches, phase32Predictions, phase32RealScores, phase32ConfirmedAt, phase32Status, participant?.role]);
 
   // Ranking visible desde 16avos: la FASE 1 queda histórica, no se suma al ranking actual.

@@ -22,7 +22,7 @@ const TEAM_CODE_MAP: Record<string, string> = {
   BRA:"BRA", MAR:"MAR", HAI:"HAI", SCO:"SCO", USA:"USA", PAR:"PAR", AUS:"AUS", TUR:"TUR",
   GER:"GER", CUW:"CUW", CIV:"CIV", ECU:"ECU", NED:"NED", JPN:"JPN", SWE:"SWE", TUN:"TUN",
   BEL:"BEL", EGY:"EGY", IRN:"IRN", NZL:"NZL", ESP:"ESP", CPV:"CPV", KSA:"KSA", URU:"URU",
-  FRA:"FRA", SEN:"SEN", IRQ:"IRQ", NOR:"NOR", ARG:"ARG", ALG:"ALG", AUT:"AUT", JOR:"JOR",
+  FRA:"FRA", SEN:"SEN", IRQ:"IRQ", IRL:"IRL", NOR:"NOR", ARG:"ARG", ALG:"ALG", AUT:"AUT", JOR:"JOR",
   POR:"POR", COD:"COD", UZB:"UZB", COL:"COL", ENG:"ENG", CRO:"CRO", GHA:"GHA", PAN:"PAN"
 };
 
@@ -42,10 +42,22 @@ const PHASE1_MATCH_MAP: Record<string, string> = {
 };
 
 const PHASE32_MATCH_MAP: Record<string, string> = {
-  "RSA|CAN":"M73", "BRA|JPN":"M74", "GER|PAR":"M75", "NED|MAR":"M76",
-  "FRA|SWE":"M77", "POR|CRO":"M78", "ESP|AUT":"M79", "USA|BIH":"M80",
-  "BEL|SEN":"M81", "CIV|NOR":"M82", "MEX|ECU":"M83", "ENG|COD":"M84",
-  "ARG|CPV":"M85", "AUS|EGY":"M86", "SUI|ALG":"M87", "COL|GHA":"M88"
+  "GER|PAR":"R32-01",
+  "FRA|SWE":"R32-02",
+  "RSA|CAN":"R32-03",
+  "NED|MAR":"R32-04",
+  "POR|CRO":"R32-05",
+  "ESP|AUT":"R32-06",
+  "USA|BIH":"R32-07",
+  "BEL|SEN":"R32-08",
+  "BRA|JPN":"R32-09",
+  "IRL|NOR":"R32-10",
+  "MEX|ECU":"R32-11",
+  "ENG|COD":"R32-12",
+  "ARG|CPV":"R32-13",
+  "AUS|EGY":"R32-14",
+  "SUI|ALG":"R32-15",
+  "COL|GHA":"R32-16"
 };
 
 type FifaMatch = Record<string, any>;

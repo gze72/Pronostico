@@ -473,3 +473,30 @@ export function calculatePhase32Score(matches, predictions, realResults, forecas
     return acc;
   }, { winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, totalPoints: 0, evaluatedMatches: 0 });
 }
+
+
+export function getPhase32CutoffUtc(dateValue = new Date()) {
+  const d = new Date(dateValue);
+  const ymd = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Guayaquil',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(d);
+
+  // Regla excepcional: el 28/jun/2026 cerró a las 14:30 Ecuador.
+  if (ymd === '2026-06-28') return new Date('2026-06-28T19:30:00.000Z');
+
+  // Desde el 29/jun/2026 en adelante, cierre diario 12:00 Ecuador = 17:00 UTC.
+  return new Date(`${ymd}T17:00:00.000Z`);
+}
+
+export function isPhase32LateForecast(confirmedAt, role = 'user') {
+  if (!confirmedAt) return false;
+  if (role === 'admin') return false;
+  const confirmed = new Date(confirmedAt);
+  if (Number.isNaN(confirmed.getTime())) return false;
+  const cutoff = getPhase32CutoffUtc(confirmed);
+  return confirmed > cutoff;
+}
+

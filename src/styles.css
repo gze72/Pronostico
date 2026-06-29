@@ -2386,3 +2386,15 @@ nav button:disabled {
   }
 }
 
+
+
+/* Fix orden de enfrentamientos reales 16avos */
+.phase32-match-card .phase32-code {
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.phase32-card-number {
+  color: var(--gold);
+  font-weight: 900;
+}

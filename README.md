@@ -848,3 +848,38 @@ Corrección aplicada después del deploy que dañó la visualización de Pronós
 - La FASE 1 queda histórica y no se suma al ranking actual de 16avos.
 - El acumulado histórico se preserva para validación final del campeonato.
 - Alessia queda fuera de horario; PATITO no confirmado/borrador no puntúa.
+
+
+## Fix limpio: cruces reales 16avos + corte correcto
+
+Esta versión corrige el desorden de cruces y evita recalcular 16avos desde grupos.
+
+### Regla de cierre
+
+- 28/jun/2026: cierre excepcional 14:30 Ecuador.
+- Desde 29/jun/2026: cierre diario 12:00 Ecuador.
+
+### Cruces reales configurados
+
+1. Alemania vs Paraguay
+2. Francia vs Suecia
+3. Sudáfrica vs Canadá
+4. Países Bajos vs Marruecos
+5. Portugal vs Croacia
+6. España vs Austria
+7. Estados Unidos vs Bosnia y Herzegovina
+8. Bélgica vs Senegal
+9. Brasil vs Japón
+10. Irlanda vs Noruega
+11. México vs Ecuador
+12. Inglaterra vs RD Congo
+13. Argentina vs Cabo Verde
+14. Australia vs Egipto
+15. Suiza vs Argelia
+16. Colombia vs Ghana
+
+### Importante
+
+- FASE 1 queda histórica.
+- Ranking visible de sidebar y Reporte usa Pronóstico 16°.
+- No se suma FASE 1 al ranking actual de 16avos.
