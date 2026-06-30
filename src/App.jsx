@@ -385,8 +385,19 @@ function formatPhase32Real(real, match){
   const winnerName = winner ? (TEAMS[winner]?.name || winner) : 'Empate';
   return `${winnerName} · ${base}${penalties && real.penaltyWinner ? ' · Penales' : ''}`;
 }
+function sortPhase32MatchesByKickoff(matches){
+  return [...(matches || [])].sort((a,b)=>{
+    const ta = a?.kickoff ? new Date(a.kickoff).getTime() : Number.MAX_SAFE_INTEGER;
+    const tb = b?.kickoff ? new Date(b.kickoff).getTime() : Number.MAX_SAFE_INTEGER;
+    if (Number.isFinite(ta) && Number.isFinite(tb) && ta !== tb) return ta - tb;
+    if (a?.matchNo && b?.matchNo) return String(a.matchNo).localeCompare(String(b.matchNo), 'es', {numeric:true});
+    return String(a?.id || '').localeCompare(String(b?.id || ''), 'es', {numeric:true});
+  });
+}
+
 function Phase32PredictionView({participant,matches,predictions,setPredictions,realScores,setRealScores,score,status,appSettings,persist}){
   const locked = phase32Locked(appSettings,status);
+  const orderedMatches = useMemo(()=>sortPhase32MatchesByKickoff(matches), [matches]);
   const complete = phase32Complete(matches,predictions);
   const [realDraft,setRealDraft] = useState({});
   const [message,setMessage] = useState('');
@@ -431,7 +442,7 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
     </div>
 
     <div className="phase32-matches">
-      {matches.map((match,index)=>{
+      {orderedMatches.map((match,index)=>{
         const prediction = predictions[match.id] || {};
         const real = realScores[match.id];
         const ev = evaluatePhase32Prediction(match,predictions,realScores);
@@ -454,7 +465,7 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
 
     <div className="confirm-row phase32-actions"><button className="ghost" disabled={locked} onClick={()=>persist(false)}>{locked?'Borrador bloqueado':'Guardar borrador'}</button><button className="primary" disabled={locked || !complete} onClick={()=>persist(true)}>{status==='confirmed'?'Pronóstico confirmado':'Confirmar Pronóstico 16°'}</button>{!complete && <span>Complete los 16 partidos. Si hay empate, seleccione ganador por penales.</span>}</div>
 
-    {participant.role==='admin' && <details className="panel phase32-admin-real"><summary>Actualizar resultados reales 16° <span className="admin-only-badge">Solo ADMIN</span></summary>{message && <p className="admin-message">{message}</p>}<div className="phase32-real-admin-list">{matches.map(match=>{const current=realScores[match.id] || {}; const draft=realDraft[match.id] || {}; const h=draft.homeGoals ?? current.homeGoals ?? ''; const a=draft.awayGoals ?? current.awayGoals ?? ''; const isTie=h!=='' && a!=='' && h!=null && a!=null && Number(h)===Number(a); const pw=draft.penaltyWinner ?? current.penaltyWinner ?? ''; return <div className="phase32-real-admin-row" key={match.id}><span>{match.matchNo}</span><b>{label(match.home)} vs {label(match.away)}</b><input type="number" min="0" max="99" value={h} onChange={e=>setRealDraft(prev=>({...prev,[match.id]:{...(prev[match.id]||{}),homeGoals:e.target.value}}))}/><span>:</span><input type="number" min="0" max="99" value={a} onChange={e=>setRealDraft(prev=>({...prev,[match.id]:{...(prev[match.id]||{}),awayGoals:e.target.value}}))}/>{isTie && <select value={pw} onChange={e=>setRealDraft(prev=>({...prev,[match.id]:{...(prev[match.id]||{}),penaltyWinner:e.target.value}}))}><option value="">Penales...</option><option value={match.home}>{TEAMS[match.home]?.name || match.home}</option><option value={match.away}>{TEAMS[match.away]?.name || match.away}</option></select>}<button className="ghost" onClick={()=>saveReal(match)}>Guardar</button></div>})}</div></details>}
+    {participant.role==='admin' && <details className="panel phase32-admin-real"><summary>Actualizar resultados reales 16° <span className="admin-only-badge">Solo ADMIN</span></summary>{message && <p className="admin-message">{message}</p>}<div className="phase32-real-admin-list">{orderedMatches.map(match=>{const current=realScores[match.id] || {}; const draft=realDraft[match.id] || {}; const h=draft.homeGoals ?? current.homeGoals ?? ''; const a=draft.awayGoals ?? current.awayGoals ?? ''; const isTie=h!=='' && a!=='' && h!=null && a!=null && Number(h)===Number(a); const pw=draft.penaltyWinner ?? current.penaltyWinner ?? ''; return <div className="phase32-real-admin-row" key={match.id}><span>{match.matchNo}</span><b>{label(match.home)} vs {label(match.away)}</b><input type="number" min="0" max="99" value={h} onChange={e=>setRealDraft(prev=>({...prev,[match.id]:{...(prev[match.id]||{}),homeGoals:e.target.value}}))}/><span>:</span><input type="number" min="0" max="99" value={a} onChange={e=>setRealDraft(prev=>({...prev,[match.id]:{...(prev[match.id]||{}),awayGoals:e.target.value}}))}/>{isTie && <select value={pw} onChange={e=>setRealDraft(prev=>({...prev,[match.id]:{...(prev[match.id]||{}),penaltyWinner:e.target.value}}))}><option value="">Penales...</option><option value={match.home}>{TEAMS[match.home]?.name || match.home}</option><option value={match.away}>{TEAMS[match.away]?.name || match.away}</option></select>}<button className="ghost" onClick={()=>saveReal(match)}>Guardar</button></div>})}</div></details>}
   </section>
 }
 
