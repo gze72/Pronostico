@@ -430,7 +430,7 @@ export function evaluatePhase32Prediction(match, predictions, realResults) {
   const real = realResults?.[match.id];
 
   if (!prediction || !real || real.homeGoals == null || real.awayGoals == null) {
-    return { winnerHit: null, scoreHit: null, penaltyHit: null, winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, points: 0 };
+    return { winnerHit: null, scoreHit: null, penaltyHit: null, winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, methodPoints: 0, points: 0 };
   }
 
   const predictedWinner = phase32WinnerFromScore(match, prediction);
@@ -439,25 +439,35 @@ export function evaluatePhase32Prediction(match, predictions, realResults) {
   const realWentPenalties = Boolean(real.wentPenalties || phase32WentPenalties(real));
 
   if (!predictedWinner || !realWinner) {
-    return { winnerHit: null, scoreHit: null, penaltyHit: null, winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, points: 0 };
+    return { winnerHit: null, scoreHit: null, penaltyHit: null, winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, methodPoints: 0, points: 0 };
   }
 
   const scoreHit = Number(prediction.homeGoals) === Number(real.homeGoals) && Number(prediction.awayGoals) === Number(real.awayGoals);
   const winnerHit = predictedWinner === realWinner;
-  const penaltyHit = realWentPenalties ? (predictedWentPenalties && prediction.penaltyWinner === real.penaltyWinner) : null;
 
-  const winnerPoints = winnerHit ? (realWentPenalties ? 1 : 2) : 0;
+  // La forma de clasificación también debe acertarse:
+  // - Directo: el usuario pronosticó victoria sin empate y el partido real no fue a penales.
+  // - Penales: el usuario pronosticó empate y acertó el ganador por penales.
+  const directMethodHit = winnerHit && !realWentPenalties && !predictedWentPenalties;
+  const penaltyHit = realWentPenalties ? (predictedWentPenalties && prediction.penaltyWinner === real.penaltyWinner) : null;
+  const penaltyMethodHit = winnerHit && realWentPenalties && Boolean(penaltyHit);
+  const methodHit = directMethodHit || penaltyMethodHit;
+
+  const winnerPoints = winnerHit ? 1 : 0;
+  const methodPoints = methodHit ? 1 : 0;
   const scorePoints = scoreHit ? 1 : 0;
-  const penaltyPoints = penaltyHit ? 1 : 0;
+  const penaltyPoints = methodPoints;
 
   return {
     winnerHit,
     scoreHit,
-    penaltyHit,
+    penaltyHit: realWentPenalties ? Boolean(penaltyHit) : methodHit,
+    methodHit,
     winnerPoints,
     scorePoints,
     penaltyPoints,
-    points: winnerPoints + scorePoints + penaltyPoints
+    methodPoints,
+    points: winnerPoints + methodPoints + scorePoints
   };
 }
 
