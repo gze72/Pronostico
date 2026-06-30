@@ -426,12 +426,12 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
         <span className="phase32-eyebrow">Segunda fase · Dieciseisavos</span>
         <h2>Pronóstico 16°</h2>
         <p className="phase32-deadline">Cierre de 28/jun: <b>14:30</b>. Desde hoy en adelante el cierre diario es <b>12:00</b>. Después del cierre se bloquea automáticamente; solo ADMIN puede habilitar nuevamente.</p>
-        <p className="phase32-rules">Cada partido vale máximo <b>3 puntos</b>. Se premia acertar el <b>clasificado</b>, la <b>forma de clasificación</b> y el <b>marcador exacto</b>. Si un usuario pronostica empate y penales, pero el equipo clasifica ganando directo, solo suma el punto de clasificado.</p>
+        <p className="phase32-rules"><b>Regla de puntaje:</b> cada partido vale máximo <b>3 puntos</b>. El puntaje se calcula por tres criterios independientes: equipo clasificado, forma de clasificación y marcador exacto.</p>
         <div className="phase32-points-rules">
-          <article><strong>+1</strong><span>Clasificado</span><small>Acierta el equipo que pasa a la siguiente fase.</small></article>
-          <article><strong>+1</strong><span>Forma correcta</span><small>Directo si ganó sin penales; penales si pronosticó empate y acertó el ganador por penales.</small></article>
-          <article><strong>+1</strong><span>Marcador exacto</span><small>Acierta los goles exactos del partido.</small></article>
-          <article><strong>3 máx.</strong><span>Total partido</span><small>El máximo siempre es 3 puntos por cada cruce.</small></article>
+          <article><strong>+1</strong><span>Equipo clasificado</span><small>Se otorga si acierta el equipo que pasa de ronda, ya sea directo o por penales.</small></article>
+          <article><strong>+1</strong><span>Forma de clasificación</span><small>Se otorga solo si también acierta si el equipo clasificó directo o por penales.</small></article>
+          <article><strong>+1</strong><span>Marcador exacto</span><small>Se otorga solo si acierta exactamente los goles de ambos equipos.</small></article>
+          <article><strong>Importante</strong><span>Sin doble premio</span><small>Si pronostica penales y el equipo gana directo, solo suma el punto de clasificado.</small></article>
         </div>{score.latePenalty && <p className="phase32-late-warning">Pronóstico registrado fuera del horario permitido. Por regla de penalización, sus puntos de Pronóstico 16° se muestran en 0.</p>}{score.notConfirmed && <p className="phase32-late-warning">Pronóstico 16° en borrador o no confirmado. No genera puntos hasta estar confirmado dentro del horario permitido.</p>}
       </div>
       <div className={`phase32-lock-card ${locked?'locked':'open'}`}>
