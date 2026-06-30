@@ -2570,3 +2570,60 @@ nav button:disabled {
 .phase32-points-rules article:nth-child(2) strong {
   letter-spacing: -.02em;
 }
+
+
+/* Fix 20: Administración Pronóstico 16° - orden, puntos y resaltados */
+.admin-phase32-head > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.admin-phase32-head em {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(17,17,17,.92);
+  color: #fff;
+  font-style: normal;
+  font-size: .72rem;
+  font-weight: 950;
+  box-shadow: 0 6px 14px rgba(17,17,17,.12);
+}
+
+.admin-phase32-title {
+  font-weight: 950;
+  color: var(--ink);
+  letter-spacing: -.01em;
+}
+
+.admin-phase32-prediction,
+.admin-phase32-real {
+  border-radius: 14px;
+  padding: 9px 10px;
+}
+
+.admin-phase32-prediction.hit {
+  background: rgba(223,243,255,.86);
+  border: 1px solid rgba(104,190,235,.46);
+  color: #0b4f71;
+}
+
+.admin-phase32-real.has-real {
+  background: rgba(255,232,238,.86);
+  border: 1px solid rgba(236,142,166,.38);
+  color: #7d2639;
+}
+
+.admin-phase32-prediction b,
+.admin-phase32-real b {
+  font-weight: 950;
+}
+
+.admin-phase32-card-hit {
+  border-color: rgba(104,190,235,.42);
+}
