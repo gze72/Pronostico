@@ -430,7 +430,7 @@ export function evaluatePhase32Prediction(match, predictions, realResults) {
   const real = realResults?.[match.id];
 
   if (!prediction || !real || real.homeGoals == null || real.awayGoals == null) {
-    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0 };
+    return { winnerHit: null, scoreHit: null, penaltyHit: null, winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, points: 0 };
   }
 
   const predictedWinner = phase32WinnerFromScore(match, prediction);
@@ -439,18 +439,25 @@ export function evaluatePhase32Prediction(match, predictions, realResults) {
   const realWentPenalties = Boolean(real.wentPenalties || phase32WentPenalties(real));
 
   if (!predictedWinner || !realWinner) {
-    return { winnerHit: null, scoreHit: null, penaltyHit: null, points: 0 };
+    return { winnerHit: null, scoreHit: null, penaltyHit: null, winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, points: 0 };
   }
 
   const scoreHit = Number(prediction.homeGoals) === Number(real.homeGoals) && Number(prediction.awayGoals) === Number(real.awayGoals);
   const winnerHit = predictedWinner === realWinner;
   const penaltyHit = realWentPenalties ? (predictedWentPenalties && prediction.penaltyWinner === real.penaltyWinner) : null;
 
+  const winnerPoints = winnerHit ? (realWentPenalties ? 1 : 2) : 0;
+  const scorePoints = scoreHit ? 1 : 0;
+  const penaltyPoints = penaltyHit ? 1 : 0;
+
   return {
     winnerHit,
     scoreHit,
     penaltyHit,
-    points: (winnerHit ? 1 : 0) + (scoreHit ? 1 : 0) + (penaltyHit ? 1 : 0)
+    winnerPoints,
+    scorePoints,
+    penaltyPoints,
+    points: winnerPoints + scorePoints + penaltyPoints
   };
 }
 
@@ -466,9 +473,9 @@ export function calculatePhase32Score(matches, predictions, realResults, forecas
   return matches.reduce((acc, match) => {
     const result = evaluatePhase32Prediction(match, predictions, realResults);
     if (result.winnerHit !== null || result.scoreHit !== null || result.penaltyHit !== null) acc.evaluatedMatches += 1;
-    if (result.winnerHit) acc.winnerPoints += 1;
-    if (result.scoreHit) acc.scorePoints += 1;
-    if (result.penaltyHit) acc.penaltyPoints += 1;
+    acc.winnerPoints += result.winnerPoints || 0;
+    acc.scorePoints += result.scorePoints || 0;
+    acc.penaltyPoints += result.penaltyPoints || 0;
     acc.totalPoints += result.points;
     return acc;
   }, { winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, totalPoints: 0, evaluatedMatches: 0 });

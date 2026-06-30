@@ -2507,3 +2507,60 @@ nav button:disabled {
   border-color: rgba(185,154,86,.25);
   box-shadow: none;
 }
+
+
+/* Fix 17: reglas de puntaje Pronóstico 16° */
+.phase32-points-rules {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.phase32-points-rules article {
+  background: rgba(223,243,255,.72);
+  border: 1px solid rgba(11,79,113,.14);
+  border-radius: 18px;
+  padding: 13px 14px;
+  box-shadow: 0 8px 22px rgba(11,79,113,.07);
+}
+
+.phase32-points-rules strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 950;
+  margin-bottom: 8px;
+}
+
+.phase32-points-rules span {
+  display: block;
+  color: #0b4f71;
+  font-weight: 950;
+  margin-bottom: 4px;
+}
+
+.phase32-points-rules small {
+  display: block;
+  color: #51606a;
+  line-height: 1.35;
+  font-weight: 650;
+}
+
+@media (max-width: 1100px) {
+  .phase32-points-rules {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .phase32-points-rules {
+    grid-template-columns: 1fr;
+  }
+}
