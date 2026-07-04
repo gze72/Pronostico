@@ -346,6 +346,10 @@ export async function getAppSettings(){
     phase32DailyLockMinuteEc: 0,
     phase32LatePenaltyEnabled: true,
     phase16PredictionsUnlocked: false,
+    phase8PredictionsUnlocked: false,
+    phase8DailyLockHourEc: 11,
+    phase8DailyLockMinuteEc: 0,
+    phase8LatePenaltyEnabled: true,
     phase16DailyLockHourEc: 11,
     phase16DailyLockMinuteEc: 0,
     phase16LatePenaltyEnabled: true
@@ -370,6 +374,10 @@ export async function getAppSettings(){
       phase32DailyLockMinuteEc: Number(map.phase32_daily_lock_minute_ec ?? 0),
       phase32LatePenaltyEnabled: map.phase32_late_penalty_enabled ?? true,
       phase16PredictionsUnlocked: map.phase16_predictions_unlocked ?? false,
+      phase8PredictionsUnlocked: map.phase8_predictions_unlocked ?? false,
+      phase8DailyLockHourEc: Number(map.phase8_daily_lock_hour_ec ?? 11),
+      phase8DailyLockMinuteEc: Number(map.phase8_daily_lock_minute_ec ?? 0),
+      phase8LatePenaltyEnabled: map.phase8_late_penalty_enabled ?? true,
       phase16DailyLockHourEc: Number(map.phase16_daily_lock_hour_ec ?? 11),
       phase16DailyLockMinuteEc: Number(map.phase16_daily_lock_minute_ec ?? 0),
       phase16LatePenaltyEnabled: map.phase16_late_penalty_enabled ?? true
@@ -407,6 +415,10 @@ export async function adminPhaseControl(adminParticipantId, action, value){
     phase32DailyLockMinuteEc: 0,
     phase32LatePenaltyEnabled: true,
     phase16PredictionsUnlocked: false,
+    phase8PredictionsUnlocked: false,
+    phase8DailyLockHourEc: 11,
+    phase8DailyLockMinuteEc: 0,
+    phase8LatePenaltyEnabled: true,
     phase16DailyLockHourEc: 11,
     phase16DailyLockMinuteEc: 0,
     phase16LatePenaltyEnabled: true

@@ -16,7 +16,7 @@ function App(){
   const [toast,setToast] = useState('');
   const [forecastStatus,setForecastStatus] = useState('empty');
   const [showPrizePopup,setShowPrizePopup] = useState(false);
-  const [appSettings,setAppSettings] = useState({ registrationEnabled:true, phase1PredictionsLocked:false, phase32PredictionsUnlocked:false, phase16PredictionsUnlocked:false });
+  const [appSettings,setAppSettings] = useState({ registrationEnabled:true, phase1PredictionsLocked:false, phase32PredictionsUnlocked:false, phase16PredictionsUnlocked:false, phase8PredictionsUnlocked:false });
   const [syncStatus,setSyncStatus] = useState('Sincronizando resultados...');
   const [rankingRows,setRankingRows] = useState([]);
   const [phase32Predictions,setPhase32Predictions] = useState({});
@@ -463,7 +463,7 @@ function phase16DeadlinePassed(){
 }
 function phase16Locked(appSettings, status){
   if (status === 'confirmed') return true;
-  return phase16DeadlinePassed() && !appSettings.phase16PredictionsUnlocked;
+  return phase16DeadlinePassed() && !appSettings.phase8PredictionsUnlocked;
 }
 function phase16TeamsResolved(match){
   return match && !String(match.home).startsWith('TBD_') && !String(match.away).startsWith('TBD_');
