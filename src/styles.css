@@ -2640,9 +2640,13 @@ nav button:disabled {
   font-size: .86rem;
 }
 
-/* Fix 22: fase 16 histórica bloqueada en menú */
+/* Fix 23: hotfix JSX + Administración enfocada en Pronóstico 8° */
 .sidebar nav button.phase-closed {
   opacity: .55;
   cursor: not-allowed;
   filter: grayscale(.25);
+}
+
+.admin-phase16-only-hide {
+  display: none !important;
 }
