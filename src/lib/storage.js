@@ -239,6 +239,7 @@ export async function listParticipantsWithForecasts(){
     const [
       forecastsResult,
       phase32ForecastsResult,
+      phase16ForecastsResult,
       scoresResult
     ] = await Promise.all([
       supabase
@@ -252,6 +253,11 @@ export async function listParticipantsWithForecasts(){
         .in('participant_id', ids),
 
       supabase
+        .from('phase16_forecasts')
+        .select('participant_id,predictions,confirmed,status,confirmed_at,updated_at')
+        .in('participant_id', ids),
+
+      supabase
         .from('participant_scores')
         .select('participant_id,total_points,winner_points,score_points,evaluated_matches,updated_at')
         .in('participant_id', ids)
@@ -259,10 +265,12 @@ export async function listParticipantsWithForecasts(){
 
     if (forecastsResult.error) throw forecastsResult.error;
     if (phase32ForecastsResult.error) throw phase32ForecastsResult.error;
+    if (phase16ForecastsResult.error) throw phase16ForecastsResult.error;
     if (scoresResult.error) throw scoresResult.error;
 
     const forecastByParticipant = new Map((forecastsResult.data || []).map(f => [f.participant_id, f]));
     const phase32ByParticipant = new Map((phase32ForecastsResult.data || []).map(f => [f.participant_id, f]));
+    const phase16ByParticipant = new Map((phase16ForecastsResult.data || []).map(f => [f.participant_id, f]));
     const scoreByParticipant = new Map((scoresResult.data || []).map(s => [s.participant_id, s]));
 
     return (participants || []).map(p => ({
@@ -272,6 +280,7 @@ export async function listParticipantsWithForecasts(){
       role: p.role,
       forecast: forecastByParticipant.get(p.id) || null,
       phase32Forecast: phase32ByParticipant.get(p.id) || null,
+      phase16Forecast: phase16ByParticipant.get(p.id) || null,
       score: scoreByParticipant.get(p.id) || {
         total_points: 0,
         winner_points: 0,
@@ -286,6 +295,7 @@ export async function listParticipantsWithForecasts(){
     ...p,
     forecast:s.forecasts.find(f=>f.participantId===p.id),
     phase32Forecast:null,
+    phase16Forecast:null,
     score:s.participantScores?.[p.id] || { totalPoints:0, winnerPoints:0, scorePoints:0, evaluatedMatches:0 }
   }));
 }
@@ -334,7 +344,11 @@ export async function getAppSettings(){
     phase32PredictionsUnlocked: false,
     phase32DailyLockHourEc: 12,
     phase32DailyLockMinuteEc: 0,
-    phase32LatePenaltyEnabled: true
+    phase32LatePenaltyEnabled: true,
+    phase16PredictionsUnlocked: false,
+    phase16DailyLockHourEc: 11,
+    phase16DailyLockMinuteEc: 0,
+    phase16LatePenaltyEnabled: true
   };
 
   if (supabase) {
@@ -354,7 +368,11 @@ export async function getAppSettings(){
       phase32PredictionsUnlocked: map.phase32_predictions_unlocked ?? false,
       phase32DailyLockHourEc: Number(map.phase32_daily_lock_hour_ec ?? 12),
       phase32DailyLockMinuteEc: Number(map.phase32_daily_lock_minute_ec ?? 0),
-      phase32LatePenaltyEnabled: map.phase32_late_penalty_enabled ?? true
+      phase32LatePenaltyEnabled: map.phase32_late_penalty_enabled ?? true,
+      phase16PredictionsUnlocked: map.phase16_predictions_unlocked ?? false,
+      phase16DailyLockHourEc: Number(map.phase16_daily_lock_hour_ec ?? 11),
+      phase16DailyLockMinuteEc: Number(map.phase16_daily_lock_minute_ec ?? 0),
+      phase16LatePenaltyEnabled: map.phase16_late_penalty_enabled ?? true
     };
   }
 
@@ -387,7 +405,11 @@ export async function adminPhaseControl(adminParticipantId, action, value){
     phase32PredictionsUnlocked: false,
     phase32DailyLockHourEc: 12,
     phase32DailyLockMinuteEc: 0,
-    phase32LatePenaltyEnabled: true
+    phase32LatePenaltyEnabled: true,
+    phase16PredictionsUnlocked: false,
+    phase16DailyLockHourEc: 11,
+    phase16DailyLockMinuteEc: 0,
+    phase16LatePenaltyEnabled: true
   };
 
   if (action === 'set_registration_enabled') {
@@ -611,6 +633,161 @@ export async function savePhase32Result(adminParticipantId, matchId, homeGoals, 
   if (!admin || admin.role !== 'admin') throw new Error('Solo el administrador puede registrar resultados reales.');
   s.phase32Results = s.phase32Results || {};
   s.phase32Results[matchId] = {
+    matchId,
+    homeGoals: parsedHome,
+    awayGoals: parsedAway,
+    wentPenalties,
+    penaltyWinner: wentPenalties ? penaltyWinner : null,
+    status,
+    source: 'manual-admin',
+    updatedAt: new Date().toISOString()
+  };
+  saveLocal(s);
+  return true;
+}
+
+
+// =============================
+// FASE 3 · OCTAVOS DE FINAL
+// =============================
+export async function getPhase16Forecast(participantId){
+  if (!participantId) return null;
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('phase16_forecasts')
+      .select('*')
+      .eq('participant_id', participantId)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('No se pudo leer phase16_forecasts:', error.message);
+      return null;
+    }
+
+    return data ? {
+      predictions:data.predictions || {},
+      confirmed:data.confirmed,
+      status:data.status || (data.confirmed ? 'confirmed' : 'draft'),
+      confirmedAt:data.confirmed_at
+    } : null;
+  }
+
+  const s = loadLocal();
+  s.phase16Forecasts = s.phase16Forecasts || [];
+  return s.phase16Forecasts.find(f => f.participantId === participantId) || null;
+}
+
+export async function savePhase16Forecast(participantId, predictions, confirmed=false){
+  if (!participantId) throw new Error('Participante requerido.');
+
+  if (supabase) {
+    const existing = await getPhase16Forecast(participantId);
+    const { error } = await supabase.from('phase16_forecasts').upsert({
+      participant_id: participantId,
+      predictions,
+      confirmed,
+      status: confirmed ? 'confirmed' : 'draft',
+      confirmed_at: confirmed ? (existing?.confirmedAt || new Date().toISOString()) : null,
+      updated_at: new Date().toISOString()
+    }, { onConflict:'participant_id' });
+
+    if (error) throw error;
+    return true;
+  }
+
+  const s = loadLocal();
+  s.phase16Forecasts = s.phase16Forecasts || [];
+  const i = s.phase16Forecasts.findIndex(f => f.participantId === participantId);
+  const current = i >= 0 ? s.phase16Forecasts[i] : null;
+  const rec = {
+    participantId,
+    predictions,
+    confirmed,
+    status: confirmed ? 'confirmed' : 'draft',
+    confirmedAt: confirmed ? (current?.confirmedAt || new Date().toISOString()) : null,
+    updatedAt: new Date().toISOString()
+  };
+  if (i >= 0) s.phase16Forecasts[i] = rec; else s.phase16Forecasts.push(rec);
+  saveLocal(s);
+  return true;
+}
+
+function normalizePhase16Result(row) {
+  if (!row) return null;
+  return {
+    matchId: row.match_id || row.matchId,
+    homeGoals: row.home_goals ?? row.homeGoals,
+    awayGoals: row.away_goals ?? row.awayGoals,
+    wentPenalties: row.went_penalties ?? row.wentPenalties ?? false,
+    penaltyWinner: row.penalty_winner || row.penaltyWinner || null,
+    status: row.status || 'scheduled',
+    source: row.source || 'manual-admin',
+    updatedAt: row.updated_at || row.updatedAt
+  };
+}
+
+export async function getPhase16Results(){
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('phase16_results')
+      .select('*');
+
+    if (error) {
+      console.warn('No se pudo leer phase16_results:', error.message);
+      return {};
+    }
+
+    return Object.fromEntries((data || []).map(row => {
+      const r = normalizePhase16Result(row);
+      return [r.matchId, r];
+    }));
+  }
+
+  const s = loadLocal();
+  return s.phase16Results || {};
+}
+
+export async function savePhase16Result(adminParticipantId, matchId, homeGoals, awayGoals, penaltyWinner, status='finished'){
+  if (!adminParticipantId) throw new Error('Solo el administrador puede registrar resultados reales.');
+  if (!matchId) throw new Error('Partido requerido.');
+
+  const parsedHome = homeGoals === '' || homeGoals == null ? null : Number(homeGoals);
+  const parsedAway = awayGoals === '' || awayGoals == null ? null : Number(awayGoals);
+  const wentPenalties = parsedHome != null && parsedAway != null && parsedHome === parsedAway;
+
+  if (wentPenalties && !penaltyWinner) throw new Error('Seleccione ganador por penales.');
+
+  if (supabase) {
+    const { data: admin, error: readErr } = await supabase
+      .from('participants')
+      .select('id,role')
+      .eq('id', adminParticipantId)
+      .maybeSingle();
+
+    if (readErr) throw readErr;
+    if (!admin || admin.role !== 'admin') throw new Error('Solo el administrador puede registrar resultados reales.');
+
+    const { error } = await supabase.from('phase16_results').upsert({
+      match_id: matchId,
+      home_goals: parsedHome,
+      away_goals: parsedAway,
+      went_penalties: wentPenalties,
+      penalty_winner: wentPenalties ? penaltyWinner : null,
+      status,
+      source: 'manual-admin',
+      updated_at: new Date().toISOString()
+    }, { onConflict:'match_id' });
+
+    if (error) throw error;
+    return true;
+  }
+
+  const s = loadLocal();
+  const admin = s.participants.find(p => p.id === adminParticipantId);
+  if (!admin || admin.role !== 'admin') throw new Error('Solo el administrador puede registrar resultados reales.');
+  s.phase16Results = s.phase16Results || {};
+  s.phase16Results[matchId] = {
     matchId,
     homeGoals: parsedHome,
     awayGoals: parsedAway,

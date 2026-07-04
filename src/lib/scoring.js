@@ -490,3 +490,75 @@ export function calculatePhase32Score(matches, predictions, realResults, forecas
     return acc;
   }, { winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, totalPoints: 0, evaluatedMatches: 0 });
 }
+
+// =============================
+// FASE 3 · OCTAVOS DE FINAL
+// =============================
+const PHASE16_PLACEHOLDERS = {
+  TBD_R3215: 'Ganador Argentina/Cabo Verde',
+  TBD_R3214: 'Ganador Australia/Egipto',
+  TBD_R3216: 'Ganador Colombia/Ghana'
+};
+
+function phase16WinnerFromPhase32Result(match, phase32Results = {}) {
+  const real = phase32Results?.[match];
+  if (!real || real.homeGoals == null || real.awayGoals == null) return null;
+  const h = Number(real.homeGoals);
+  const a = Number(real.awayGoals);
+  if (Number.isNaN(h) || Number.isNaN(a)) return null;
+  const phase32Map = {
+    'R32-14': { home:'AUS', away:'EGY' },
+    'R32-15': { home:'ARG', away:'CPV' },
+    'R32-16': { home:'COL', away:'GHA' }
+  };
+  const fixture = phase32Map[match];
+  if (!fixture) return null;
+  if (h > a) return fixture.home;
+  if (a > h) return fixture.away;
+  return real.penaltyWinner || null;
+}
+
+export function buildRoundOf16() {
+  // Octavos definitivos según resultados completos de 16avos.
+  // No se dejan cruces TBD para evitar distorsión visual o de guardado.
+  return [
+    { id:'R16-01', fifaId:'53452511', matchNo:'8°-01', phase:'ROUND_OF_16', home:'CAN', away:'MAR', kickoff:'2026-07-04T12:00:00-05:00', venue:'FIFA World Cup 2026', sourceR32:['R32-01','R32-04'] },
+    { id:'R16-02', fifaId:'53452509', matchNo:'8°-02', phase:'ROUND_OF_16', home:'PAR', away:'FRA', kickoff:'2026-07-04T16:00:00-05:00', venue:'FIFA World Cup 2026', sourceR32:['R32-03','R32-05'] },
+    { id:'R16-03', fifaId:'53452517', matchNo:'8°-03', phase:'ROUND_OF_16', home:'BRA', away:'NOR', kickoff:'2026-07-05T15:00:00-05:00', venue:'FIFA World Cup 2026', sourceR32:['R32-02','R32-10'] },
+    { id:'R16-04', fifaId:'53452519', matchNo:'8°-04', phase:'ROUND_OF_16', home:'MEX', away:'ENG', kickoff:'2026-07-05T19:00:00-05:00', venue:'FIFA World Cup 2026', sourceR32:['R32-11','R32-08'] },
+    { id:'R16-05', fifaId:'53452513', matchNo:'8°-05', phase:'ROUND_OF_16', home:'POR', away:'ESP', kickoff:'2026-07-06T14:00:00-05:00', venue:'FIFA World Cup 2026', sourceR32:['R32-12','R32-06'] },
+    { id:'R16-06', fifaId:'53452515', matchNo:'8°-06', phase:'ROUND_OF_16', home:'USA', away:'BEL', kickoff:'2026-07-06T19:00:00-05:00', venue:'FIFA World Cup 2026', sourceR32:['R32-07','R32-09'] },
+    { id:'R16-07', fifaId:'53452521', matchNo:'8°-07', phase:'ROUND_OF_16', home:'ARG', away:'EGY', kickoff:'2026-07-07T11:00:00-05:00', venue:'FIFA World Cup 2026', sourceR32:['R32-15','R32-14'] },
+    { id:'R16-08', fifaId:'53452523', matchNo:'8°-08', phase:'ROUND_OF_16', home:'SUI', away:'COL', kickoff:'2026-07-07T15:00:00-05:00', venue:'FIFA World Cup 2026', sourceR32:['R32-13','R32-16'] }
+  ];
+}
+
+export function phase16TeamResolved(code) {
+  return Boolean(code) && !String(code).startsWith('TBD_');
+}
+
+export function phase16MatchResolved(match) {
+  return phase16TeamResolved(match?.home) && phase16TeamResolved(match?.away);
+}
+
+export function phase16Complete(matches, predictions) {
+  return (matches || []).every(match => {
+    if (!phase16MatchResolved(match)) return false;
+    const prediction = predictions?.[match.id];
+    if (!prediction || prediction.homeGoals === '' || prediction.awayGoals === '' || prediction.homeGoals == null || prediction.awayGoals == null) return false;
+    const tie = Number(prediction.homeGoals) === Number(prediction.awayGoals);
+    return !tie || Boolean(prediction.penaltyWinner);
+  });
+}
+
+export function calculatePhase16Score(matches, predictions, realResults, forecastMeta = {}) {
+  return calculatePhase32Score(matches, predictions, realResults, forecastMeta);
+}
+
+export function evaluatePhase16Prediction(match, predictions, realResults) {
+  return evaluatePhase32Prediction(match, predictions, realResults);
+}
+
+export function phase16PlaceholderLabel(code) {
+  return PHASE16_PLACEHOLDERS[code] || 'Por definir';
+}
