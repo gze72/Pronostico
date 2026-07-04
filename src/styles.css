@@ -2627,3 +2627,22 @@ nav button:disabled {
 .admin-phase32-card-hit {
   border-color: rgba(104,190,235,.42);
 }
+
+/* Fix 21: Fase 3 · Octavos de final */
+.phase32-pending-note {
+  margin: 10px 0 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,245,218,.92);
+  border: 1px solid rgba(185,154,86,.26);
+  color: #7a5a1b;
+  font-weight: 800;
+  font-size: .86rem;
+}
+
+/* Fix 22: fase 16 histórica bloqueada en menú */
+.sidebar nav button.phase-closed {
+  opacity: .55;
+  cursor: not-allowed;
+  filter: grayscale(.25);
+}
