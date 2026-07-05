@@ -813,8 +813,16 @@ function AdminView({matches,realScores,setRealScores,participant,appSettings,set
       setBusy(true);
       setMessage('Sincronizando resultados y recalculando puntajes...');
       const sync = await syncResultsAndScores();
+
       const fresh = await getRealScores();
       setRealScores(fresh);
+
+      const freshPhase32 = await getPhase32Results();
+      setPhase32RealScores(freshPhase32);
+
+      const freshPhase16 = await getPhase16Results();
+      setPhase16RealScores(freshPhase16);
+
       await refresh();
       setMessage(sync?.message || 'Sincronización completada.');
     } catch (ex) {
