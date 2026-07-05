@@ -73,6 +73,18 @@ const PHASE16_MATCH_MAP: Record<string, { id: string; home: string; away: string
   "SUI|COL": { id:"R16-08", home:"SUI", away:"COL" }, "COL|SUI": { id:"R16-08", home:"SUI", away:"COL" }
 };
 
+
+const PHASE16_FIFA_ID_MAP: Record<string, { id: string; home: string; away: string }> = {
+  "53452511": { id:"R16-01", home:"CAN", away:"MAR" },
+  "53452509": { id:"R16-02", home:"PAR", away:"FRA" },
+  "53452517": { id:"R16-03", home:"BRA", away:"NOR" },
+  "53452519": { id:"R16-04", home:"MEX", away:"ENG" },
+  "53452513": { id:"R16-05", home:"POR", away:"ESP" },
+  "53452515": { id:"R16-06", home:"USA", away:"BEL" },
+  "53452521": { id:"R16-07", home:"ARG", away:"EGY" },
+  "53452523": { id:"R16-08", home:"SUI", away:"COL" }
+};
+
 type FifaMatch = Record<string, any>;
 
 function json(body: unknown, status = 200) {
@@ -199,6 +211,9 @@ function phase32PenaltyWinner(match: FifaMatch) {
 }
 
 function phase16Internal(match: FifaMatch) {
+  const fifaId = String(match.IdMatch || match.idMatch || match.MatchId || "");
+  if (fifaId && PHASE16_FIFA_ID_MAP[fifaId]) return PHASE16_FIFA_ID_MAP[fifaId];
+
   const key = phase32Key(match);
   return key ? PHASE16_MATCH_MAP[key] : null;
 }
@@ -210,7 +225,8 @@ function phase16NormalizedScore(match: FifaMatch, internal: { id: string; home: 
 function isPhase16(match: FifaMatch) {
   const stage = stageName(match).toLowerCase();
   const key = phase32Key(match) || "";
-  return stage.includes("octavos") || stage.includes("round of 16") || Boolean(PHASE16_MATCH_MAP[key]);
+  const fifaId = String(match.IdMatch || match.idMatch || match.MatchId || "");
+  return stage.includes("octavos") || stage.includes("round of 16") || Boolean(PHASE16_MATCH_MAP[key]) || Boolean(PHASE16_FIFA_ID_MAP[fifaId]);
 }
 
 function phase16PenaltyWinner(match: FifaMatch) {
@@ -264,6 +280,7 @@ Deno.serve(async (req: Request) => {
     const body = await req.json().catch(() => ({}));
     const debug = Boolean(body?.debug);
     const adminCheck = await assertAdmin(supabase, body?.adminParticipantId || null);
+    const syncVersion = "fix27_sync_pronostico8_20260704";
 
     const fifaMatches = await fetchFifaMatches();
     const phase1Existing = await loadMap(supabase, "match_results");
@@ -544,7 +561,8 @@ Deno.serve(async (req: Request) => {
       skipped: skipped.length,
       recalculated,
       recalculateError,
-      message: `Sincronización ejecutada. FASE 1: ${phase1Updated.length} actualizados. 16°: ${phase32Updated.length} actualizados. 8°: ${phase16Updated.length} actualizados.`,
+      syncVersion,
+      message: `Sincronización ejecutada (${syncVersion}). FASE 1: ${phase1Updated.length} actualizados. 16°: ${phase32Updated.length} actualizados. Pronóstico 8°: ${phase16Updated.length} actualizados.`,
       ...(debug ? {
         phase32UpdatedRows: phase32Updated,
         phase32ClearedRows: phase32Cleared,
