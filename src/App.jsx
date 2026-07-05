@@ -139,7 +139,7 @@ function App(){
       {view==='pronostico8' && <Phase16PredictionView participant={participant} matches={phase16Matches} predictions={phase16Predictions} setPredictions={setPhase16Predictions} realScores={phase16RealScores} setRealScores={setPhase16RealScores} score={phase16Score} status={phase16Status} appSettings={appSettings} persist={persistPhase16}/>}
       {view==='pronostico16' && <Phase32PredictionView participant={participant} matches={phase32Matches} predictions={phase32Predictions} setPredictions={setPhase32Predictions} realScores={phase32RealScores} setRealScores={setPhase32RealScores} score={phase32Score} status={phase32Status} appSettings={appSettings} persist={persistPhase32}/>}
       {view==='pronostico' && <PredictionView matches={matches} predictions={predictions} realScores={realScores} activeGroup={activeGroup} setActiveGroup={setActiveGroup} setScore={setScore} persist={persist} canConfirm={canConfirm} forecastStatus={forecastStatus} appSettings={appSettings}/>} 
-      {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores} rankingRows={rankingRows} phase32Matches={phase32Matches} phase32RealScores={phase32RealScores} phase16Matches={phase16Matches} phase16RealScores={phase16RealScores}/>} 
+      {view==='reporte' && <ReportView participant={participant} matches={matches} predictions={predictions} realScores={realScores} rankingRows={rankingRows} phase32Matches={phase32Matches} phase32RealScores={phase32RealScores} phase16Matches={phase16Matches} phase16RealScores={phase16RealScores} appSettings={appSettings}/>} 
       {view==='admin' && participant.role === 'admin' && <AdminView matches={matches} realScores={realScores} setRealScores={setRealScores} participant={participant} appSettings={appSettings} setAppSettings={setAppSettings} phase32Matches={phase32Matches} phase32RealScores={phase32RealScores} setPhase32RealScores={setPhase32RealScores} phase16Matches={phase16Matches} phase16RealScores={phase16RealScores} setPhase16RealScores={setPhase16RealScores}/>} 
       {toast && <div className="toast">{toast}</div>}
       {showPrizePopup && <PrizePopup onClose={() => setShowPrizePopup(false)} />}
@@ -631,7 +631,7 @@ function Phase16PredictionView({participant,matches,predictions,setPredictions,r
 }
 
 
-function ReportView({participant,matches,predictions,realScores,rankingRows=[],phase32Matches=[],phase32RealScores={},phase16Matches=[],phase16RealScores={}}){
+function ReportView({participant,matches,predictions,realScores,rankingRows=[],phase32Matches=[],phase32RealScores={},phase16Matches=[],phase16RealScores={},appSettings={}}){
   const [reportTab,setReportTab] = useState('ranking');
   const score = calculateParticipantScore(matches,predictions,realScores);
   const rankedRows = buildPhase16RankingRows(rankingRows,phase16Matches,phase16RealScores,appSettings);
@@ -815,8 +815,16 @@ function AdminView({matches,realScores,setRealScores,participant,appSettings,set
       setBusy(true);
       setMessage('Sincronizando resultados y recalculando puntajes...');
       const sync = await syncResultsAndScores();
+
       const fresh = await getRealScores();
       setRealScores(fresh);
+
+      const freshPhase32 = await getPhase32Results();
+      setPhase32RealScores(freshPhase32);
+
+      const freshPhase16 = await getPhase16Results();
+      setPhase16RealScores(freshPhase16);
+
       await refresh();
       setMessage(sync?.message || 'Sincronización completada.');
     } catch (ex) {
