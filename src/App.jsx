@@ -333,7 +333,7 @@ function premiumPhase16Status(row){
   return {label:'Sin pronóstico', cls:'empty'};
 }
 
-function buildPhase16RankingRows(rows,phase16Matches,phase16RealScores){
+function buildPhase16RankingRows(rows,phase16Matches,phase16RealScores,appSettings={}){
   const possible = (phase16Matches?.length || 8) * 3;
   return [...(rows||[])]
     .map(r=>{
@@ -342,7 +342,8 @@ function buildPhase16RankingRows(rows,phase16Matches,phase16RealScores){
         confirmedAt: forecast.confirmed_at || forecast.confirmedAt,
         status: forecast.status,
         confirmed: forecast.confirmed,
-        role: r.role
+        role: r.role,
+        phase8PredictionsUnlocked: appSettings.phase8PredictionsUnlocked
       });
       const pct = possible > 0 ? Math.round((score.totalPoints / possible) * 100) : 0;
       const statusInfo = score.latePenalty
@@ -633,7 +634,7 @@ function Phase16PredictionView({participant,matches,predictions,setPredictions,r
 function ReportView({participant,matches,predictions,realScores,rankingRows=[],phase32Matches=[],phase32RealScores={},phase16Matches=[],phase16RealScores={}}){
   const [reportTab,setReportTab] = useState('ranking');
   const score = calculateParticipantScore(matches,predictions,realScores);
-  const rankedRows = buildPhase16RankingRows(rankingRows,phase16Matches,phase16RealScores);
+  const rankedRows = buildPhase16RankingRows(rankingRows,phase16Matches,phase16RealScores,appSettings);
   const predictionTitle = participant.role==='admin' ? 'Consulta de pronóstico' : 'Mi pronóstico';
   const predictionText = participant.role==='admin'
     ? 'Use Administración para revisar todos los participantes.'
@@ -787,7 +788,8 @@ function AdminView({matches,realScores,setRealScores,participant,appSettings,set
       confirmedAt: forecast.confirmed_at || forecast.confirmedAt,
       status: forecast.status,
       confirmed: forecast.confirmed,
-      role: row?.role
+      role: row?.role,
+      phase8PredictionsUnlocked: appSettings.phase8PredictionsUnlocked
     });
   }
 
@@ -813,16 +815,8 @@ function AdminView({matches,realScores,setRealScores,participant,appSettings,set
       setBusy(true);
       setMessage('Sincronizando resultados y recalculando puntajes...');
       const sync = await syncResultsAndScores();
-
       const fresh = await getRealScores();
       setRealScores(fresh);
-
-      const freshPhase32 = await getPhase32Results();
-      setPhase32RealScores(freshPhase32);
-
-      const freshPhase16 = await getPhase16Results();
-      setPhase16RealScores(freshPhase16);
-
       await refresh();
       setMessage(sync?.message || 'Sincronización completada.');
     } catch (ex) {

@@ -552,7 +552,27 @@ export function phase16Complete(matches, predictions) {
 }
 
 export function calculatePhase16Score(matches, predictions, realResults, forecastMeta = {}) {
-  return calculatePhase32Score(matches, predictions, realResults, forecastMeta);
+  const phase8Unlocked = Boolean(forecastMeta.phase8PredictionsUnlocked);
+
+  if (isPhase32ForecastNotConfirmed(forecastMeta)) {
+    return zeroPhase32Score('Pronóstico 8° no confirmado. No genera puntos.', { notConfirmed: true });
+  }
+
+  // Si el ADMIN habilitó Pronóstico 8°, la habilitación excepcional permite contar puntos
+  // aunque la confirmación haya sido posterior al cierre diario.
+  if (!phase8Unlocked && isPhase32ForecastLate(forecastMeta)) {
+    return zeroPhase32Score('Pronóstico 8° registrado fuera del horario permitido.', { latePenalty: true });
+  }
+
+  return matches.reduce((acc, match) => {
+    const result = evaluatePhase16Prediction(match, predictions, realResults);
+    if (result.winnerHit !== null || result.scoreHit !== null || result.penaltyHit !== null) acc.evaluatedMatches += 1;
+    acc.winnerPoints += result.winnerPoints || 0;
+    acc.scorePoints += result.scorePoints || 0;
+    acc.penaltyPoints += result.penaltyPoints || 0;
+    acc.totalPoints += result.points;
+    return acc;
+  }, { winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, totalPoints: 0, evaluatedMatches: 0 });
 }
 
 export function evaluatePhase16Prediction(match, predictions, realResults) {
