@@ -383,7 +383,7 @@ function buildPhase16RankingRows(rows,phase16Matches,phase16RealScores,appSettin
     .sort((a,b)=> b.score.totalPoints-a.score.totalPoints || a.name.localeCompare(b.name));
 }
 function PremiumSidebarRanking({rows,onOpenReport}){
-  return <section className="premium-sidebar-ranking"><div className="premium-sidebar-ranking-head"><div><span>Ranking actual</span><small>Pronóstico 8° · fase actual</small></div><b>🏆</b></div><div className="premium-sidebar-ranking-list">{rows.length?rows.map((row,index)=><div className={`premium-sidebar-rank rank-${index+1}`} key={row.id || row.name}><i>{rankMedal(index)}</i><div><strong>{row.name}</strong><small>{row.score.totalPoints} pts · {row.percent}%</small></div></div>):<p className="premium-sidebar-empty">Aún no hay ranking disponible.</p>}</div><button type="button" className="premium-sidebar-link" onClick={onOpenReport}>Ver ranking completo <span>›</span></button></section>
+  return <section className="premium-sidebar-ranking"><div className="premium-sidebar-ranking-head"><div><span>Ranking actual</span><small>Pronóstico 4° · fase actual</small></div><b>🏆</b></div><div className="premium-sidebar-ranking-list">{rows.length?rows.map((row,index)=><div className={`premium-sidebar-rank rank-${index+1}`} key={row.id || row.name}><i>{rankMedal(index)}</i><div><strong>{row.name}</strong><small>{row.score.totalPoints} pts · {row.percent}%</small></div></div>):<p className="premium-sidebar-empty">Aún no hay ranking disponible.</p>}</div><button type="button" className="premium-sidebar-link" onClick={onOpenReport}>Ver ranking completo <span>›</span></button></section>
 }
 function PremiumRankingReport({rows}){
   const leader=rows[0];
@@ -392,7 +392,7 @@ function PremiumRankingReport({rows}){
   const confirmed=rows.filter(r=>r.statusInfo?.cls==='confirmed').length;
   const winnerTotal=leader?.score?.winnerPoints || 0;
   const scoreTotal=leader?.score?.scorePoints || 0;
-  return <section className="premium-ranking-report"><div className="premium-ranking-hero"><div className="premium-ranking-icon">🏆</div><div><span>Reporte oficial</span><h2>Ranking de participantes</h2><p>Ranking de la fase actual: Pronóstico 8°. La FASE 1 y Pronóstico 16° quedan históricos para el acumulado final.</p></div></div><div className="premium-ranking-metrics"><article><span>Puntos 8°</span><strong>{leader?`${leader.score.totalPoints} / ${maxPoints}`:`0 / ${maxPoints}`} <small>pts</small></strong><p>{leader?`${leader.percent}% de aciertos del líder`:'Sin puntaje registrado'}</p></article><article><span>Clasificado</span><strong>{winnerTotal}</strong><p>Predicciones correctas del líder</p></article><article><span>Score exacto</span><strong>{scoreTotal}</strong><p>Marcadores exactos del líder</p></article><article><span>Partidos evaluados</span><strong>{evaluated}</strong><p>{rows.length} participantes · {confirmed} confirmados</p></article></div><div className="premium-ranking-table"><div className="premium-ranking-table-head"><span>Pos</span><span>Participante</span><span>Puntos</span><span>Porcentaje</span><span>Estado</span></div>{rows.length?rows.map((row,index)=><div key={row.id || row.name} className={`premium-ranking-line ${index===0?'leader':''}`}><span className="premium-pos">{rankMedal(index)}</span><div className="premium-participant"><i>{participantInitials(row.name)}</i><div><strong>{row.name}</strong><small>Clasificado: {row.score.winnerPoints} pts · Marcador: {row.score.scorePoints}</small></div></div><b>{row.score.totalPoints} pts</b><em>{row.percent}%</em><span className={`premium-status ${row.statusInfo.cls}`}>{row.statusInfo.label}</span></div>):<p className="premium-ranking-empty">No hay participantes disponibles para mostrar.</p>}</div></section>
+  return <section className="premium-ranking-report"><div className="premium-ranking-hero"><div className="premium-ranking-icon">🏆</div><div><span>Reporte oficial</span><h2>Ranking de participantes</h2><p>Ranking de la fase actual: Pronóstico 4°. Pronóstico 8°, Pronóstico 16° y Pronóstico 32° quedan históricos para el acumulado final.</p></div></div><div className="premium-ranking-metrics"><article><span>Puntos 4°</span><strong>{leader?`${leader.score.totalPoints} / ${maxPoints}`:`0 / ${maxPoints}`} <small>pts</small></strong><p>{leader?`${leader.percent}% de aciertos del líder`:'Sin puntaje registrado'}</p></article><article><span>Clasificado</span><strong>{winnerTotal}</strong><p>Predicciones correctas del líder</p></article><article><span>Score exacto</span><strong>{scoreTotal}</strong><p>Marcadores exactos del líder</p></article><article><span>Partidos evaluados</span><strong>{evaluated}</strong><p>{rows.length} participantes · {confirmed} confirmados</p></article></div><div className="premium-ranking-table"><div className="premium-ranking-table-head"><span>Pos</span><span>Participante</span><span>Puntos</span><span>Porcentaje</span><span>Estado</span></div>{rows.length?rows.map((row,index)=><div key={row.id || row.name} className={`premium-ranking-line ${index===0?'leader':''}`}><span className="premium-pos">{rankMedal(index)}</span><div className="premium-participant"><i>{participantInitials(row.name)}</i><div><strong>{row.name}</strong><small>Clasificado: {row.score.winnerPoints} pts · Marcador: {row.score.scorePoints}</small></div></div><b>{row.score.totalPoints} pts</b><em>{row.percent}%</em><span className={`premium-status ${row.statusInfo.cls}`}>{row.statusInfo.label}</span></div>):<p className="premium-ranking-empty">No hay participantes disponibles para mostrar.</p>}</div></section>
 }
 
 
@@ -563,7 +563,7 @@ function Phase32PredictionView({participant,matches,predictions,setPredictions,r
     </div>
 
     <div className="phase32-summary">
-      <article><span>Puntos 8°</span><strong>{score.totalPoints} / {score.evaluatedMatches*3 || 48}</strong><small>pts</small></article>
+      <article><span>Puntos 4°</span><strong>{score.totalPoints} / {score.evaluatedMatches*3 || 48}</strong><small>pts</small></article>
       <article><span>Clasificado</span><strong>{score.winnerPoints}</strong><small>pts</small></article>
       <article><span>Resultado</span><strong>{score.scorePoints}</strong><small>exactos</small></article>
       <article><span>Forma</span><strong>{score.penaltyPoints}</strong><small>pts</small></article>
@@ -643,7 +643,7 @@ function Phase4PredictionView({participant,matches,predictions,setPredictions,re
     </div>
 
     <div className="phase32-summary">
-      <article><span>Puntos 4°</span><strong>{score.totalPoints} / {score.evaluatedMatches*3 || 24}</strong><small>pts</small></article>
+      <article><span>Puntos 4°</span><strong>{score.totalPoints} / 12</strong><small>pts</small></article>
       <article><span>Clasificado</span><strong>{score.winnerPoints}</strong><small>pts</small></article>
       <article><span>Resultado</span><strong>{score.scorePoints}</strong><small>exactos</small></article>
       <article><span>Forma</span><strong>{score.penaltyPoints}</strong><small>pts</small></article>
@@ -726,7 +726,7 @@ function Phase16PredictionView({participant,matches,predictions,setPredictions,r
     </div>
 
     <div className="phase32-summary">
-      <article><span>Puntos 8°</span><strong>{score.totalPoints} / {score.evaluatedMatches*3 || 24}</strong><small>pts</small></article>
+      <article><span>Puntos 4°</span><strong>{score.totalPoints} / 12</strong><small>pts</small></article>
       <article><span>Clasificado</span><strong>{score.winnerPoints}</strong><small>pts</small></article>
       <article><span>Resultado</span><strong>{score.scorePoints}</strong><small>exactos</small></article>
       <article><span>Forma</span><strong>{score.penaltyPoints}</strong><small>pts</small></article>
