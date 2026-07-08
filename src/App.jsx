@@ -149,8 +149,10 @@ function App(){
     <aside className={`sidebar ${sidebar?'open':''}`}><button className="sidebar-close" onClick={()=>setSidebar(false)} aria-label="Cerrar menú"><X size={18}/><span>Cerrar</span></button>
       <div className="brand"><div className="brand-mark"><Trophy size={20}/></div><div><b>Zambranada 2026</b><span>{supabase ? 'Supabase activo' : 'Modo demo local'}</span></div></div>
       <nav>
-        <button className="disabled" disabled title="La FASE 1 concluyó y está cerrada."><Trophy/> Pronóstico</button>
-        <button className={view==='pronostico4'?'active':''} onClick={()=>{setView('pronostico4'); setSidebar(false)}}><Trophy/> Pronóstico 4°</button><button className="disabled phase-closed" disabled title="Pronóstico 8° cerrado. Fase histórica bloqueada."><Trophy/> Pronóstico 8°</button><button className="disabled phase-closed" disabled title="Pronóstico 16° cerrado. Fase histórica bloqueada."><Trophy/> Pronóstico 16°</button>
+        <button className={view==='pronostico4'?'active':''} onClick={()=>{setView('pronostico4'); setSidebar(false)}}><Trophy/> Pronóstico 4°</button>
+        <button className="disabled phase-closed" disabled title="Pronóstico 8° cerrado. Fase histórica bloqueada."><Trophy/> Pronóstico 8°</button>
+        <button className="disabled phase-closed" disabled title="Pronóstico 16° cerrado. Fase histórica bloqueada."><Trophy/> Pronóstico 16°</button>
+        <button className="disabled phase-closed" disabled title="Pronóstico 32° cerrado. Fase histórica bloqueada."><Trophy/> Pronóstico 32°</button>
         <button className={view==='reporte'?'active':''} onClick={()=>{setView('reporte'); setSidebar(false)}}><BarChart3/> Reporte</button>
         {participant.role === 'admin' && <button className={view==='admin'?'active':''} onClick={()=>{setView('admin'); setSidebar(false)}}><ShieldCheck/> Administración</button>}
       </nav>
