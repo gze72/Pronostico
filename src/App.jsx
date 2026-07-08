@@ -498,18 +498,16 @@ function phase16TeamsResolved(match){
 }
 
 
-const PHASE4_DAILY_CUTOFF_HOUR_EC = 11;
+// Cierre único de Cuartos:
+// Ecuador UTC-5. Se permite pronosticar hasta 2026-07-09 14:59 EC.
+// Desde 15:00 EC se bloquea automáticamente, salvo habilitación excepcional de ADMIN.
+const PHASE4_CUTOFF_UTC = Date.UTC(2026, 6, 9, 20, 0, 0, 0);
 
 function phase4CutoffForNow(){
-  const now = new Date();
-  const ecNow = new Date(now.getTime() - (5 * 60 * 60 * 1000));
-  const y = ecNow.getUTCFullYear();
-  const m = ecNow.getUTCMonth() + 1;
-  const d = ecNow.getUTCDate();
-  return new Date(Date.UTC(y, m - 1, d, PHASE4_DAILY_CUTOFF_HOUR_EC + 5, 0, 0, 0));
+  return new Date(PHASE4_CUTOFF_UTC);
 }
 function phase4DeadlinePassed(){
-  return Date.now() >= phase4CutoffForNow().getTime();
+  return Date.now() >= PHASE4_CUTOFF_UTC;
 }
 function phase4Locked(appSettings, status){
   if (status === 'confirmed') return true;
@@ -629,7 +627,7 @@ function Phase4PredictionView({participant,matches,predictions,setPredictions,re
       <div>
         <span className="phase32-eyebrow">Cuarta fase · Cuartos de final</span>
         <h2>Pronóstico 4°</h2>
-        <p className="phase32-deadline">Cierre diario de cuartos: <b>11:00 Ecuador</b>. Después del cierre se bloquea automáticamente; solo ADMIN puede habilitar nuevamente.</p>
+        <p className="phase32-deadline">Cierre de cuartos: <b>9/jul/2026 · 14:59 Ecuador</b>. Desde las <b>15:00 Ecuador</b> se bloquea automáticamente; solo ADMIN puede habilitar nuevamente.</p>
         <p className="phase32-rules"><b>Regla de puntaje:</b> cada partido vale máximo <b>3 puntos</b>. El puntaje se calcula por tres criterios independientes: equipo clasificado, forma de clasificación y marcador exacto.</p>
         <div className="phase32-points-rules">
           <article><strong>+1</strong><span>Equipo clasificado</span><small>Se otorga si acierta el equipo que pasa de ronda, ya sea directo o por penales.</small></article>

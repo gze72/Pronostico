@@ -582,3 +582,69 @@ export function evaluatePhase16Prediction(match, predictions, realResults) {
 export function phase16PlaceholderLabel(code) {
   return PHASE16_PLACEHOLDERS[code] || 'Por definir';
 }
+
+
+// =============================
+// FASE 4 · CUARTOS DE FINAL
+// =============================
+export function buildQuarterFinals() {
+  return [
+    { id:'QF-01', fifaId:'53452525', matchNo:'4°-01', phase:'QUARTERFINAL', home:'FRA', away:'MAR', kickoff:'2026-07-09T15:00:00-05:00', venue:'FIFA World Cup 2026', sourceR16:['R16-02','R16-01'] },
+    { id:'QF-02', fifaId:'53452527', matchNo:'4°-02', phase:'QUARTERFINAL', home:'ESP', away:'BEL', kickoff:'2026-07-10T14:00:00-05:00', venue:'FIFA World Cup 2026', sourceR16:['R16-05','R16-06'] },
+    { id:'QF-03', fifaId:'53452529', matchNo:'4°-03', phase:'QUARTERFINAL', home:'NOR', away:'ENG', kickoff:'2026-07-11T16:00:00-05:00', venue:'FIFA World Cup 2026', sourceR16:['R16-03','R16-04'] },
+    { id:'QF-04', fifaId:'53452531', matchNo:'4°-04', phase:'QUARTERFINAL', home:'ARG', away:'SUI', kickoff:'2026-07-11T20:00:00-05:00', venue:'FIFA World Cup 2026', sourceR16:['R16-07','R16-08'] }
+  ];
+}
+
+export function phase4Complete(matches, predictions) {
+  return (matches || []).every(match => {
+    const prediction = predictions?.[match.id];
+    if (!prediction || prediction.homeGoals === '' || prediction.awayGoals === '' || prediction.homeGoals == null || prediction.awayGoals == null) return false;
+    const tie = Number(prediction.homeGoals) === Number(prediction.awayGoals);
+    return !tie || Boolean(prediction.penaltyWinner);
+  });
+}
+
+export function phase4TeamsResolved(match){
+  return Boolean(match?.home) && Boolean(match?.away);
+}
+
+function isPhase4ForecastLate(forecastMeta = {}) {
+  if (forecastMeta.role === 'admin') return false;
+  const confirmedAt = forecastMeta.confirmedAt || forecastMeta.confirmed_at;
+  if (!confirmedAt) return true;
+
+  // Ecuador UTC-5. Cierre permitido: 2026-07-09 14:59 EC.
+  // Desde 15:00 EC = 2026-07-09T20:00:00Z, queda fuera de horario.
+  const cutoffUtc = Date.UTC(2026, 6, 9, 20, 0, 0, 0);
+  const confirmedTime = new Date(confirmedAt).getTime();
+  return Number.isFinite(confirmedTime) && confirmedTime >= cutoffUtc;
+}
+
+export function calculatePhase4Score(matches, predictions, realResults, forecastMeta = {}) {
+  const phase4Unlocked = Boolean(forecastMeta.phase4PredictionsUnlocked);
+
+  if (isPhase32ForecastNotConfirmed(forecastMeta)) {
+    return zeroPhase32Score('Pronóstico 4° no confirmado. No genera puntos.', { notConfirmed: true });
+  }
+
+  // Si ADMIN habilita excepcionalmente phase4_predictions_unlocked=true,
+  // se permite contar puntos aun si la confirmación fue posterior al cierre.
+  if (!phase4Unlocked && isPhase4ForecastLate(forecastMeta)) {
+    return zeroPhase32Score('Pronóstico 4° registrado fuera del horario permitido.', { latePenalty: true });
+  }
+
+  return matches.reduce((acc, match) => {
+    const result = evaluatePhase4Prediction(match, predictions, realResults);
+    if (result.winnerHit !== null || result.scoreHit !== null || result.penaltyHit !== null) acc.evaluatedMatches += 1;
+    acc.winnerPoints += result.winnerPoints || 0;
+    acc.scorePoints += result.scorePoints || 0;
+    acc.penaltyPoints += result.penaltyPoints || 0;
+    acc.totalPoints += result.points;
+    return acc;
+  }, { winnerPoints: 0, scorePoints: 0, penaltyPoints: 0, totalPoints: 0, evaluatedMatches: 0 });
+}
+
+export function evaluatePhase4Prediction(match, predictions, realResults) {
+  return evaluatePhase32Prediction(match, predictions, realResults);
+}
