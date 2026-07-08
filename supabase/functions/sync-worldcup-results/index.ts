@@ -85,6 +85,21 @@ const PHASE16_FIFA_ID_MAP: Record<string, { id: string; home: string; away: stri
   "53452523": { id:"R16-08", home:"SUI", away:"COL" }
 };
 
+
+const PHASE4_MATCH_MAP: Record<string, { id: string; home: string; away: string }> = {
+  "FRA|MAR": { id:"QF-01", home:"FRA", away:"MAR" }, "MAR|FRA": { id:"QF-01", home:"FRA", away:"MAR" },
+  "ESP|BEL": { id:"QF-02", home:"ESP", away:"BEL" }, "BEL|ESP": { id:"QF-02", home:"ESP", away:"BEL" },
+  "NOR|ENG": { id:"QF-03", home:"NOR", away:"ENG" }, "ENG|NOR": { id:"QF-03", home:"NOR", away:"ENG" },
+  "ARG|SUI": { id:"QF-04", home:"ARG", away:"SUI" }, "SUI|ARG": { id:"QF-04", home:"ARG", away:"SUI" }
+};
+
+const PHASE4_FIFA_ID_MAP: Record<string, { id: string; home: string; away: string }> = {
+  "53452525": { id:"QF-01", home:"FRA", away:"MAR" },
+  "53452527": { id:"QF-02", home:"ESP", away:"BEL" },
+  "53452529": { id:"QF-03", home:"NOR", away:"ENG" },
+  "53452531": { id:"QF-04", home:"ARG", away:"SUI" }
+};
+
 type FifaMatch = Record<string, any>;
 
 function json(body: unknown, status = 200) {
@@ -233,6 +248,28 @@ function phase16PenaltyWinner(match: FifaMatch) {
   return phase32PenaltyWinner(match);
 }
 
+function phase4Internal(match: FifaMatch) {
+  const fifaId = String(match.IdMatch || match.idMatch || match.MatchId || "");
+  if (fifaId && PHASE4_FIFA_ID_MAP[fifaId]) return PHASE4_FIFA_ID_MAP[fifaId];
+  const key = phase32Key(match);
+  return key ? PHASE4_MATCH_MAP[key] : null;
+}
+
+function phase4NormalizedScore(match: FifaMatch, internal: { id: string; home: string; away: string }) {
+  return phase32NormalizedScore(match, internal);
+}
+
+function isPhase4(match: FifaMatch) {
+  const stage = stageName(match).toLowerCase();
+  const key = phase32Key(match) || "";
+  const fifaId = String(match.IdMatch || match.idMatch || match.MatchId || "");
+  return stage.includes("quarter") || stage.includes("cuartos") || Boolean(PHASE4_MATCH_MAP[key]) || Boolean(PHASE4_FIFA_ID_MAP[fifaId]);
+}
+
+function phase4PenaltyWinner(match: FifaMatch) {
+  return phase32PenaltyWinner(match);
+}
+
 async function fetchFifaMatches() {
   const res = await fetch(FIFA_CALENDAR_URL, {
     headers: { "Accept": "application/json", "User-Agent": "Zambranada-Mundial-2026/1.0" }
@@ -286,6 +323,7 @@ Deno.serve(async (req: Request) => {
     const phase1Existing = await loadMap(supabase, "match_results");
     const phase32Existing = await loadMap(supabase, "phase32_results");
     const phase16Existing = await loadMap(supabase, "phase16_results");
+    const phase4Existing = await loadMap(supabase, "phase4_results");
 
     const phase1Updated: any[] = [];
     const phase1Cleared: any[] = [];
@@ -296,12 +334,68 @@ Deno.serve(async (req: Request) => {
     const phase16Updated: any[] = [];
     const phase16Cleared: any[] = [];
     const phase16Protected: any[] = [];
+    const phase4Updated: any[] = [];
+    const phase4Cleared: any[] = [];
+    const phase4Protected: any[] = [];
     const skipped: any[] = [];
 
     for (const match of fifaMatches) {
       const h = scoreHome(match);
       const a = scoreAway(match);
       const final = isFinal(match);
+      const p4 = phase4Internal(match);
+      const p4Id = p4?.id;
+
+      if (isPhase4(match) && p4Id) {
+        const existing = phase4Existing.get(p4Id);
+
+        if (!final) {
+          if (hasStoredScore(existing) && isManualAdminScore(existing)) {
+            phase4Protected.push({ match_id: p4Id, reason: "manual/admin protegido" });
+          } else if (hasScore(match) && p4 && !isFuture(match)) {
+            const normalized = phase4NormalizedScore(match, p4);
+            const wentPenalties = normalized.homeGoals === normalized.awayGoals && (penaltyHome(match) != null || penaltyAway(match) != null);
+            const penaltyWinner = wentPenalties ? phase4PenaltyWinner(match) : null;
+            const { error } = await supabase.from("phase4_results").upsert({
+              match_id: p4Id, home_goals: normalized.homeGoals, away_goals: normalized.awayGoals,
+              went_penalties: wentPenalties, penalty_winner: penaltyWinner, status: "live",
+              source: "fifa-live", source_url: FIFA_CALENDAR_URL, external_match_key: String(match.IdMatch),
+              fetched_at: new Date().toISOString(), updated_at: new Date().toISOString()
+            }, { onConflict: "match_id" });
+            if (error) skipped.push({ phase: "phase4", match_id: p4Id, error: error.message });
+            else phase4Updated.push({ match_id: p4Id, key: phase32Key(match), status: "live" });
+          } else if (hasStoredScore(existing) && isAutoScore(existing)) {
+            const { error } = await supabase.from("phase4_results").upsert({
+              match_id: p4Id, home_goals: null, away_goals: null, went_penalties: false, penalty_winner: null,
+              status: "scheduled", source: "fifa-auto-cleared", source_url: FIFA_CALENDAR_URL,
+              external_match_key: String(match.IdMatch), fetched_at: new Date().toISOString(), updated_at: new Date().toISOString()
+            }, { onConflict: "match_id" });
+            if (error) skipped.push({ phase: "phase4", match_id: p4Id, error: error.message });
+            else phase4Cleared.push({ match_id: p4Id });
+          }
+          continue;
+        }
+
+        if (h == null || a == null) continue;
+        if (hasStoredScore(existing) && isManualAdminScore(existing)) {
+          phase4Protected.push({ match_id: p4Id, reason: "manual/admin protegido" });
+          continue;
+        }
+
+        const normalized = phase4NormalizedScore(match, p4);
+        const wentPenalties = normalized.homeGoals === normalized.awayGoals && (penaltyHome(match) != null || penaltyAway(match) != null);
+        const penaltyWinner = wentPenalties ? phase4PenaltyWinner(match) : null;
+        const { error } = await supabase.from("phase4_results").upsert({
+          match_id: p4Id, home_goals: normalized.homeGoals, away_goals: normalized.awayGoals,
+          went_penalties: wentPenalties, penalty_winner: penaltyWinner, status: "finished",
+          source: "fifa", source_url: FIFA_CALENDAR_URL, external_match_key: String(match.IdMatch),
+          fetched_at: new Date().toISOString(), updated_at: new Date().toISOString()
+        }, { onConflict: "match_id" });
+        if (error) skipped.push({ phase: "phase4", match_id: p4Id, error: error.message });
+        else phase4Updated.push({ match_id: p4Id, key: phase32Key(match), score: `${normalized.homeGoals}-${normalized.awayGoals}`, penalties: wentPenalties ? `${penaltyHome(match)}-${penaltyAway(match)}` : null, penaltyWinner });
+        continue;
+      }
+
       const p16 = phase16Internal(match);
       const p16Id = p16?.id;
 
@@ -477,7 +571,7 @@ Deno.serve(async (req: Request) => {
       const p1Id = p1key ? PHASE1_MATCH_MAP[p1key] : null;
 
       if (!p1Id) {
-        if (debug && (hasScore(match) || isPhase32(match) || isPhase16(match))) {
+        if (debug && (hasScore(match) || isPhase32(match) || isPhase16(match) || isPhase4(match))) {
           skipped.push({ key: p1key || phase32Key(match), stage: stageName(match), reason: "Sin mapeo interno" });
         }
         continue;
@@ -558,11 +652,14 @@ Deno.serve(async (req: Request) => {
       phase16Updated: phase16Updated.length,
       phase16Cleared: phase16Cleared.length,
       phase16Protected: phase16Protected.length,
+      phase4Updated: phase4Updated.length,
+      phase4Cleared: phase4Cleared.length,
+      phase4Protected: phase4Protected.length,
       skipped: skipped.length,
       recalculated,
       recalculateError,
       syncVersion,
-      message: `Sincronización ejecutada (${syncVersion}). FASE 1: ${phase1Updated.length} actualizados. 16°: ${phase32Updated.length} actualizados. Pronóstico 8°: ${phase16Updated.length} actualizados.`,
+      message: `Sincronización ejecutada (${syncVersion}). FASE 1: ${phase1Updated.length} actualizados. 16°: ${phase32Updated.length} actualizados. Pronóstico 8°: ${phase16Updated.length} actualizados. Pronóstico 4°: ${phase4Updated.length} actualizados.`,
       ...(debug ? {
         phase32UpdatedRows: phase32Updated,
         phase32ClearedRows: phase32Cleared,
@@ -570,6 +667,9 @@ Deno.serve(async (req: Request) => {
         phase16UpdatedRows: phase16Updated,
         phase16ClearedRows: phase16Cleared,
         phase16ProtectedRows: phase16Protected,
+        phase4UpdatedRows: phase4Updated,
+        phase4ClearedRows: phase4Cleared,
+        phase4ProtectedRows: phase4Protected,
         skippedRows: skipped.slice(0, 150)
       } : {})
     });
